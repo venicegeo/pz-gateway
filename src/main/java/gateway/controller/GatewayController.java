@@ -2,10 +2,13 @@ package main.java.gateway.controller;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import main.java.gateway.auth.AuthConnector;
+import messages.job.JobMessageFactory;
 import model.job.type.GetJob;
 import model.request.PiazzaRequest;
 import model.response.ErrorResponse;
@@ -14,12 +17,14 @@ import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,7 +34,7 @@ public class GatewayController {
 	 * The Kafka Producer that will send messages from this controller to the
 	 * Dispatcher. Initialized upon Controller startup.
 	 */
-	Producer<String, String> producer;
+	private Producer<String, String> producer;
 
 	/**
 	 * Initializing the Kafka Producer on Controller startup.
@@ -48,6 +53,11 @@ public class GatewayController {
 		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
 		producer = new KafkaProducer<String, String>(props);
+	}
+
+	@PreDestroy
+	public void cleanup() {
+		producer.close();
 	}
 
 	/**
@@ -76,15 +86,29 @@ public class GatewayController {
 		}
 
 		// Create a GUID for this Job.
+		String guid = UUID.randomUUID().toString();
+		request.job.setJobId(guid);
 
 		// Determine if this Job is processed via synchronous REST, or via Kafka
 		// message queues.
 		if (request.job instanceof GetJob) {
 			// REST GET request to Dispatcher. Block until fulfilled.
-			return new JobStatusResponse("TestJobID");
+
+			// TODO
+			return new JobStatusResponse(guid);
 		} else {
-			// Dispatch Kafka Message of Incoming Job
-			return new PiazzaResponse("TestJobID");
+			// Create the Kafka Message for an incoming Job to be created.
+			ProducerRecord<String, String> message;
+			try {
+				message = JobMessageFactory.getJobMessage(request.job);
+			} catch (JsonProcessingException exception) {
+				return new ErrorResponse(null, "Error Creating Message for Job", "Gateway");
+			}
+			// Dispatch the Kafka Message
+			producer.send(message);
+
+			// Respond immediately with the new Job GUID
+			return new PiazzaResponse(guid);
 		}
 	}
 
