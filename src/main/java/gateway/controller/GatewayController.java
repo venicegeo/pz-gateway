@@ -38,7 +38,7 @@ public class GatewayController {
 	public void init() {
 		// Initialize the Kafka Producer
 		Properties props = new Properties();
-		props.put("bootstrap.servers", "localhost:4242");
+		props.put("bootstrap.servers", "kafka.dev:9092");
 		props.put("acks", "all");
 		props.put("retries", 0);
 		props.put("batch.size", 16384);
