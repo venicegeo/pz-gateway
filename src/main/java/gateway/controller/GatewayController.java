@@ -1,6 +1,5 @@
 package main.java.gateway.controller;
 
-import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -8,8 +7,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import main.java.gateway.auth.AuthConnector;
-import messages.job.JobMessageFactory;
-import model.job.type.GetJob;
+import messaging.job.JobMessageFactory;
 import model.request.PiazzaRequest;
 import model.response.ErrorResponse;
 import model.response.JobStatusResponse;
@@ -23,10 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 public class GatewayController {
@@ -73,7 +68,7 @@ public class GatewayController {
 		// Deserialize the incoming JSON to Request Model objects
 		PiazzaRequest request;
 		try {
-			request = parseRequestJson(json);
+			request = JobMessageFactory.parseRequestJson(json);
 		} catch (Exception exception) {
 			return new ErrorResponse(null, "Error Parsing JSON: " + exception.getMessage(), "Gateway");
 		}
@@ -91,7 +86,7 @@ public class GatewayController {
 
 		// Determine if this Job is processed via synchronous REST, or via Kafka
 		// message queues.
-		if (request.job instanceof GetJob) {
+		if (request.job.isSynchronous()) {
 			// REST GET request to Dispatcher. Block until fulfilled.
 
 			// TODO
@@ -100,7 +95,7 @@ public class GatewayController {
 			// Create the Kafka Message for an incoming Job to be created.
 			ProducerRecord<String, String> message;
 			try {
-				message = JobMessageFactory.getJobMessage(request.job);
+				message = JobMessageFactory.getRequestJobMessage(request.job);
 			} catch (JsonProcessingException exception) {
 				return new ErrorResponse(null, "Error Creating Message for Job", "Gateway");
 			}
@@ -112,17 +107,4 @@ public class GatewayController {
 		}
 	}
 
-	/**
-	 * Parses the raw JSON Payload into the PiazzaRest backing models. No value
-	 * validation done here, only syntax.
-	 * 
-	 * @param json
-	 *            JSON Payload from POST RequestBody
-	 * @return PiazzaRequest object for the JSON Payload.
-	 * @throws Exception
-	 */
-	private PiazzaRequest parseRequestJson(String json) throws IOException, JsonParseException, JsonMappingException {
-		PiazzaRequest request = new ObjectMapper().readValue(json, PiazzaRequest.class);
-		return request;
-	}
 }
