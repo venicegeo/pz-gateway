@@ -86,7 +86,7 @@ public class GatewayController {
 
 		// Determine if this Job is processed via synchronous REST, or via Kafka
 		// message queues.
-		if (request.job.isSynchronous()) {
+		if (request.job.getSynchronous()) {
 			// REST GET request to Dispatcher. Block until fulfilled.
 
 			// TODO
@@ -100,6 +100,7 @@ public class GatewayController {
 				return new ErrorResponse(null, "Error Creating Message for Job", "Gateway");
 			}
 			// Dispatch the Kafka Message
+			System.out.println("Requesting Job topic " + message.topic() + " with key " + message.key());
 			producer.send(message);
 
 			// Respond immediately with the new Job GUID

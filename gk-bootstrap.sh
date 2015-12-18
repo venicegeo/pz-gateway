@@ -12,7 +12,7 @@ sudo update-rc.d tomcat7 defaults
 
 # Build the Gateway application
 cd /vagrant/gateway
-mvn package
+mvn clean package
 
 # Copy the Gateway WAR file to the Tomcat /webapps directory
 cp target/piazza-gateway*.war /var/lib/tomcat7/webapps/gateway.war
