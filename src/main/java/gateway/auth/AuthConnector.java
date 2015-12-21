@@ -1,22 +1,19 @@
 package main.java.gateway.auth;
 
-import model.job.PiazzaJob;
+import model.request.PiazzaJobRequest;
 
 public class AuthConnector {
 
 	/**
 	 * Determines if the user is able to make the specified request or not.
 	 * 
-	 * @param apiKey
-	 *            API Key of user
-	 * @param job
+	 * @param jobRequest
 	 *            The job the user wishes to perform.
 	 * @throws Exception
 	 *             Authorization exception if the user is not allowed.
 	 */
-	public static void verifyAuth(String apiKey, PiazzaJob job)
-			throws SecurityException {
-		if (!(isAuthenticated(apiKey)) || !(isAuthorized(apiKey, job))) {
+	public static void verifyAuth(PiazzaJobRequest jobRequest) throws SecurityException {
+		if (!(isAuthenticated(jobRequest.apiKey)) || !(isAuthorized(jobRequest))) {
 			throw new SecurityException("Not authorized.");
 		}
 	}
@@ -43,7 +40,7 @@ public class AuthConnector {
 	 *            false if not
 	 * @return
 	 */
-	private static Boolean isAuthorized(String apiKey, PiazzaJob job) {
+	private static Boolean isAuthorized(PiazzaJobRequest jobRequest) {
 		return true;
 	}
 }
