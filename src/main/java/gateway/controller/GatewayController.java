@@ -96,15 +96,19 @@ public class GatewayController {
 			// Create a GUID for this new Job.
 			String jobId = UUID.randomUUID().toString();
 			// Create the Kafka Message for an incoming Job to be created.
-			ProducerRecord<String, String> message;
+			final ProducerRecord<String, String> message;
 			try {
 				message = JobMessageFactory.getRequestJobMessage(request, jobId);
 			} catch (JsonProcessingException exception) {
 				return new ErrorResponse(null, "Error Creating Message for Job", "Gateway");
 			}
-			// Dispatch the Kafka Message
+			// Dispatch the Kafka Message in a separate thread. 
 			System.out.println("Requesting Job topic " + message.topic() + " with key " + message.key());
-			producer.send(message);
+			(new Thread() {
+				public void run() {
+					producer.send(message);
+				}
+			}).start();
 
 			// Respond immediately with the new Job GUID
 			return new PiazzaResponse(jobId);
