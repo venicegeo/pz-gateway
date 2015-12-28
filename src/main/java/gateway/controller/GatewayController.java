@@ -16,6 +16,7 @@ import model.response.PiazzaResponse;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -31,8 +32,14 @@ public class GatewayController {
 	 * Dispatcher. Initialized upon Controller startup.
 	 */
 	private Producer<String, String> producer;
-	private final String DISPATCHER_HOST = "localhost";
-	private final String DISPATCHER_PORT = "8082";
+	@Value("${kafka.host}")
+	private String KAFKA_HOST;
+	@Value("${kafka.port}")
+	private String KAFKA_PORT;
+	@Value("${dispatcher.host}")
+	private String DISPATCHER_HOST;
+	@Value("${dispatcher.port}")
+	private String DISPATCHER_PORT;
 
 	/**
 	 * Initializing the Kafka Producer on Controller startup.
@@ -41,7 +48,7 @@ public class GatewayController {
 	public void init() {
 		// Initialize the Kafka Producer
 		Properties props = new Properties();
-		props.put("bootstrap.servers", "localhost:9092");
+		props.put("bootstrap.servers", String.format("%s:%s", KAFKA_HOST, KAFKA_PORT));
 		props.put("acks", "all");
 		props.put("retries", 0);
 		props.put("batch.size", 16384);
@@ -102,7 +109,7 @@ public class GatewayController {
 			} catch (JsonProcessingException exception) {
 				return new ErrorResponse(null, "Error Creating Message for Job", "Gateway");
 			}
-			// Dispatch the Kafka Message in a separate thread. 
+			// Dispatch the Kafka Message in a separate thread.
 			System.out.println("Requesting Job topic " + message.topic() + " with key " + message.key());
 			(new Thread() {
 				public void run() {
