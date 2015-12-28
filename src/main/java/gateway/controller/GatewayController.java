@@ -93,11 +93,16 @@ public class GatewayController {
 		// Determine if this Job is processed via synchronous REST, or via Kafka
 		// message queues.
 		if (request.jobType instanceof GetJob) {
+			// Ensure the Job ID is populated.
+			GetJob getJob = (GetJob) request.jobType;
+			if (getJob.getJobId() == null || getJob.getJobId().isEmpty()) {
+				return new ErrorResponse(null, "Missing JobID Property.", "Gateway");
+			}
 			// REST GET request to Dispatcher to fetch the status of the Job ID.
 			RestTemplate restTemplate = new RestTemplate();
 			PiazzaResponse dispatcherResponse = restTemplate.getForObject(
-					String.format("http://%s:%s/job/%s", DISPATCHER_HOST, DISPATCHER_PORT,
-							((GetJob) request.jobType).getJobId()), PiazzaResponse.class);
+					String.format("http://%s:%s/job/%s", DISPATCHER_HOST, DISPATCHER_PORT, getJob.getJobId()),
+					PiazzaResponse.class);
 			return dispatcherResponse;
 		} else {
 			// Create a GUID for this new Job.
