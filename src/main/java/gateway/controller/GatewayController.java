@@ -51,6 +51,8 @@ public class GatewayController {
 		props.put("bootstrap.servers", String.format("%s:%s", KAFKA_HOST, KAFKA_PORT));
 		props.put("acks", "all");
 		props.put("retries", 0);
+		// TODO: These values came from the Kafka docs. They seem awfully
+		// arbitrary, though.
 		props.put("batch.size", 16384);
 		props.put("linger.ms", 1);
 		props.put("buffer.memory", 33554432);
