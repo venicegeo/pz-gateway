@@ -1,6 +1,5 @@
 package main.java.gateway.controller;
 
-import java.util.Properties;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -8,12 +7,12 @@ import javax.annotation.PreDestroy;
 
 import main.java.gateway.auth.AuthConnector;
 import messaging.job.JobMessageFactory;
+import messaging.job.KafkaClientFactory;
 import model.job.type.GetJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,20 +45,7 @@ public class GatewayController {
 	 */
 	@PostConstruct
 	public void init() {
-		// Initialize the Kafka Producer
-		Properties props = new Properties();
-		props.put("bootstrap.servers", String.format("%s:%s", KAFKA_HOST, KAFKA_PORT));
-		props.put("acks", "all");
-		props.put("retries", 0);
-		// TODO: These values came from the Kafka docs. They seem awfully
-		// arbitrary, though.
-		props.put("batch.size", 16384);
-		props.put("linger.ms", 1);
-		props.put("buffer.memory", 33554432);
-		props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-
-		producer = new KafkaProducer<String, String>(props);
+		producer = KafkaClientFactory.getProducer(KAFKA_HOST, KAFKA_PORT);
 	}
 
 	@PreDestroy
