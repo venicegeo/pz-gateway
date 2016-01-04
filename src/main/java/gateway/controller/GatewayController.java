@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -88,10 +89,15 @@ public class GatewayController {
 			}
 			// REST GET request to Dispatcher to fetch the status of the Job ID.
 			RestTemplate restTemplate = new RestTemplate();
-			PiazzaResponse dispatcherResponse = restTemplate.getForObject(
-					String.format("http://%s:%s/job/%s", DISPATCHER_HOST, DISPATCHER_PORT, getJob.getJobId()),
-					PiazzaResponse.class);
-			return dispatcherResponse;
+			try {
+				PiazzaResponse dispatcherResponse = restTemplate.getForObject(
+						String.format("http://%s:%s/job/%s", DISPATCHER_HOST, DISPATCHER_PORT, getJob.getJobId()),
+						PiazzaResponse.class);
+				return dispatcherResponse;
+			} catch (RestClientException exception) {
+				return new ErrorResponse(null, "Error connecting to Dispatcher service: " + exception.getMessage(),
+						"Gateway");
+			}
 		} else {
 			// Create a GUID for this new Job.
 			String jobId = UUID.randomUUID().toString();

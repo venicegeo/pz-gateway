@@ -71,7 +71,7 @@ The resulting JSON will contain the current status information for that Job. The
 
 #### Job Abort
 
-Users who submit a Job that is currently running, can request that Job be cancelled using the ``abort`` Job type. This will dispatch the event throughout the Piazza application that all components handling this Job should stop immediately. Since the cancelling of a Job can potentially be a long-running process, this ``abort`` Job type will have a new Job created for the abort request. Thus, the ``abort`` Job request will merely return a new Job ID, which can then be submitted via the ``get`` Job to check the status of the abort request.
+Users who submit a Job that is currently running, can request that Job be cancelled using the ``abort`` Job type. This will dispatch the event throughout the Piazza application that all components handling this Job should stop immediately. 
 
 ```
 {
