@@ -15,5 +15,10 @@ mvn clean package
 echo "192.168.23.22	dispatcher.dev" >> /etc/hosts
 echo "192.168.33.12  kafka.dev" >> /etc/hosts
 
-# Run the Gateway application
-java -jar target/piazza-gateway*.jar
+# Add an Upstart job to run our script upon machine boot
+chmod 777 /vagrant/gateway/config/spring-start.sh
+cp /vagrant/gateway/config/gateway.conf /etc/init/gateway.conf
+
+# Start the Spring application
+cd /vagrant/gateway/config
+./spring-start.sh
