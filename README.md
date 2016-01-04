@@ -6,7 +6,7 @@ Upon validation and authentication of a submitted request, the Gateway communica
 
 ## Vagrant
 
-Run ``vagrant up`` to start the Gateway REST service. The service will be accessible via http://gateway.dev:8081. This machine's functionality depends on the [Dispatcher](https://github.com/venicegeo/pz-dispatcher) and [Job Manager](https://github.com/venicegeo/pz-jobmanager) components also being running their own Vagrant machines.
+Run ``vagrant up`` to start the Gateway REST service. The service will be accessible via http://gateway.dev:8081. This machine's functionality depends on the [Dispatcher](https://github.com/venicegeo/pz-dispatcher) and [Job Manager](https://github.com/venicegeo/pz-jobmanager) components also being running their own Vagrant machines. For Kafka messaging, the [Kafka Devbox](https://github.com/venicegeo/kafka-devbox) is also required to be running. 
 
 ## Interface
 
