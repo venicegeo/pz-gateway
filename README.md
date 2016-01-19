@@ -8,6 +8,10 @@ Upon validation and authentication of a submitted request, the Gateway communica
 
 Run ``vagrant up`` to start the Gateway REST service. The service will be accessible via http://gateway.dev:8081. This machine's functionality depends on the [Dispatcher](https://github.com/venicegeo/pz-dispatcher) and [Job Manager](https://github.com/venicegeo/pz-jobmanager) components also being running their own Vagrant machines. For Kafka messaging, the [Kafka Devbox](https://github.com/venicegeo/kafka-devbox) is also required to be running. 
 
+## Running Locally
+
+To run the Gateway service locally (without Vagrant), navigate to the project directory and run ``clean install -U spring-boot:run``. This will run a Tomcat server locally with the Gateway service running on port 8081. If you are also running the Dispatcher locally (and not through Vagrant) you will also have to specify the parameter ``dispatcher.host`` as ``localhost``. 
+
 ## Interface
 
 Once running, the Job service will be accessible via the http://gateway.dev:8081/job address. Requests take on the form of a JSON Payload that is POSTED to this endpoint.
