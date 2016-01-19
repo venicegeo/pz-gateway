@@ -10,7 +10,7 @@ Run ``vagrant up`` to start the Gateway REST service. The service will be access
 
 ## Running Locally
 
-To run the Gateway service locally (without Vagrant), navigate to the project directory and run ``clean install -U spring-boot:run``. This will run a Tomcat server locally with the Gateway service running on port 8081. If you are also running the Dispatcher locally (and not through Vagrant) you will also have to specify the parameter ``dispatcher.host`` as ``localhost``. 
+To run the Gateway service locally (without Vagrant), perhaps through Eclipse or through CLI, navigate to the project directory and run ``mvn clean install -U spring-boot:run``. This will run a Tomcat server locally with the Gateway service running on port 8081. If you are also running the Dispatcher locally (and not through Vagrant) you will also have to override the host name parameter ``dispatcher.host`` as ``localhost``. 
 
 ## Interface
 
