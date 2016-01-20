@@ -1,0 +1,79 @@
+swagger: '2.0'
+info:
+  title: Gateway API
+  description: Interacting with Piazza Core Services
+  version: "0.1.0"
+  contact: 
+    name: Patrick Doody
+    email: patrick.doody@rgi-corp.com
+    url: github.com/venicegeo
+host: gateway.dev:8081
+schemes:
+  - http
+produces:
+  - application/json
+paths:
+  /job:
+    post:
+      summary: Piazza Job Service
+      description: Every request to the Piazza Core services is encapsulated within a Job object that is consumed by this REST Endpoint. Job requests are authenticated by providing API Keys with each individual request to the Job service.
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: body
+          in: formData
+          description: Job request information, outlining the user request for ingesting, accessing, executing, or other core service actions.
+          required: true
+          schema:
+            $ref: '#/definitions/PiazzaJobRequest'
+        - name: file
+          in: formData
+          description: If ingesting local data; the file to be ingested.
+          required: false
+          type: file
+          format: binary
+      tags:
+        - Job
+      responses:
+        200:
+          description: Information regarding the requested Job. At bare minimum, this will contain the Job ID of the Job that has been spawned as a result of the POSTed message. If more information is available, such as Status, it will also be included.
+        default:
+          description: Internal server error
+definitions:
+  PiazzaJobRequest: 
+    type: object
+    discriminator: jobType
+    properties:
+      apiKey: 
+        type: string
+        format: uuid
+        description: The API Key associated with the requesting user or group. The API Key is used for authentication and authorization within the system, and must be specified with every request to the Gateway.
+      jobType:
+        type: string
+        format: object
+        description: For each request into the Piazza core, there is a corresponding Job Type JSON format.
+  AbortJob:
+    description: Request the cancellation of an ongoing Job.
+    allOf:
+      - $ref: '#/definitions/PiazzaJobRequest'
+      - type: object
+        properties:
+          jobId:
+            type: string
+            format: uuid
+            description: The ID of the Job to be cancelled.
+          reason:
+            type: string
+            description: The reason for cancelling the Job.
+  GetJob:
+    description: Request the status of a Job in the system.
+    allOf:
+      - $ref: '#/definitions/PiazzaJobRequest'
+      - type: object
+        properties:
+          jobId:
+            type: string
+            format: uuid
+            description: The ID of the Job to obtain status for.
+  PiazzaResponse:
+    type: object
