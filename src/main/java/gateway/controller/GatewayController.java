@@ -1,11 +1,11 @@
-package main.java.gateway.controller;
+package gateway.controller;
 
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import main.java.gateway.auth.AuthConnector;
+import gateway.auth.AuthConnector;
 import messaging.job.JobMessageFactory;
 import messaging.job.KafkaClientFactory;
 import model.job.type.GetJob;

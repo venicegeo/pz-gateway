@@ -1,4 +1,4 @@
-package main.java.gateway.auth;
+package gateway.auth;
 
 import model.request.PiazzaJobRequest;
 
