@@ -41,6 +41,8 @@ public class GatewayController {
 	private String KAFKA_HOST;
 	@Value("${kafka.port}")
 	private String KAFKA_PORT;
+	@Value("${kafka.group}")
+	private String KAFKA_GROUP;	
 	@Value("${dispatcher.host}")
 	private String DISPATCHER_HOST;
 	@Value("${dispatcher.port}")
@@ -117,8 +119,9 @@ public class GatewayController {
 			
 			System.out.println("Requesting Job topic " + message.topic() + " with key " + message.key());
 			
-			Future<ConsumerRecord<String, String>> jobStatus = 
-					Executors.newSingleThreadExecutor().submit(new JobMessageSyncUtility(message));
+			JobMessageSyncUtility jmsu = new JobMessageSyncUtility(KAFKA_HOST, KAFKA_PORT, KAFKA_GROUP, message);
+
+			Future<ConsumerRecord<String, String>> jobStatus = Executors.newSingleThreadExecutor().submit(jmsu);
 					
 			while( !jobStatus.isDone() ) {
 				try {
