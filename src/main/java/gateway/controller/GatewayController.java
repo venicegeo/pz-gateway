@@ -1,6 +1,9 @@
 package gateway.controller;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -8,11 +11,13 @@ import javax.annotation.PreDestroy;
 import gateway.auth.AuthConnector;
 import messaging.job.JobMessageFactory;
 import messaging.job.KafkaClientFactory;
+import messaging.job.async.JobMessageSyncUtility;
 import model.job.type.GetJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +42,8 @@ public class GatewayController {
 	private String KAFKA_HOST;
 	@Value("${kafka.port}")
 	private String KAFKA_PORT;
+	@Value("${kafka.group}")
+	private String KAFKA_GROUP;	
 	@Value("${dispatcher.host}")
 	private String DISPATCHER_HOST;
 	@Value("${dispatcher.port}")
@@ -62,6 +69,7 @@ public class GatewayController {
 	 *            The JSON Payload
 	 * @return Response object.
 	 */
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/job", method = RequestMethod.POST)
 	public PiazzaResponse job(@RequestParam(required = true) String body,
 			@RequestParam(required = false) final MultipartFile file) {
@@ -108,16 +116,32 @@ public class GatewayController {
 			try {
 				message = JobMessageFactory.getRequestJobMessage(request, jobId);
 			} catch (JsonProcessingException exception) {
-				return new ErrorResponse(null, "Error Creating Message for Job", "Gateway");
+				return new ErrorResponse(jobId, "Error Creating Message for Job", "Gateway");
 			}
-			// Dispatch the Kafka Message in a separate thread.
+			
 			System.out.println("Requesting Job topic " + message.topic() + " with key " + message.key());
-			(new Thread() {
-				public void run() {
-					producer.send(message);
-				}
-			}).start();
+			
+			JobMessageSyncUtility jmsu = new JobMessageSyncUtility(KAFKA_HOST, KAFKA_PORT, KAFKA_GROUP, message);
 
+			Future<ConsumerRecord<String, String>> jobStatus = Executors.newSingleThreadExecutor().submit(jmsu);
+					
+			while( !jobStatus.isDone() ) {
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					return new ErrorResponse(jobId, "Thread Management Error", "Gateway");
+				}
+			}
+			
+			try {
+				ConsumerRecord<String, String> record = jobStatus.get();
+				System.out.println("Received: " + record.key() + " : " + record.value() );
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				return new ErrorResponse(jobId, "Thread Execution Error", "Gateway");
+			}
+						
 			// Respond immediately with the new Job GUID
 			return new PiazzaResponse(jobId);
 		}
