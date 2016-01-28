@@ -16,12 +16,13 @@ import model.response.PiazzaResponse;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -62,12 +63,13 @@ public class GatewayController {
 	 * @return Response object.
 	 */
 	@RequestMapping(value = "/job", method = RequestMethod.POST)
-	public PiazzaResponse job(@RequestBody String json) {
+	public PiazzaResponse job(@RequestParam(required = true) String body,
+			@RequestParam(required = false) final MultipartFile file) {
 
 		// Deserialize the incoming JSON to Request Model objects
 		PiazzaJobRequest request;
 		try {
-			request = JobMessageFactory.parseRequestJson(json);
+			request = JobMessageFactory.parseRequestJson(body);
 		} catch (Exception exception) {
 			return new ErrorResponse(null, "Error Parsing JSON: " + exception.getMessage(), "Gateway");
 		}
