@@ -3,6 +3,7 @@ package gateway.controller;
 import gateway.auth.AuthConnector;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
@@ -122,25 +123,27 @@ public class GatewayController {
 
 			// Fire off a Kafka Message and then wait for a response from the
 			// Job Manager that the Job has been indexed.
-			JobMessageSyncUtility jmsu = new JobMessageSyncUtility(KAFKA_HOST, KAFKA_PORT, KAFKA_GROUP, message);
-			Future<ConsumerRecord<String, String>> jobStatus = Executors.newSingleThreadExecutor().submit(jmsu);
+			JobMessageSyncUtility syncUtility = new JobMessageSyncUtility(KAFKA_HOST, KAFKA_PORT, KAFKA_GROUP, message,
+					10);
+			Future<ConsumerRecord<String, String>> jobStatus = Executors.newSingleThreadExecutor().submit(syncUtility);
 
 			// Wait for job future to be fulfilled. This signifies that the Job
 			// has been received by the Job Manager.
-			int iterations = 0;
 			while (!jobStatus.isDone()) {
 				try {
-					if (iterations > 10) {
-						return new ErrorResponse(jobId,
-								"Timeout while waiting for a response from the Job Manager to index the Job.",
-								"Gateway");
-					}
 					Thread.sleep(1000);
-					iterations++;
 				} catch (InterruptedException exception) {
 					exception.printStackTrace();
 					return new ErrorResponse(jobId, "Thread Management Error", "Gateway");
 				}
+			}
+
+			// Ensure no Exceptions were produced by the ASync callable.
+			try {
+				jobStatus.get();
+			} catch (Exception exception) {
+				return new ErrorResponse(jobId, "The Gateway did not receive a response from the Job Manager.",
+						"Gateway");
 			}
 
 			// Respond immediately with the new Job GUID
