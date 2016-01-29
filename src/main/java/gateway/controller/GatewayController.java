@@ -1,14 +1,14 @@
 package gateway.controller;
 
+import gateway.auth.AuthConnector;
+
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import gateway.auth.AuthConnector;
 import messaging.job.JobMessageFactory;
 import messaging.job.KafkaClientFactory;
 import messaging.job.async.JobMessageSyncUtility;
@@ -43,7 +43,7 @@ public class GatewayController {
 	@Value("${kafka.port}")
 	private String KAFKA_PORT;
 	@Value("${kafka.group}")
-	private String KAFKA_GROUP;	
+	private String KAFKA_GROUP;
 	@Value("${dispatcher.host}")
 	private String DISPATCHER_HOST;
 	@Value("${dispatcher.port}")
@@ -69,7 +69,6 @@ public class GatewayController {
 	 *            The JSON Payload
 	 * @return Response object.
 	 */
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/job", method = RequestMethod.POST)
 	public PiazzaResponse job(@RequestParam(required = true) String body,
 			@RequestParam(required = false) final MultipartFile file) {
@@ -118,33 +117,34 @@ public class GatewayController {
 			} catch (JsonProcessingException exception) {
 				return new ErrorResponse(jobId, "Error Creating Message for Job", "Gateway");
 			}
-			
-			System.out.println("Requesting Job topic " + message.topic() + " with key " + message.key());
-			
-			JobMessageSyncUtility jmsu = new JobMessageSyncUtility(KAFKA_HOST, KAFKA_PORT, KAFKA_GROUP, message);
 
+			System.out.println("Requesting Job topic " + message.topic() + " with key " + message.key());
+
+			// Fire off a Kafka Message and then wait for a response from the
+			// Job Manager that the Job has been indexed.
+			JobMessageSyncUtility jmsu = new JobMessageSyncUtility(KAFKA_HOST, KAFKA_PORT, KAFKA_GROUP, message);
 			Future<ConsumerRecord<String, String>> jobStatus = Executors.newSingleThreadExecutor().submit(jmsu);
-					
-			while( !jobStatus.isDone() ) {
+
+			// Wait for job future to be fulfilled. This signifies that the Job
+			// has been received by the Job Manager.
+			int iterations = 0;
+			while (!jobStatus.isDone()) {
 				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+					if (iterations > 10) {
+						return new ErrorResponse(jobId,
+								"Timeout while waiting for a response from the Job Manager to index the Job.",
+								"Gateway");
+					}
+					Thread.sleep(1000);
+					iterations++;
+				} catch (InterruptedException exception) {
+					exception.printStackTrace();
 					return new ErrorResponse(jobId, "Thread Management Error", "Gateway");
 				}
 			}
-			
-			try {
-				ConsumerRecord<String, String> record = jobStatus.get();
-				System.out.println("Received: " + record.key() + " : " + record.value() );
-			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();
-				return new ErrorResponse(jobId, "Thread Execution Error", "Gateway");
-			}
-						
+
 			// Respond immediately with the new Job GUID
 			return new PiazzaResponse(jobId);
 		}
 	}
-
 }
