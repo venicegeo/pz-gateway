@@ -142,7 +142,9 @@ public class GatewayController {
 			try {
 				jobStatus.get();
 			} catch (Exception exception) {
-				return new ErrorResponse(jobId, "The Gateway did not receive a response from the Job Manager.",
+				return new ErrorResponse(
+						jobId,
+						"The Gateway did not receive a response from the Job Manager; the request may not have succeeded. Please query the Job ID to verify if the Job was successfully submitted.",
 						"Gateway");
 			}
 
