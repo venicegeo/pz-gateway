@@ -3,22 +3,17 @@ package gateway.controller;
 import gateway.auth.AuthConnector;
 
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import messaging.job.JobMessageFactory;
 import messaging.job.KafkaClientFactory;
-import messaging.job.async.JobMessageSyncUtility;
 import model.job.type.GetJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
@@ -121,30 +116,14 @@ public class GatewayController {
 
 			System.out.println("Requesting Job topic " + message.topic() + " with key " + message.key());
 
-			// Fire off a Kafka Message and then wait for a response from the
-			// Job Manager that the Job has been indexed.
-			JobMessageSyncUtility syncUtility = new JobMessageSyncUtility(KAFKA_HOST, KAFKA_PORT, KAFKA_GROUP, message,
-					10);
-			Future<ConsumerRecord<String, String>> jobStatus = Executors.newSingleThreadExecutor().submit(syncUtility);
-
-			// Wait for job future to be fulfilled. This signifies that the Job
-			// has been received by the Job Manager.
-			while (!jobStatus.isDone()) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException exception) {
-					exception.printStackTrace();
-					return new ErrorResponse(jobId, "Thread Management Error", "Gateway");
-				}
-			}
-
-			// Ensure no Exceptions were produced by the ASync callable.
+			// Fire off a Kafka Message and then wait for a ack response from
+			// the kafka broker
 			try {
-				jobStatus.get();
+				producer.send(message).get();
 			} catch (Exception exception) {
 				return new ErrorResponse(
 						jobId,
-						"The Gateway did not receive a response from the Job Manager; the request may not have succeeded. Please query the Job ID to verify if the Job was successfully submitted.",
+						"The Gateway did not receive a response from Kafka; the request could not be forwarded along to Piazza.",
 						"Gateway");
 			}
 
