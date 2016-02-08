@@ -10,6 +10,7 @@ import javax.annotation.PreDestroy;
 import messaging.job.JobMessageFactory;
 import messaging.job.KafkaClientFactory;
 import model.job.type.GetJob;
+import model.job.type.GetResource;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
@@ -86,17 +87,21 @@ public class GatewayController {
 
 		// Determine if this Job is processed via synchronous REST, or via Kafka
 		// message queues.
-		if (request.jobType instanceof GetJob) {
-			// Ensure the Job ID is populated.
-			GetJob getJob = (GetJob) request.jobType;
-			if (getJob.getJobId() == null || getJob.getJobId().isEmpty()) {
-				return new ErrorResponse(null, "Missing JobID Property.", "Gateway");
-			}
+		if ((request.jobType instanceof GetJob) || (request.jobType instanceof GetResource)) {
 			// REST GET request to Dispatcher to fetch the status of the Job ID.
+			// TODO: I would like a way to normalize this.
+			String id = null, serviceName = null;
+			if (request.jobType instanceof GetJob) {
+				id = ((GetJob) request.jobType).getJobId();
+				serviceName = "job";
+			} else if (request.jobType instanceof GetResource) {
+				id = ((GetResource) request.jobType).getResourceId();
+				serviceName = "data";
+			}
 			RestTemplate restTemplate = new RestTemplate();
 			try {
 				PiazzaResponse dispatcherResponse = restTemplate.getForObject(
-						String.format("http://%s:%s/job/%s", DISPATCHER_HOST, DISPATCHER_PORT, getJob.getJobId()),
+						String.format("http://%s:%s/%s/%s", DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id),
 						PiazzaResponse.class);
 				return dispatcherResponse;
 			} catch (RestClientException exception) {
