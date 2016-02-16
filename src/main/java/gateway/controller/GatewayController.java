@@ -25,6 +25,9 @@ import javax.annotation.PreDestroy;
 
 import messaging.job.JobMessageFactory;
 import messaging.job.KafkaClientFactory;
+import model.data.FileRepresentation;
+import model.data.location.FileLocation;
+import model.data.location.S3FileStore;
 import model.job.type.GetJob;
 import model.job.type.GetResource;
 import model.job.type.IngestJob;
@@ -136,7 +139,8 @@ public class GatewayController {
 	 * their request.
 	 * 
 	 * @param request
-	 * @return
+	 *            The Job Request
+	 * @return The response object
 	 */
 	private PiazzaResponse sendRequestToDispatcherViaRest(PiazzaJobRequest request) {
 		// REST GET request to Dispatcher to fetch the status of the Job ID.
@@ -166,8 +170,10 @@ public class GatewayController {
 	 * potentially long-running, and are thus asynchronous.
 	 * 
 	 * @param request
+	 *            The Job Request
 	 * @param file
-	 * @return
+	 *            The file being uploaded
+	 * @return The response object, which will contain the Job ID
 	 */
 	private PiazzaResponse sendRequestToDispatcherViaKafka(PiazzaJobRequest request, MultipartFile file) {
 		// Create a GUID for this new Job.
@@ -176,11 +182,27 @@ public class GatewayController {
 		// If an Ingest job, persist the file to the Amazon S3 filesystem
 		if (request.jobType instanceof IngestJob && file != null) {
 			try {
+				// Upload the file into S3
 				AmazonS3 client = new AmazonS3Client();
 				client.setEndpoint(AMAZONS3_BUCKET_NAME + AMAZONS3_DOMAIN);
 				client.setRegion(Region.getRegion(Regions.US_EAST_1));
 				client.putObject(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(), file.getInputStream(),
 						new ObjectMetadata());
+				// Note the S3 file path in the Ingest Job. This will be used
+				// later to pull the file in the Ingest component.
+				IngestJob ingestJob = (IngestJob) request.jobType;
+				if (ingestJob.getData().getDataType() instanceof FileRepresentation) {
+					// Attach the file to the FileLocation object
+					FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(),
+							AMAZONS3_DOMAIN, null);
+					((FileRepresentation) ingestJob.getData().getDataType()).setLocation(fileLocation);
+				} else {
+					// Only FileRepresentation objects can have a file attached
+					// to them. Otherwise, this is an invalid input and an error
+					// needs to be thrown.
+					return new ErrorResponse(null, "The uploaded file cannot be attached to the specified Data Type: "
+							+ ingestJob.getData().getDataType().getType(), "Gateway");
+				}
 			} catch (AmazonServiceException awsServiceException) {
 				System.out.println("Error Message:    " + awsServiceException.getMessage());
 				System.out.println("HTTP Status Code: " + awsServiceException.getStatusCode());
@@ -190,7 +212,6 @@ public class GatewayController {
 				return new ErrorResponse(null, "Caught an AmazonServiceException, which "
 						+ "means your request made it " + "to Amazon S3, but was rejected with an error response"
 						+ " for some reason.", "Gateway");
-
 			} catch (AmazonClientException awsClientException) {
 				System.out.println("Error Message: " + awsClientException.getMessage());
 				awsClientException.printStackTrace();
@@ -198,7 +219,6 @@ public class GatewayController {
 						+ "means the client encountered " + "an internal error while trying to "
 						+ "communicate with S3, " + "such as not being able to access the network.", "Gateway");
 			} catch (IllegalStateException | IOException exception) {
-				// TODO Auto-generated catch block
 				exception.printStackTrace();
 			}
 		}
