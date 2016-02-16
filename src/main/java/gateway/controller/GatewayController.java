@@ -182,26 +182,34 @@ public class GatewayController {
 		// If an Ingest job, persist the file to the Amazon S3 filesystem
 		if (request.jobType instanceof IngestJob && file != null) {
 			try {
-				// Upload the file into S3
-				AmazonS3 client = new AmazonS3Client();
-				client.setEndpoint(AMAZONS3_BUCKET_NAME + AMAZONS3_DOMAIN);
-				client.setRegion(Region.getRegion(Regions.US_EAST_1));
-				client.putObject(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(), file.getInputStream(),
-						new ObjectMetadata());
-				// Note the S3 file path in the Ingest Job. This will be used
-				// later to pull the file in the Ingest component.
-				IngestJob ingestJob = (IngestJob) request.jobType;
-				if (ingestJob.getData().getDataType() instanceof FileRepresentation) {
-					// Attach the file to the FileLocation object
-					FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(),
-							AMAZONS3_DOMAIN, null);
-					((FileRepresentation) ingestJob.getData().getDataType()).setLocation(fileLocation);
+				if (((IngestJob) request.jobType).getHost() == true) {
+					// Upload the file into S3
+					AmazonS3 client = new AmazonS3Client();
+					client.setEndpoint(AMAZONS3_BUCKET_NAME + AMAZONS3_DOMAIN);
+					client.setRegion(Region.getRegion(Regions.US_EAST_1));
+					client.putObject(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(), file.getInputStream(),
+							new ObjectMetadata());
+					// Note the S3 file path in the Ingest Job. This will be
+					// used later to pull the file in the Ingest component.
+					IngestJob ingestJob = (IngestJob) request.jobType;
+					if (ingestJob.getData().getDataType() instanceof FileRepresentation) {
+						// Attach the file to the FileLocation object
+						FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(),
+								AMAZONS3_DOMAIN, null);
+						((FileRepresentation) ingestJob.getData().getDataType()).setLocation(fileLocation);
+					} else {
+						// Only FileRepresentation objects can have a file
+						// attached to them. Otherwise, this is an invalid input
+						// and an error needs to be thrown.
+						return new ErrorResponse(null,
+								"The uploaded file cannot be attached to the specified Data Type: "
+										+ ingestJob.getData().getDataType().getType(), "Gateway");
+					}
 				} else {
-					// Only FileRepresentation objects can have a file attached
-					// to them. Otherwise, this is an invalid input and an error
-					// needs to be thrown.
-					return new ErrorResponse(null, "The uploaded file cannot be attached to the specified Data Type: "
-							+ ingestJob.getData().getDataType().getType(), "Gateway");
+					return new ErrorResponse(
+							null,
+							"The Host parameter for an Ingest Job cannot be set to false if a file has been specified. This is an invalid input.",
+							"Gateway");
 				}
 			} catch (AmazonServiceException awsServiceException) {
 				System.out.println("Error Message:    " + awsServiceException.getMessage());
