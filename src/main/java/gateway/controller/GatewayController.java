@@ -48,8 +48,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -78,10 +77,14 @@ public class GatewayController {
 	private String DISPATCHER_HOST;
 	@Value("${dispatcher.port}")
 	private String DISPATCHER_PORT;
-	@Value("${amazons3.bucketname}")
+	@Value("${s3.bucketname}")
 	private String AMAZONS3_BUCKET_NAME;
-	@Value("${amazons3.domain}")
+	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
+	@Value("${s3.key.access:}")
+	private String AMAZONS3_ACCESS_KEY;
+	@Value("${s3.key.private:}")
+	private String AMAZONS3_PRIVATE_KEY;
 
 	/**
 	 * Initializing the Kafka Producer on Controller startup.
@@ -183,12 +186,15 @@ public class GatewayController {
 		if (request.jobType instanceof IngestJob && file != null) {
 			try {
 				if (((IngestJob) request.jobType).getHost() == true) {
-					// Upload the file into S3
-					AmazonS3 client = new AmazonS3Client();
-					client.setEndpoint(AMAZONS3_BUCKET_NAME + AMAZONS3_DOMAIN);
-					client.setRegion(Region.getRegion(Regions.US_EAST_1));
-					client.putObject(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(), file.getInputStream(),
-							new ObjectMetadata());
+					// Connect to our S3 Bucket
+					BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
+					AmazonS3 client = new AmazonS3Client(credentials);
+					client.setEndpoint(String.format("%s.%s", AMAZONS3_BUCKET_NAME, AMAZONS3_DOMAIN));
+					// The content length must be specified.
+					ObjectMetadata metadata = new ObjectMetadata();
+					metadata.setContentLength(file.getSize());
+					// Send the file.
+					client.putObject(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(), file.getInputStream(), metadata);
 					// Note the S3 file path in the Ingest Job. This will be
 					// used later to pull the file in the Ingest component.
 					IngestJob ingestJob = (IngestJob) request.jobType;
