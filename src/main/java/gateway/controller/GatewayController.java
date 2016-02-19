@@ -17,7 +17,6 @@ package gateway.controller;
 
 import gateway.auth.AuthConnector;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -46,7 +45,6 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -189,20 +187,21 @@ public class GatewayController {
 					// Connect to our S3 Bucket
 					BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
 					AmazonS3 client = new AmazonS3Client(credentials);
-					client.setEndpoint(String.format("%s.%s", AMAZONS3_BUCKET_NAME, AMAZONS3_DOMAIN));
 					// The content length must be specified.
 					ObjectMetadata metadata = new ObjectMetadata();
 					metadata.setContentLength(file.getSize());
-					// Send the file.
-					client.putObject(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(), file.getInputStream(), metadata);
+					// Send the file. The key corresponds with the S3 file name.
+					String fileKey = String.format("%s-%s", jobId, file.getOriginalFilename());
+					client.putObject(AMAZONS3_BUCKET_NAME, fileKey, file.getInputStream(), metadata);
 					// Note the S3 file path in the Ingest Job. This will be
 					// used later to pull the file in the Ingest component.
 					IngestJob ingestJob = (IngestJob) request.jobType;
 					if (ingestJob.getData().getDataType() instanceof FileRepresentation) {
 						// Attach the file to the FileLocation object
-						FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, file.getOriginalFilename(),
-								AMAZONS3_DOMAIN, null);
+						FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, fileKey, AMAZONS3_DOMAIN);
 						((FileRepresentation) ingestJob.getData().getDataType()).setLocation(fileLocation);
+						System.out.println(String.format("S3 File successfully persisted to %s:%s",
+								AMAZONS3_BUCKET_NAME, fileKey));
 					} else {
 						// Only FileRepresentation objects can have a file
 						// attached to them. Otherwise, this is an invalid input
@@ -214,26 +213,19 @@ public class GatewayController {
 				} else {
 					return new ErrorResponse(
 							null,
-							"The Host parameter for an Ingest Job cannot be set to false if a file has been specified. This is an invalid input.",
+							"Invalid input: Host parameter for an Ingest Job cannot be set to false if a file has been specified.",
 							"Gateway");
 				}
 			} catch (AmazonServiceException awsServiceException) {
-				System.out.println("Error Message:    " + awsServiceException.getMessage());
-				System.out.println("HTTP Status Code: " + awsServiceException.getStatusCode());
-				System.out.println("AWS Error Code:   " + awsServiceException.getErrorCode());
-				System.out.println("Error Type:       " + awsServiceException.getErrorType());
-				System.out.println("Request ID:       " + awsServiceException.getRequestId());
-				return new ErrorResponse(null, "Caught an AmazonServiceException, which "
-						+ "means your request made it " + "to Amazon S3, but was rejected with an error response"
-						+ " for some reason.", "Gateway");
-			} catch (AmazonClientException awsClientException) {
-				System.out.println("Error Message: " + awsClientException.getMessage());
-				awsClientException.printStackTrace();
-				return new ErrorResponse(null, "Caught an AmazonClientException, which "
-						+ "means the client encountered " + "an internal error while trying to "
-						+ "communicate with S3, " + "such as not being able to access the network.", "Gateway");
-			} catch (IllegalStateException | IOException exception) {
+				System.out.println("AWS S3 Upload Error: " + awsServiceException.getMessage());
+				awsServiceException.printStackTrace();
+				return new ErrorResponse(null, "The file was rejected by Piazza persistent storage. Reason: "
+						+ awsServiceException.getMessage(), "Gateway");
+			} catch (Exception exception) {
+				System.out.println("Error Message: " + exception.getMessage());
 				exception.printStackTrace();
+				return new ErrorResponse(null, "An Internal error was encountered while persisting the file: "
+						+ exception.getMessage(), "Gateway");
 			}
 		}
 
@@ -242,6 +234,7 @@ public class GatewayController {
 		try {
 			message = JobMessageFactory.getRequestJobMessage(request, jobId);
 		} catch (JsonProcessingException exception) {
+			exception.printStackTrace();
 			return new ErrorResponse(jobId, "Error Creating Message for Job", "Gateway");
 		}
 
