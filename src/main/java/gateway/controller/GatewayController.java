@@ -165,7 +165,7 @@ public class GatewayController {
 			logger.log(String.format("Sent Job %s to Dispatcher %s REST services", id, serviceName), PiazzaLogger.INFO);
 			return dispatcherResponse;
 		} catch (RestClientException exception) {
-			logger.log("Could not relay message to Dispatcher.", PiazzaLogger.FATAL);
+			logger.log("Could not relay message to Dispatcher.", PiazzaLogger.ERROR);
 			return new ErrorResponse(null, "Error connecting to Dispatcher service: " + exception.getMessage(),
 					"Gateway");
 		}
@@ -188,7 +188,7 @@ public class GatewayController {
 			// Create a GUID for this new Job from the UUIDGen component
 			jobId = uuidFactory.getUUID();
 		} catch (RestClientException exception) {
-			logger.log("Could not connect to UUID Service for UUID.", PiazzaLogger.FATAL);
+			logger.log("Could not connect to UUID Service for UUID.", PiazzaLogger.ERROR);
 			return new ErrorResponse(null,
 					"Could not generate Job ID. Core Piazza Components were not found (UUIDGen).", "UUIDGen");
 		}
@@ -231,13 +231,13 @@ public class GatewayController {
 				}
 			} catch (AmazonServiceException awsServiceException) {
 				logger.log(String.format("AWS S3 Upload Error on Job %s: %s", jobId, awsServiceException.getMessage()),
-						PiazzaLogger.FATAL);
+						PiazzaLogger.ERROR);
 				awsServiceException.printStackTrace();
 				return new ErrorResponse(null, "The file was rejected by Piazza persistent storage. Reason: "
 						+ awsServiceException.getMessage(), "Gateway");
 			} catch (Exception exception) {
 				logger.log(String.format("Error Processing S3 Upload on Job %s: %s", jobId, exception.getMessage()),
-						PiazzaLogger.FATAL);
+						PiazzaLogger.ERROR);
 				exception.printStackTrace();
 				return new ErrorResponse(null, "An Internal error was encountered while persisting the file: "
 						+ exception.getMessage(), "Gateway");
@@ -250,7 +250,7 @@ public class GatewayController {
 			message = JobMessageFactory.getRequestJobMessage(request, jobId);
 		} catch (JsonProcessingException exception) {
 			exception.printStackTrace();
-			logger.log(String.format("Error Creating Kafka Message for Job %s", jobId), PiazzaLogger.FATAL);
+			logger.log(String.format("Error Creating Kafka Message for Job %s", jobId), PiazzaLogger.ERROR);
 			return new ErrorResponse(jobId, "Error Creating Message for Job", "Gateway");
 		}
 
@@ -260,7 +260,7 @@ public class GatewayController {
 			producer.send(message).get();
 		} catch (Exception exception) {
 			logger.log(String.format("Timeout sending Message for Job %s through Kafka: %s", jobId,
-					exception.getMessage()), PiazzaLogger.FATAL);
+					exception.getMessage()), PiazzaLogger.ERROR);
 			return new ErrorResponse(
 					jobId,
 					"The Gateway did not receive a response from Kafka; the request could not be forwarded along to Piazza.",
