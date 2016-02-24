@@ -67,6 +67,7 @@ public class GatewayController {
 	@Autowired
 	private UUIDFactory uuidFactory;
 	private Producer<String, String> producer;
+	private RestTemplate restTemplate = new RestTemplate();
 	@Value("${kafka.host}")
 	private String KAFKA_HOST;
 	@Value("${kafka.port}")
@@ -159,7 +160,7 @@ public class GatewayController {
 			serviceName = "data";
 		}
 		try {
-			PiazzaResponse dispatcherResponse = new RestTemplate().getForObject(
+			PiazzaResponse dispatcherResponse = restTemplate.getForObject(
 					String.format("http://%s:%s/%s/%s", DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id),
 					PiazzaResponse.class);
 			logger.log(String.format("Sent Job %s to Dispatcher %s REST services", id, serviceName), PiazzaLogger.INFO);
