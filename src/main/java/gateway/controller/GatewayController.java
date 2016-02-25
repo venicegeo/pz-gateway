@@ -68,6 +68,7 @@ public class GatewayController {
 	private UUIDFactory uuidFactory;
 	private Producer<String, String> producer;
 	private RestTemplate restTemplate = new RestTemplate();
+	private AmazonS3 s3Client;
 	@Value("${kafka.host}")
 	private String KAFKA_HOST;
 	@Value("${kafka.port}")
@@ -93,6 +94,9 @@ public class GatewayController {
 	@PostConstruct
 	public void init() {
 		producer = KafkaClientFactory.getProducer(KAFKA_HOST, KAFKA_PORT);
+		// Connect to our S3 Bucket
+		BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
+		s3Client = new AmazonS3Client(credentials);
 	}
 
 	@PreDestroy
@@ -198,15 +202,12 @@ public class GatewayController {
 		if (request.jobType instanceof IngestJob && file != null) {
 			try {
 				if (((IngestJob) request.jobType).getHost() == true) {
-					// Connect to our S3 Bucket
-					BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
-					AmazonS3 client = new AmazonS3Client(credentials);
 					// The content length must be specified.
 					ObjectMetadata metadata = new ObjectMetadata();
 					metadata.setContentLength(file.getSize());
 					// Send the file. The key corresponds with the S3 file name.
 					String fileKey = String.format("%s-%s", jobId, file.getOriginalFilename());
-					client.putObject(AMAZONS3_BUCKET_NAME, fileKey, file.getInputStream(), metadata);
+					s3Client.putObject(AMAZONS3_BUCKET_NAME, fileKey, file.getInputStream(), metadata);
 					// Note the S3 file path in the Ingest Job. This will be
 					// used later to pull the file in the Ingest component.
 					IngestJob ingestJob = (IngestJob) request.jobType;
