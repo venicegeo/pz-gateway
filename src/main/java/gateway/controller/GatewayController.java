@@ -36,6 +36,8 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -113,7 +115,7 @@ public class GatewayController {
 	 * @return Response object.
 	 */
 	@RequestMapping(value = "/job", method = RequestMethod.POST)
-	public PiazzaResponse job(@RequestParam(required = true) String body,
+	public ResponseEntity<PiazzaResponse> job(@RequestParam(required = true) String body,
 			@RequestParam(required = false) final MultipartFile file) {
 		// Deserialize the incoming JSON to Request Model objects
 		PiazzaJobRequest request;
@@ -122,7 +124,8 @@ public class GatewayController {
 		} catch (Exception exception) {
 			logger.log(String.format("An Invalid Job Request sent to the Gateway: %s", exception.getMessage()),
 					PiazzaLogger.WARNING);
-			return new ErrorResponse(null, "Error Parsing Job Request: " + exception.getMessage(), "Gateway");
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Error Parsing Job Request: "
+					+ exception.getMessage(), "Gateway"), HttpStatus.BAD_REQUEST);
 		}
 
 		// Authenticate and Authorize the request
@@ -130,7 +133,8 @@ public class GatewayController {
 			AuthConnector.verifyAuth(request);
 		} catch (SecurityException securityEx) {
 			logger.log("Non-authorized connection to Gateway Blocked.", PiazzaLogger.WARNING);
-			return new ErrorResponse(null, "Authentication Error", "Gateway");
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Authentication Error", "Gateway"),
+					HttpStatus.UNAUTHORIZED);
 		}
 
 		// Determine if this Job is processed via synchronous REST, or via Kafka
@@ -152,7 +156,7 @@ public class GatewayController {
 	 *            The Job Request
 	 * @return The response object
 	 */
-	private PiazzaResponse sendRequestToDispatcherViaRest(PiazzaJobRequest request) {
+	private ResponseEntity<PiazzaResponse> sendRequestToDispatcherViaRest(PiazzaJobRequest request) {
 		// REST GET request to Dispatcher to fetch the status of the Job ID.
 		// TODO: I would like a way to normalize this.
 		String id = null, serviceName = null;
@@ -168,11 +172,16 @@ public class GatewayController {
 					String.format("http://%s:%s/%s/%s", DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id),
 					PiazzaResponse.class);
 			logger.log(String.format("Sent Job %s to Dispatcher %s REST services", id, serviceName), PiazzaLogger.INFO);
-			return dispatcherResponse;
+			// The status code of the response gets swallowed up no matter what
+			// we do. Infer the status code that we should use based on the type
+			// of Response the REST service responds with.
+			HttpStatus status = dispatcherResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			return new ResponseEntity<PiazzaResponse>(dispatcherResponse, status);
 		} catch (RestClientException exception) {
 			logger.log("Could not relay message to Dispatcher.", PiazzaLogger.ERROR);
-			return new ErrorResponse(null, "Error connecting to Dispatcher service: " + exception.getMessage(),
-					"Gateway");
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Error Processing Request: "
+					+ exception.getMessage(), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -187,15 +196,16 @@ public class GatewayController {
 	 *            The file being uploaded
 	 * @return The response object, which will contain the Job ID
 	 */
-	private PiazzaResponse sendRequestToDispatcherViaKafka(PiazzaJobRequest request, MultipartFile file) {
+	private ResponseEntity<PiazzaResponse> sendRequestToDispatcherViaKafka(PiazzaJobRequest request, MultipartFile file) {
 		String jobId;
 		try {
 			// Create a GUID for this new Job from the UUIDGen component
 			jobId = uuidFactory.getUUID();
 		} catch (RestClientException exception) {
 			logger.log("Could not connect to UUID Service for UUID.", PiazzaLogger.ERROR);
-			return new ErrorResponse(null,
-					"Could not generate Job ID. Core Piazza Components were not found (UUIDGen).", "UUIDGen");
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
+					"Could not generate Job ID. Core Piazza Components were not found (UUIDGen).", "UUIDGen"),
+					HttpStatus.SERVICE_UNAVAILABLE);
 		}
 
 		// If an Ingest job, persist the file to the Amazon S3 filesystem
@@ -221,28 +231,32 @@ public class GatewayController {
 						// Only FileRepresentation objects can have a file
 						// attached to them. Otherwise, this is an invalid input
 						// and an error needs to be thrown.
-						return new ErrorResponse(null,
+						return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
 								"The uploaded file cannot be attached to the specified Data Type: "
-										+ ingestJob.getData().getDataType().getType(), "Gateway");
+										+ ingestJob.getData().getDataType().getType(), "Gateway"),
+								HttpStatus.BAD_REQUEST);
 					}
 				} else {
-					return new ErrorResponse(
-							null,
-							"Invalid input: Host parameter for an Ingest Job cannot be set to false if a file has been specified.",
-							"Gateway");
+					return new ResponseEntity<PiazzaResponse>(
+							new ErrorResponse(
+									null,
+									"Invalid input: Host parameter for an Ingest Job cannot be set to false if a file has been specified.",
+									"Gateway"), HttpStatus.BAD_REQUEST);
 				}
 			} catch (AmazonServiceException awsServiceException) {
 				logger.log(String.format("AWS S3 Upload Error on Job %s: %s", jobId, awsServiceException.getMessage()),
 						PiazzaLogger.ERROR);
 				awsServiceException.printStackTrace();
-				return new ErrorResponse(null, "The file was rejected by Piazza persistent storage. Reason: "
-						+ awsServiceException.getMessage(), "Gateway");
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
+						"The file was rejected by Piazza persistent storage. Reason: "
+								+ awsServiceException.getMessage(), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 			} catch (Exception exception) {
 				logger.log(String.format("Error Processing S3 Upload on Job %s: %s", jobId, exception.getMessage()),
 						PiazzaLogger.ERROR);
 				exception.printStackTrace();
-				return new ErrorResponse(null, "An Internal error was encountered while persisting the file: "
-						+ exception.getMessage(), "Gateway");
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
+						"An Internal error was encountered while persisting the file: " + exception.getMessage(),
+						"Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
 
@@ -253,7 +267,8 @@ public class GatewayController {
 		} catch (JsonProcessingException exception) {
 			exception.printStackTrace();
 			logger.log(String.format("Error Creating Kafka Message for Job %s", jobId), PiazzaLogger.ERROR);
-			return new ErrorResponse(jobId, "Error Creating Message for Job", "Gateway");
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(jobId, "Error Creating Message for Job",
+					"Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 		// Fire off a Kafka Message and then wait for a ack response from the
@@ -263,16 +278,17 @@ public class GatewayController {
 		} catch (Exception exception) {
 			logger.log(String.format("Timeout sending Message for Job %s through Kafka: %s", jobId,
 					exception.getMessage()), PiazzaLogger.ERROR);
-			return new ErrorResponse(
-					jobId,
-					"The Gateway did not receive a response from Kafka; the request could not be forwarded along to Piazza.",
-					"Gateway");
+			return new ResponseEntity<PiazzaResponse>(
+					new ErrorResponse(
+							jobId,
+							"The Gateway did not receive a response from Kafka; the request could not be forwarded along to Piazza.",
+							"Gateway"), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 
 		logger.log(String.format("Sent Job %s with Kafka Topic %s and Key %s to Dispatcher.", jobId, message.topic(),
 				message.key()), PiazzaLogger.INFO);
 
 		// Respond immediately with the new Job GUID
-		return new PiazzaResponse(jobId);
+		return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(jobId), HttpStatus.CREATED);
 	}
 }
