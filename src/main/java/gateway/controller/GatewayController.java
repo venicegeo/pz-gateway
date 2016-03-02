@@ -17,6 +17,8 @@ package gateway.controller;
 
 import gateway.auth.AuthConnector;
 
+import java.security.Principal;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
@@ -116,7 +118,11 @@ public class GatewayController {
 	 */
 	@RequestMapping(value = "/job", method = RequestMethod.POST)
 	public ResponseEntity<PiazzaResponse> job(@RequestParam(required = true) String body,
-			@RequestParam(required = false) final MultipartFile file) {
+			@RequestParam(required = false) final MultipartFile file, Principal user) {
+
+		String userName = (user != null) ? user.getName() : null;
+		System.out.println("The currently authenticated user is: " + userName);
+
 		// Deserialize the incoming JSON to Request Model objects
 		PiazzaJobRequest request;
 		try {
@@ -124,8 +130,9 @@ public class GatewayController {
 		} catch (Exception exception) {
 			logger.log(String.format("An Invalid Job Request sent to the Gateway: %s", exception.getMessage()),
 					PiazzaLogger.WARNING);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Error Parsing Job Request: "
-					+ exception.getMessage(), "Gateway"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<PiazzaResponse>(
+					new ErrorResponse(null, "Error Parsing Job Request: " + exception.getMessage(), "Gateway"),
+					HttpStatus.BAD_REQUEST);
 		}
 
 		// Authenticate and Authorize the request
@@ -196,15 +203,17 @@ public class GatewayController {
 	 *            The file being uploaded
 	 * @return The response object, which will contain the Job ID
 	 */
-	private ResponseEntity<PiazzaResponse> sendRequestToDispatcherViaKafka(PiazzaJobRequest request, MultipartFile file) {
+	private ResponseEntity<PiazzaResponse> sendRequestToDispatcherViaKafka(PiazzaJobRequest request,
+			MultipartFile file) {
 		String jobId;
 		try {
 			// Create a GUID for this new Job from the UUIDGen component
 			jobId = uuidFactory.getUUID();
 		} catch (RestClientException exception) {
 			logger.log("Could not connect to UUID Service for UUID.", PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
-					"Could not generate Job ID. Core Piazza Components were not found (UUIDGen).", "UUIDGen"),
+			return new ResponseEntity<PiazzaResponse>(
+					new ErrorResponse(null,
+							"Could not generate Job ID. Core Piazza Components were not found (UUIDGen).", "UUIDGen"),
 					HttpStatus.SERVICE_UNAVAILABLE);
 		}
 
@@ -231,25 +240,28 @@ public class GatewayController {
 						// Only FileRepresentation objects can have a file
 						// attached to them. Otherwise, this is an invalid input
 						// and an error needs to be thrown.
-						return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
-								"The uploaded file cannot be attached to the specified Data Type: "
-										+ ingestJob.getData().getDataType().getType(), "Gateway"),
+						return new ResponseEntity<PiazzaResponse>(
+								new ErrorResponse(null,
+										"The uploaded file cannot be attached to the specified Data Type: "
+												+ ingestJob.getData().getDataType().getType(),
+										"Gateway"),
 								HttpStatus.BAD_REQUEST);
 					}
 				} else {
-					return new ResponseEntity<PiazzaResponse>(
-							new ErrorResponse(
-									null,
-									"Invalid input: Host parameter for an Ingest Job cannot be set to false if a file has been specified.",
-									"Gateway"), HttpStatus.BAD_REQUEST);
+					return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
+							"Invalid input: Host parameter for an Ingest Job cannot be set to false if a file has been specified.",
+							"Gateway"), HttpStatus.BAD_REQUEST);
 				}
 			} catch (AmazonServiceException awsServiceException) {
 				logger.log(String.format("AWS S3 Upload Error on Job %s: %s", jobId, awsServiceException.getMessage()),
 						PiazzaLogger.ERROR);
 				awsServiceException.printStackTrace();
-				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
-						"The file was rejected by Piazza persistent storage. Reason: "
-								+ awsServiceException.getMessage(), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<PiazzaResponse>(
+						new ErrorResponse(null,
+								"The file was rejected by Piazza persistent storage. Reason: "
+										+ awsServiceException.getMessage(),
+								"Gateway"),
+						HttpStatus.INTERNAL_SERVER_ERROR);
 			} catch (Exception exception) {
 				logger.log(String.format("Error Processing S3 Upload on Job %s: %s", jobId, exception.getMessage()),
 						PiazzaLogger.ERROR);
@@ -267,8 +279,9 @@ public class GatewayController {
 		} catch (JsonProcessingException exception) {
 			exception.printStackTrace();
 			logger.log(String.format("Error Creating Kafka Message for Job %s", jobId), PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(jobId, "Error Creating Message for Job",
-					"Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(
+					new ErrorResponse(jobId, "Error Creating Message for Job", "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 		// Fire off a Kafka Message and then wait for a ack response from the
@@ -278,11 +291,9 @@ public class GatewayController {
 		} catch (Exception exception) {
 			logger.log(String.format("Timeout sending Message for Job %s through Kafka: %s", jobId,
 					exception.getMessage()), PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(
-					new ErrorResponse(
-							jobId,
-							"The Gateway did not receive a response from Kafka; the request could not be forwarded along to Piazza.",
-							"Gateway"), HttpStatus.SERVICE_UNAVAILABLE);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(jobId,
+					"The Gateway did not receive a response from Kafka; the request could not be forwarded along to Piazza.",
+					"Gateway"), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 
 		logger.log(String.format("Sent Job %s with Kafka Topic %s and Key %s to Dispatcher.", jobId, message.topic(),

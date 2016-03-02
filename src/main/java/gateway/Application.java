@@ -15,11 +15,16 @@
  **/
 package gateway;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import gateway.auth.UserDetailsBean;
 
 @SpringBootApplication
 @ComponentScan({ "gateway, util" })
@@ -32,5 +37,17 @@ public class Application extends SpringBootServletInitializer {
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
+	}
+
+	@Configuration
+	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
+
+		@Autowired
+		private UserDetailsBean userService;
+		
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			http.x509().userDetailsService(userService).and().csrf().disable();
+		}
 	}
 }
