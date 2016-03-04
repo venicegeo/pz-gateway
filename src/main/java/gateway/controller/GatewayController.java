@@ -17,6 +17,11 @@ package gateway.controller;
 
 import gateway.auth.AuthConnector;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
@@ -290,5 +295,25 @@ public class GatewayController {
 
 		// Respond immediately with the new Job GUID
 		return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(jobId), HttpStatus.CREATED);
+	}
+
+	/**
+	 * Returns administrative statistics for this Gateway component.
+	 * 
+	 * @return Component information
+	 */
+	@RequestMapping(value = "/admin/stats", method = RequestMethod.GET)
+	public ResponseEntity<Map<String, Object>> getAdminStats() {
+		Map<String, Object> stats = new HashMap<String, Object>();
+		// Get S3 Metrics
+		stats.put("S3Location", s3Client.getBucketLocation(AMAZONS3_BUCKET_NAME));
+		// Get Kafka Producer Metrics
+		Iterator<?> iterator = producer.metrics().entrySet().iterator();
+		while (iterator.hasNext()) {
+			Entry<?, ?> pair = (Entry<?, ?>) iterator.next();
+			stats.put(pair.getKey().toString(), pair.getValue().toString());
+		}
+
+		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
 	}
 }
