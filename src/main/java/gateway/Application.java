@@ -15,21 +15,34 @@
  **/
 package gateway;
 
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.web.SpringBootServletInitializer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.AccessDecisionVoter;
+import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import gateway.auth.PiazzaAccessDecisionVoter;
 import gateway.auth.UserDetailsBean;
 
+/**
+ * Spring-boot configuration for the Gateway service.
+ * 
+ * @author Patrick.Doody, Russell.Orf
+ * 
+ */
 @SpringBootApplication
 @ComponentScan({ "gateway, util" })
 public class Application extends SpringBootServletInitializer {
-
+	
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
 		return builder.sources(Application.class);
@@ -38,7 +51,7 @@ public class Application extends SpringBootServletInitializer {
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}
-
+	
 	@Configuration
 	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 
@@ -47,7 +60,17 @@ public class Application extends SpringBootServletInitializer {
 		
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.x509().userDetailsService(userService).and().csrf().disable();
+			http
+				.x509().userDetailsService(userService)
+				.and()
+				.authorizeRequests().accessDecisionManager(accessDecisionManager()).anyRequest().authenticated()
+				.and()
+				.csrf().disable();
 		}
+
+		@Bean
+		public AccessDecisionManager accessDecisionManager() {
+			return new AffirmativeBased(Arrays.asList((AccessDecisionVoter<?>)new PiazzaAccessDecisionVoter()));
+		}	
 	}
 }

@@ -15,8 +15,6 @@
  **/
 package gateway.controller;
 
-import gateway.auth.AuthConnector;
-
 import java.security.Principal;
 
 import javax.annotation.PostConstruct;
@@ -61,7 +59,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 /**
  * Controller that handles the incoming POST requests to the Gateway service.
  * 
- * @author Patrick.Doody
+ * @author Patrick.Doody, Russell.Orf
  * 
  */
 @RestController
@@ -121,7 +119,7 @@ public class GatewayController {
 			@RequestParam(required = false) final MultipartFile file, Principal user) {
 
 		String userName = (user != null) ? user.getName() : null;
-		System.out.println("The currently authenticated user is: " + userName);
+		System.out.println("The currently authenticated, authorized user is: " + userName);
 
 		// Deserialize the incoming JSON to Request Model objects
 		PiazzaJobRequest request;
@@ -133,15 +131,6 @@ public class GatewayController {
 			return new ResponseEntity<PiazzaResponse>(
 					new ErrorResponse(null, "Error Parsing Job Request: " + exception.getMessage(), "Gateway"),
 					HttpStatus.BAD_REQUEST);
-		}
-
-		// Authenticate and Authorize the request
-		try {
-			AuthConnector.verifyAuth(request);
-		} catch (SecurityException securityEx) {
-			logger.log("Non-authorized connection to Gateway Blocked.", PiazzaLogger.WARNING);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Authentication Error", "Gateway"),
-					HttpStatus.UNAUTHORIZED);
 		}
 
 		// Determine if this Job is processed via synchronous REST, or via Kafka
@@ -187,8 +176,9 @@ public class GatewayController {
 			return new ResponseEntity<PiazzaResponse>(dispatcherResponse, status);
 		} catch (RestClientException exception) {
 			logger.log("Could not relay message to Dispatcher.", PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Error Processing Request: "
-					+ exception.getMessage(), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(
+					new ErrorResponse(null, "Error Processing Request: " + exception.getMessage(), "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
