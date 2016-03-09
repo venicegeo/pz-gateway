@@ -63,7 +63,7 @@ public class Application extends SpringBootServletInitializer {
 			http
 				.x509().userDetailsService(userService)
 				.and()
-				.authorizeRequests().accessDecisionManager(accessDecisionManager()).anyRequest().authenticated()
+				.authorizeRequests().accessDecisionManager(accessDecisionManager()).antMatchers("/job").authenticated()
 				.and()
 				.csrf().disable();
 		}
