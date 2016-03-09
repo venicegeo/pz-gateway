@@ -30,9 +30,11 @@ import messaging.job.KafkaClientFactory;
 import model.data.FileRepresentation;
 import model.data.location.FileLocation;
 import model.data.location.S3FileStore;
+import model.job.PiazzaJobType;
 import model.job.type.GetJob;
 import model.job.type.GetResource;
 import model.job.type.IngestJob;
+import model.request.FileRequest;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
@@ -60,6 +62,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Controller that handles the incoming POST requests to the Gateway service.
@@ -112,6 +115,39 @@ public class GatewayController {
 	}
 
 	/**
+	 * Requests a file that has been prepared by the Accessor component. This is
+	 * a separate method off of the /job endpoint because the return type is
+	 * greatly different.
+	 * 
+	 * @param body
+	 *            The JSON Payload of the FileRequestJob. All other Job Types
+	 *            will be invalid.
+	 */
+	@RequestMapping(value = "/file", method = RequestMethod.POST)
+	public ResponseEntity<byte[]> accessFile(@RequestParam(required = true) String body) throws Exception {
+		try {
+			// Parse the Request String
+			FileRequest request = new ObjectMapper().readValue(body, FileRequest.class);
+
+			// The Request object will contain the information needed to acquire
+			// the file bytes. Pass this off to the Dispatcher to get the file
+			// from the Access component.
+			ResponseEntity<byte[]> dispatcherResponse = restTemplate.getForEntity(
+					String.format("http://%s:%s/file/%s", DISPATCHER_HOST, DISPATCHER_PORT, request.dataId),
+					byte[].class);
+			logger.log(String.format("Sent File Request Job %s to Dispatcher.", request.dataId), PiazzaLogger.INFO);
+			// The status code of the response gets swallowed up no matter what
+			// we do. Infer the status code that we should use based on the type
+			// of Response the REST service responds with.
+			return dispatcherResponse;
+		} catch (Exception exception) {
+			String message = String.format("Error Sending Message to Dispatcher: %s", exception.getMessage());
+			logger.log(message, PiazzaLogger.ERROR);
+			throw new Exception(message);
+		}
+	}
+
+	/**
 	 * Handles an incoming Piazza Job request by passing it along from the
 	 * external users to the internal Piazza components.
 	 * 
@@ -144,11 +180,28 @@ public class GatewayController {
 
 		// Determine if this Job is processed via synchronous REST, or via Kafka
 		// message queues.
-		if ((request.jobType instanceof GetJob) || (request.jobType instanceof GetResource)) {
+		if (isSynchronousJob(request.jobType)) {
 			return sendRequestToDispatcherViaRest(request);
 		} else {
 			return sendRequestToDispatcherViaKafka(request, file);
 		}
+	}
+
+	/**
+	 * Determines if the Job Type is synchronous or not. Synchronous Jobs are
+	 * forwarded via REST, asynchronous jobs are forwarded via Kafka.
+	 * 
+	 * @param jobType
+	 *            The Job Type
+	 * @return true if synchronous based on the job contents, false if not
+	 */
+	private boolean isSynchronousJob(PiazzaJobType jobType) {
+		boolean isSynchronous = false;
+		// GET Jobs are always Synchronous
+		if ((jobType instanceof GetJob) || (jobType instanceof GetResource)) {
+			isSynchronous = true;
+		}
+		return isSynchronous;
 	}
 
 	/**
