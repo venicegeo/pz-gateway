@@ -1,7 +1,9 @@
 applications:
 - name: pz-gateway
   host: pz-gateway
+  path: pz-gateway.jar
+  buildpack: java_buildpack_offline
+  domain: test.geointservices.io
   memory: 512M
   instances: 1
   timeout: 80
-  path: pz-gateway.jar
