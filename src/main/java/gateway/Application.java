@@ -30,6 +30,8 @@ import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+
 import gateway.auth.PiazzaAccessDecisionVoter;
 import gateway.auth.UserDetailsBean;
 
@@ -67,6 +69,8 @@ public class Application extends SpringBootServletInitializer {
 				.antMatchers("/job").authenticated()
 				.antMatchers("/file").authenticated()
 				.antMatchers("/admin/**").authenticated()
+				.and()
+				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER)
 				.and()
 				.csrf().disable();
 		}
