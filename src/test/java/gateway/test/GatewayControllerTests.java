@@ -30,7 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import model.data.DataResource;
-import model.data.type.RasterResource;
+import model.data.type.RasterDataType;
 import model.job.Job;
 import model.job.JobProgress;
 import model.job.type.GetJob;
@@ -100,7 +100,7 @@ public class GatewayControllerTests {
 		mockIngestJob.progress = new JobProgress(50);
 
 		// Mock an Ingest Job Request
-		RasterResource raster = new RasterResource();
+		RasterDataType raster = new RasterDataType();
 		DataResource data = new DataResource();
 		data.dataType = raster;
 		IngestJob ingestJob = new IngestJob();
