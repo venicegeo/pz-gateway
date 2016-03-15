@@ -51,9 +51,19 @@ public class PiazzaAccessDecisionVoter implements AccessDecisionVoter<Object> {
 	public int vote(Authentication authentication, Object object, Collection attributes) {
 		HttpServletRequest req = ((FilterInvocation)object).getRequest();
 		
-		String requestedJobType;
 		try {
-			requestedJobType = ((PiazzaJobRequest)JobMessageFactory.parseRequestJson(req.getParameter("body"))).jobType.getType();
+			String requestedJobType;
+			String requestPathLower = req.getServletPath().toLowerCase();
+			
+			if( requestPathLower.startsWith("/admin") ) {
+				requestedJobType = "admin-stats"; 
+			}
+			else if( requestPathLower.startsWith("/file") ) {
+				requestedJobType = "access";
+			}
+			else {
+				requestedJobType = ((PiazzaJobRequest)JobMessageFactory.parseRequestJson(req.getParameter("body"))).jobType.getType();
+			}
 			
 			for( GrantedAuthority ga : authentication.getAuthorities() ) {
 				System.out.println("Checking requested " + requestedJobType + " against authorized " + ga.getAuthority());
