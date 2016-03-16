@@ -166,6 +166,7 @@ public class GatewayController {
 		PiazzaJobRequest request;
 		try {
 			request = JobMessageFactory.parseRequestJson(body);
+			request.userName = userName;
 		} catch (Exception exception) {
 			logger.log(String.format("An Invalid Job Request sent to the Gateway: %s", exception.getMessage()),
 					PiazzaLogger.WARNING);
