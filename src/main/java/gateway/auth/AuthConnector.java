@@ -28,7 +28,7 @@ public class AuthConnector {
 	 *             Authorization exception if the user is not allowed.
 	 */
 	public static void verifyAuth(PiazzaJobRequest jobRequest) throws SecurityException {
-		if (!(isAuthenticated(jobRequest.apiKey)) || !(isAuthorized(jobRequest))) {
+		if (!(isAuthenticated(jobRequest.userName)) || !(isAuthorized(jobRequest))) {
 			throw new SecurityException("Not authorized.");
 		}
 	}

@@ -107,7 +107,7 @@ public class GatewayControllerTests {
 		ingestJob.host = true;
 		ingestJob.data = data;
 		mockRequest = new PiazzaJobRequest();
-		mockRequest.apiKey = "Api-Key";
+		mockRequest.userName = "jsmith";
 		mockRequest.jobType = ingestJob;
 
 		// Mock the Kafka response that Producers will send. This will always
@@ -134,7 +134,7 @@ public class GatewayControllerTests {
 		// Mocking a Status Response for fetching Job Status from the Dispatcher
 		JobStatusResponse mockResponse = new JobStatusResponse(mockIngestJob);
 		PiazzaJobRequest mockRequest = new PiazzaJobRequest();
-		mockRequest.apiKey = UUID.randomUUID().toString();
+		mockRequest.userName = UUID.randomUUID().toString();
 		mockRequest.jobType = new GetJob(mockIngestJob.jobId);
 		String request = new ObjectMapper().writeValueAsString(mockRequest);
 
