@@ -34,6 +34,7 @@ import model.job.PiazzaJobType;
 import model.job.type.GetJob;
 import model.job.type.GetResource;
 import model.job.type.IngestJob;
+import model.job.type.SearchQueryJob;
 import model.request.FileRequest;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
@@ -181,9 +182,13 @@ public class GatewayController {
 		// Determine if this Job is processed via synchronous REST, or via Kafka
 		// message queues.
 		if (isSynchronousJob(request.jobType)) {
-			return sendRequestToDispatcherViaRest(request);
+			if (request.jobType instanceof SearchQueryJob) {
+				return performDispatcherPost(request);
+			} else {
+				return performDispatcherGet(request);
+			}
 		} else {
-			return sendRequestToDispatcherViaKafka(request, file);
+			return performDispatcherKafka(request, file);
 		}
 	}
 
@@ -197,11 +202,42 @@ public class GatewayController {
 	 */
 	private boolean isSynchronousJob(PiazzaJobType jobType) {
 		boolean isSynchronous = false;
-		// GET Jobs are always Synchronous
-		if ((jobType instanceof GetJob) || (jobType instanceof GetResource)) {
+		// GET Jobs are always Synchronous. TODO: Use interfaces for this,
+		// instead of static type checks.
+		if ((jobType instanceof GetJob) || (jobType instanceof GetResource) || (jobType instanceof SearchQueryJob)) {
 			isSynchronous = true;
 		}
 		return isSynchronous;
+	}
+
+	/**
+	 * Forwards a Search Query request to the internal Dispatcher component via
+	 * POST REST.
+	 * 
+	 * This method is separated out from the other Dispatcher REST method
+	 * because it uses a specific POST format, instead of GETS.
+	 * 
+	 * @param request
+	 *            The Job Request
+	 * @return The Response from the Dispatcher
+	 */
+	private ResponseEntity<PiazzaResponse> performDispatcherPost(PiazzaJobRequest request) {
+		try {
+			PiazzaResponse dispatcherResponse = restTemplate.postForObject(
+					String.format("http://%s:%s/%s", DISPATCHER_HOST, DISPATCHER_PORT, "search"), request.jobType,
+					PiazzaResponse.class);
+			logger.log(String.format("Sent Search Job to Dispatcher REST services"), PiazzaLogger.INFO);
+			// The status code of the response gets swallowed up no matter what
+			// we do. Infer the status code that we should use based on the type
+			// of Response the REST service responds with.
+			HttpStatus status = dispatcherResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			return new ResponseEntity<PiazzaResponse>(dispatcherResponse, status);
+		} catch (RestClientException exception) {
+			logger.log("Could not relay message to Dispatcher.", PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Error Processing Request: "
+					+ exception.getMessage(), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	/**
@@ -214,7 +250,7 @@ public class GatewayController {
 	 *            The Job Request
 	 * @return The response object
 	 */
-	private ResponseEntity<PiazzaResponse> sendRequestToDispatcherViaRest(PiazzaJobRequest request) {
+	private ResponseEntity<PiazzaResponse> performDispatcherGet(PiazzaJobRequest request) {
 		// REST GET request to Dispatcher to fetch the status of the Job ID.
 		// TODO: I would like a way to normalize this.
 		String id = null, serviceName = null;
@@ -254,7 +290,7 @@ public class GatewayController {
 	 *            The file being uploaded
 	 * @return The response object, which will contain the Job ID
 	 */
-	private ResponseEntity<PiazzaResponse> sendRequestToDispatcherViaKafka(PiazzaJobRequest request, MultipartFile file) {
+	private ResponseEntity<PiazzaResponse> performDispatcherKafka(PiazzaJobRequest request, MultipartFile file) {
 		String jobId;
 		try {
 			// Create a GUID for this new Job from the UUIDGen component
