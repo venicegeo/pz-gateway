@@ -9,3 +9,4 @@ applications:
   timeout: 80
   services:
     - pz-kafka
+    - pz-blobstore
