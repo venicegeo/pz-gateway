@@ -93,6 +93,15 @@
 		<packaging>jar</packaging>
 	</properties>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
 	<pluginRepositories>
 		<pluginRepository>
 			<id>spring-releases</id>
