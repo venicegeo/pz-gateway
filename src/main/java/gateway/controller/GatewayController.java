@@ -80,10 +80,8 @@ public class GatewayController {
 	private Producer<String, String> producer;
 	private RestTemplate restTemplate = new RestTemplate();
 	private AmazonS3 s3Client;
-	@Value("${kafka.host}")
-	private String KAFKA_HOST;
-	@Value("${kafka.port}")
-	private String KAFKA_PORT;
+	@Value("${vcap.services.pz-kafka.credentials.host:kafka.dev:9092}")
+	private String KAFKA_ADDRESS;
 	@Value("${kafka.group}")
 	private String KAFKA_GROUP;
 	@Value("${dispatcher.host}")
@@ -104,7 +102,10 @@ public class GatewayController {
 	 */
 	@PostConstruct
 	public void init() {
-		producer = KafkaClientFactory.getProducer(KAFKA_HOST, KAFKA_PORT);
+		// pz-kafka.credentials.host contains the host and port. It will be split up.
+		System.out.println(KAFKA_ADDRESS);
+		
+		producer = KafkaClientFactory.getProducer(KAFKA_ADDRESS.split(":")[0], KAFKA_ADDRESS.split(":")[1]);
 		// Connect to our S3 Bucket
 		BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
 		s3Client = new AmazonS3Client(credentials);
