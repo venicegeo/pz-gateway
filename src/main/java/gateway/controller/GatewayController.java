@@ -88,13 +88,13 @@ public class GatewayController {
 	private String DISPATCHER_HOST;
 	@Value("${dispatcher.port}")
 	private String DISPATCHER_PORT;
-	@Value("${s3.bucketname}")
+	@Value("${vcap.services.pz-blobstore.credentials.bucket:piazza-persist}")
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
-	@Value("${s3.key.access:}")
+	@Value("${vcap.services.pz-blobstore.credentials.access:}")
 	private String AMAZONS3_ACCESS_KEY;
-	@Value("${s3.key.private:}")
+	@Value("${vcap.services.pz-blobstore.credentials.private:}")
 	private String AMAZONS3_PRIVATE_KEY;
 
 	/**
