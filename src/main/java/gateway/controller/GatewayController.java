@@ -80,7 +80,7 @@ public class GatewayController {
 	private Producer<String, String> producer;
 	private RestTemplate restTemplate = new RestTemplate();
 	private AmazonS3 s3Client;
-	@Value("${vcap.services.pz-kafka.credentials.host:kafka.dev:9092}")
+	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
 	@Value("${kafka.group}")
 	private String KAFKA_GROUP;
@@ -88,7 +88,7 @@ public class GatewayController {
 	private String DISPATCHER_HOST;
 	@Value("${dispatcher.port}")
 	private String DISPATCHER_PORT;
-	@Value("${vcap.services.pz-blobstore.credentials.bucket:piazza-persist}")
+	@Value("${vcap.services.pz-blobstore.credentials.bucket}")
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;

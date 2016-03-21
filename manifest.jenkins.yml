@@ -10,3 +10,4 @@ applications:
   services:
     - pz-kafka
     - pz-blobstore
+    - pz-postgres
