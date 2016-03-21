@@ -88,6 +88,8 @@ public class GatewayController {
 	private String DISPATCHER_HOST;
 	@Value("${dispatcher.port}")
 	private String DISPATCHER_PORT;
+	@Value("${dispatcher.protocol}")
+	private String DISPATCHER_PROTOCOL;
 	@Value("${vcap.services.pz-blobstore.credentials.bucket}")
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${s3.domain}")
@@ -135,9 +137,8 @@ public class GatewayController {
 			// The Request object will contain the information needed to acquire
 			// the file bytes. Pass this off to the Dispatcher to get the file
 			// from the Access component.
-			ResponseEntity<byte[]> dispatcherResponse = restTemplate.getForEntity(
-					String.format("https://%s:%s/file/%s", DISPATCHER_HOST, DISPATCHER_PORT, request.dataId),
-					byte[].class);
+			ResponseEntity<byte[]> dispatcherResponse = restTemplate.getForEntity(String.format("%s://%s:%s/file/%s",
+					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, request.dataId), byte[].class);
 			logger.log(String.format("Sent File Request Job %s to Dispatcher.", request.dataId), PiazzaLogger.INFO);
 			// The status code of the response gets swallowed up no matter what
 			// we do. Infer the status code that we should use based on the type
@@ -226,8 +227,8 @@ public class GatewayController {
 	private ResponseEntity<PiazzaResponse> performDispatcherPost(PiazzaJobRequest request) {
 		try {
 			PiazzaResponse dispatcherResponse = restTemplate.postForObject(
-					String.format("https://%s:%s/%s", DISPATCHER_HOST, DISPATCHER_PORT, "search"), request.jobType,
-					PiazzaResponse.class);
+					String.format("%s://%s:%s/%s", DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, "search"),
+					request.jobType, PiazzaResponse.class);
 			logger.log(String.format("Sent Search Job to Dispatcher REST services"), PiazzaLogger.INFO);
 			// The status code of the response gets swallowed up no matter what
 			// we do. Infer the status code that we should use based on the type
@@ -264,9 +265,8 @@ public class GatewayController {
 			serviceName = "data";
 		}
 		try {
-			PiazzaResponse dispatcherResponse = restTemplate.getForObject(
-					String.format("https://%s:%s/%s/%s", DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id),
-					PiazzaResponse.class);
+			PiazzaResponse dispatcherResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
+					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id), PiazzaResponse.class);
 			logger.log(String.format("Sent Job %s to Dispatcher %s REST services", id, serviceName), PiazzaLogger.INFO);
 			// The status code of the response gets swallowed up no matter what
 			// we do. Infer the status code that we should use based on the type
