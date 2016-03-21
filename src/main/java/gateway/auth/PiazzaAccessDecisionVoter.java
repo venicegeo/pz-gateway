@@ -25,9 +25,15 @@ import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.FilterInvocation;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import messaging.job.JobMessageFactory;
+import model.job.type.RepeatJob;
 import model.request.PiazzaJobRequest;
+import model.response.JobStatusResponse;
 
 /**
  * Custom class responsible for voting on Authorization decisions
@@ -36,6 +42,14 @@ import model.request.PiazzaJobRequest;
  * 
  */
 public class PiazzaAccessDecisionVoter implements AccessDecisionVoter<Object> {
+	
+	private RestTemplate restTemplate = new RestTemplate();	
+	
+	private static String DISPATCHER_HOST = null;
+	
+	public PiazzaAccessDecisionVoter(String host) {
+		DISPATCHER_HOST = host;
+	}
 	
 	@Override
 	public boolean supports(ConfigAttribute attribute) {
@@ -48,22 +62,11 @@ public class PiazzaAccessDecisionVoter implements AccessDecisionVoter<Object> {
 	}
 
 	@Override
-	public int vote(Authentication authentication, Object object, Collection attributes) {
+	public int vote(Authentication authentication, Object object, Collection<ConfigAttribute> attributes) {
 		HttpServletRequest req = ((FilterInvocation)object).getRequest();
 		
 		try {
-			String requestedJobType;
-			String requestPathLower = req.getServletPath().toLowerCase();
-			
-			if( requestPathLower.startsWith("/admin") ) {
-				requestedJobType = "admin-stats"; 
-			}
-			else if( requestPathLower.startsWith("/file") ) {
-				requestedJobType = "access";
-			}
-			else {
-				requestedJobType = ((PiazzaJobRequest)JobMessageFactory.parseRequestJson(req.getParameter("body"))).jobType.getType();
-			}
+			String requestedJobType = getRequestedJobType(req);
 			
 			for( GrantedAuthority ga : authentication.getAuthorities() ) {
 				System.out.println("Checking requested " + requestedJobType + " against authorized " + ga.getAuthority());
@@ -71,10 +74,37 @@ public class PiazzaAccessDecisionVoter implements AccessDecisionVoter<Object> {
 					return 1;
 				}
 			}			
-		} catch (IOException e) {
+		} catch (Exception e) {
+			System.out.println("Exception occurred; could not authorize user due to: " + e.getMessage());
 			e.printStackTrace();
 		}
 		
-		return 0;
+		return -1;
+	}
+	
+	private String getRequestedJobType(HttpServletRequest req) throws JsonParseException, JsonMappingException, IOException {
+		String requestPathLower = req.getServletPath().toLowerCase();
+		
+		if( requestPathLower.startsWith("/admin") ) {
+			return "admin-stats"; 
+		}
+		else if( requestPathLower.startsWith("/file") ) {
+			return "access";
+		}
+		else {
+			PiazzaJobRequest pjr = (PiazzaJobRequest)JobMessageFactory.parseRequestJson(req.getParameter("body"));
+			String requestedJobType = pjr.jobType.getType();
+			
+			if( requestedJobType.equalsIgnoreCase("repeat") ) {
+				requestedJobType = getOriginalJobTypeForRepeatJob( ((RepeatJob)(pjr.jobType)).jobId );
+				System.out.println("Original job type is: " + requestedJobType);
+			}
+			return requestedJobType;
+		}
+	}
+	
+	private String getOriginalJobTypeForRepeatJob(String jobId) {
+		return restTemplate.getForObject(
+				String.format("http://%s/%s/%s", DISPATCHER_HOST, "job", jobId), JobStatusResponse.class).jobType;
 	}
 }

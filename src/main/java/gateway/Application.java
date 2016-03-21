@@ -18,6 +18,7 @@ package gateway;
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -44,7 +45,7 @@ import gateway.auth.UserDetailsBean;
 @SpringBootApplication
 @ComponentScan({ "gateway, util" })
 public class Application extends SpringBootServletInitializer {
-	
+
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
 		return builder.sources(Application.class);
@@ -59,6 +60,12 @@ public class Application extends SpringBootServletInitializer {
 
 		@Autowired
 		private UserDetailsBean userService;
+		
+		@Value("${dispatcher.port}")
+		private String DPORT;
+		
+		@Value("${dispatcher.host}")
+		private String DHOST;	
 		
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
@@ -77,7 +84,9 @@ public class Application extends SpringBootServletInitializer {
 
 		@Bean
 		public AccessDecisionManager accessDecisionManager() {
-			return new AffirmativeBased(Arrays.asList((AccessDecisionVoter<?>)new PiazzaAccessDecisionVoter()));
-		}	
+			String dispatcher = (DPORT == null || DPORT.trim().length() == 0) ? DHOST : DHOST + ":" + DPORT;
+
+			return new AffirmativeBased(Arrays.asList((AccessDecisionVoter<?>)new PiazzaAccessDecisionVoter(dispatcher)));
+		}
 	}
 }

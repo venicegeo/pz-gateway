@@ -92,18 +92,19 @@ public class GatewayControllerTests {
 	@Before
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
+		IngestJob ingestJob = new IngestJob();
 
 		// Mock an Ingest Job
 		mockIngestJob = new Job();
 		mockIngestJob.jobId = "Test-Job-ID";
 		mockIngestJob.status = StatusUpdate.STATUS_RUNNING;
 		mockIngestJob.progress = new JobProgress(50);
+		mockIngestJob.jobType = ingestJob;
 
 		// Mock an Ingest Job Request
 		RasterDataType raster = new RasterDataType();
 		DataResource data = new DataResource();
 		data.dataType = raster;
-		IngestJob ingestJob = new IngestJob();
 		ingestJob.host = true;
 		ingestJob.data = data;
 		mockRequest = new PiazzaJobRequest();
