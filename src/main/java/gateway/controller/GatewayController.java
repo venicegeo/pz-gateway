@@ -102,9 +102,10 @@ public class GatewayController {
 	 */
 	@PostConstruct
 	public void init() {
-		// pz-kafka.credentials.host contains the host and port. It will be split up.
+		// pz-kafka.credentials.host contains the host and port. It will be
+		// split up.
 		System.out.println(KAFKA_ADDRESS);
-		
+
 		producer = KafkaClientFactory.getProducer(KAFKA_ADDRESS.split(":")[0], KAFKA_ADDRESS.split(":")[1]);
 		// Connect to our S3 Bucket
 		BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
@@ -405,5 +406,14 @@ public class GatewayController {
 		}
 
 		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
+	}
+
+	/**
+	 * Health Check. Returns OK if this component is up and running.
+	 * 
+	 */
+	@RequestMapping(value = "/health", method = RequestMethod.GET)
+	public String healthCheck() {
+		return "OK";
 	}
 }
