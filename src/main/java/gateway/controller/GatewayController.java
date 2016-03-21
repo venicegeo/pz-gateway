@@ -104,14 +104,15 @@ public class GatewayController {
 	 */
 	@PostConstruct
 	public void init() {
-		// pz-kafka.credentials.host contains the host and port. It will be
-		// split up.
-		System.out.println(KAFKA_ADDRESS);
-
 		producer = KafkaClientFactory.getProducer(KAFKA_ADDRESS.split(":")[0], KAFKA_ADDRESS.split(":")[1]);
-		// Connect to our S3 Bucket
-		BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
-		s3Client = new AmazonS3Client(credentials);
+		// Connect to S3 Bucket. Only apply credentials if they are present.
+		if ((AMAZONS3_ACCESS_KEY.isEmpty()) && (AMAZONS3_PRIVATE_KEY.isEmpty())) {
+			s3Client = new AmazonS3Client();
+		} else {
+			BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
+			s3Client = new AmazonS3Client(credentials);
+		}
+
 	}
 
 	@PreDestroy
