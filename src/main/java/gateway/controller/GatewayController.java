@@ -80,23 +80,23 @@ public class GatewayController {
 	private Producer<String, String> producer;
 	private RestTemplate restTemplate = new RestTemplate();
 	private AmazonS3 s3Client;
-	@Value("${kafka.host}")
-	private String KAFKA_HOST;
-	@Value("${kafka.port}")
-	private String KAFKA_PORT;
+	@Value("${vcap.services.pz-kafka.credentials.host}")
+	private String KAFKA_ADDRESS;
 	@Value("${kafka.group}")
 	private String KAFKA_GROUP;
 	@Value("${dispatcher.host}")
 	private String DISPATCHER_HOST;
 	@Value("${dispatcher.port}")
 	private String DISPATCHER_PORT;
-	@Value("${s3.bucketname}")
+	@Value("${dispatcher.protocol}")
+	private String DISPATCHER_PROTOCOL;
+	@Value("${vcap.services.pz-blobstore.credentials.bucket}")
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
-	@Value("${s3.key.access:}")
+	@Value("${vcap.services.pz-blobstore.credentials.access:}")
 	private String AMAZONS3_ACCESS_KEY;
-	@Value("${s3.key.private:}")
+	@Value("${vcap.services.pz-blobstore.credentials.private:}")
 	private String AMAZONS3_PRIVATE_KEY;
 
 	/**
@@ -104,10 +104,15 @@ public class GatewayController {
 	 */
 	@PostConstruct
 	public void init() {
-		producer = KafkaClientFactory.getProducer(KAFKA_HOST, KAFKA_PORT);
-		// Connect to our S3 Bucket
-		BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
-		s3Client = new AmazonS3Client(credentials);
+		producer = KafkaClientFactory.getProducer(KAFKA_ADDRESS.split(":")[0], KAFKA_ADDRESS.split(":")[1]);
+		// Connect to S3 Bucket. Only apply credentials if they are present.
+		if ((AMAZONS3_ACCESS_KEY.isEmpty()) && (AMAZONS3_PRIVATE_KEY.isEmpty())) {
+			s3Client = new AmazonS3Client();
+		} else {
+			BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
+			s3Client = new AmazonS3Client(credentials);
+		}
+
 	}
 
 	@PreDestroy
@@ -133,9 +138,8 @@ public class GatewayController {
 			// The Request object will contain the information needed to acquire
 			// the file bytes. Pass this off to the Dispatcher to get the file
 			// from the Access component.
-			ResponseEntity<byte[]> dispatcherResponse = restTemplate.getForEntity(
-					String.format("http://%s:%s/file/%s", DISPATCHER_HOST, DISPATCHER_PORT, request.dataId),
-					byte[].class);
+			ResponseEntity<byte[]> dispatcherResponse = restTemplate.getForEntity(String.format("%s://%s:%s/file/%s",
+					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, request.dataId), byte[].class);
 			logger.log(String.format("Sent File Request Job %s to Dispatcher.", request.dataId), PiazzaLogger.INFO);
 			// The status code of the response gets swallowed up no matter what
 			// we do. Infer the status code that we should use based on the type
@@ -224,8 +228,8 @@ public class GatewayController {
 	private ResponseEntity<PiazzaResponse> performDispatcherPost(PiazzaJobRequest request) {
 		try {
 			PiazzaResponse dispatcherResponse = restTemplate.postForObject(
-					String.format("http://%s:%s/%s", DISPATCHER_HOST, DISPATCHER_PORT, "search"), request.jobType,
-					PiazzaResponse.class);
+					String.format("%s://%s:%s/%s", DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, "search"),
+					request.jobType, PiazzaResponse.class);
 			logger.log(String.format("Sent Search Job to Dispatcher REST services"), PiazzaLogger.INFO);
 			// The status code of the response gets swallowed up no matter what
 			// we do. Infer the status code that we should use based on the type
@@ -262,9 +266,8 @@ public class GatewayController {
 			serviceName = "data";
 		}
 		try {
-			PiazzaResponse dispatcherResponse = restTemplate.getForObject(
-					String.format("http://%s:%s/%s/%s", DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id),
-					PiazzaResponse.class);
+			PiazzaResponse dispatcherResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
+					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id), PiazzaResponse.class);
 			logger.log(String.format("Sent Job %s to Dispatcher %s REST services", id, serviceName), PiazzaLogger.INFO);
 			// The status code of the response gets swallowed up no matter what
 			// we do. Infer the status code that we should use based on the type
@@ -404,5 +407,14 @@ public class GatewayController {
 		}
 
 		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
+	}
+
+	/**
+	 * Health Check. Returns OK if this component is up and running.
+	 * 
+	 */
+	@RequestMapping(value = "/health", method = RequestMethod.GET)
+	public String healthCheck() {
+		return "OK";
 	}
 }
