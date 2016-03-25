@@ -26,6 +26,7 @@ import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.vote.AffirmativeBased;
@@ -56,6 +57,7 @@ public class Application extends SpringBootServletInitializer {
 	}
 	
 	@Configuration
+	@Profile("cloud")
 	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 
 		@Autowired
