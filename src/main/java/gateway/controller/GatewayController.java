@@ -35,6 +35,7 @@ import model.job.type.GetJob;
 import model.job.type.GetResource;
 import model.job.type.IngestJob;
 import model.job.type.SearchQueryJob;
+import model.job.type.SearchMetadataIngestJob;
 import model.request.FileRequest;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
@@ -186,7 +187,7 @@ public class GatewayController {
 		// Determine if this Job is processed via synchronous REST, or via Kafka
 		// message queues.
 		if (isSynchronousJob(request.jobType)) {
-			if (request.jobType instanceof SearchQueryJob) {
+			if ((request.jobType instanceof SearchQueryJob) || (request.jobType instanceof SearchMetadataIngestJob)) {
 				return performDispatcherPost(request);
 			} else {
 				return performDispatcherGet(request);
@@ -208,7 +209,8 @@ public class GatewayController {
 		boolean isSynchronous = false;
 		// GET Jobs are always Synchronous. TODO: Use interfaces for this,
 		// instead of static type checks.
-		if ((jobType instanceof GetJob) || (jobType instanceof GetResource) || (jobType instanceof SearchQueryJob)) {
+		if ((jobType instanceof GetJob) || (jobType instanceof GetResource) || (jobType instanceof SearchQueryJob)
+				|| (jobType instanceof SearchMetadataIngestJob)) {
 			isSynchronous = true;
 		}
 		return isSynchronous;
@@ -227,9 +229,11 @@ public class GatewayController {
 	 */
 	private ResponseEntity<PiazzaResponse> performDispatcherPost(PiazzaJobRequest request) {
 		try {
-			PiazzaResponse dispatcherResponse = restTemplate.postForObject(
-					String.format("%s://%s:%s/%s", DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, "search"),
-					request.jobType, PiazzaResponse.class);
+			String endpointString = (request.jobType instanceof SearchMetadataIngestJob) ? "searchmetadataingest"
+					: "search";
+			PiazzaResponse dispatcherResponse = restTemplate.postForObject(String.format("%s://%s:%s/%s",
+					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, endpointString), request.jobType,
+					PiazzaResponse.class);
 			logger.log(String.format("Sent Search Job to Dispatcher REST services"), PiazzaLogger.INFO);
 			// The status code of the response gets swallowed up no matter what
 			// we do. Infer the status code that we should use based on the type
