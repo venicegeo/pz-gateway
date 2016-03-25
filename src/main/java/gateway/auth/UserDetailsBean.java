@@ -43,14 +43,12 @@ public class UserDetailsBean implements UserDetailsService {
 	@Value("${pz.security.endpoint}")
 	private String SEC_ENDPOINT;
 
-	private static final String URI = "/roles/";
-
 	@Override
 	public UserDetails loadUserByUsername(String username) {
 		List<GrantedAuthority> gas = new ArrayList<GrantedAuthority>();
 
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<List> roles = restTemplate.getForEntity("http://" + SEC_ENDPOINT + URI + username, List.class);
+		ResponseEntity<List> roles = restTemplate.getForEntity("http://" + SEC_ENDPOINT + "/users/" + username + "/roles", List.class);
 
 		for (Object role : roles.getBody()) {
 			System.out.println("Adding " + username + " role: " + role);
