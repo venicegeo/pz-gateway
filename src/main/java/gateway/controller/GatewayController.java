@@ -234,7 +234,8 @@ public class GatewayController {
 			PiazzaResponse dispatcherResponse = restTemplate.postForObject(String.format("%s://%s:%s/%s",
 					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, endpointString), request.jobType,
 					PiazzaResponse.class);
-			logger.log(String.format("Sent Search Job to Dispatcher REST services"), PiazzaLogger.INFO);
+			logger.log(String.format("Sent Search Job For User %s to Dispatcher REST services", request.apiKey),
+					PiazzaLogger.INFO);
 			// The status code of the response gets swallowed up no matter what
 			// we do. Infer the status code that we should use based on the type
 			// of Response the REST service responds with.
