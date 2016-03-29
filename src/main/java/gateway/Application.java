@@ -61,7 +61,7 @@ public class Application extends SpringBootServletInitializer {
 	}
 	
 	@Configuration
-	@Profile("cloud")
+	@Profile({"cloud","localssl"})
 	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 
 		@Autowired
