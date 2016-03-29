@@ -65,6 +65,11 @@ public class PiazzaAccessDecisionVoter implements AccessDecisionVoter<Object> {
 	public int vote(Authentication authentication, Object object, Collection<ConfigAttribute> attributes) {
 		HttpServletRequest req = ((FilterInvocation)object).getRequest();
 		
+		//Authorized for pre-flight CORS request.
+		if( req.getMethod().equalsIgnoreCase("OPTIONS") ) {
+			return 1; 
+		}
+		
 		try {
 			String requestedJobType = getRequestedJobType(req);
 			
