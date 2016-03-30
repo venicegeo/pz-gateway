@@ -10,3 +10,5 @@ applications:
   services:
     - pz-kafka
     - pz-blobstore
+  env:
+    SPRING_PROFILES_ACTIVE: fade-stage
