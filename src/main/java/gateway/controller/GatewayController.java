@@ -30,16 +30,18 @@ import messaging.job.KafkaClientFactory;
 import model.data.FileRepresentation;
 import model.data.location.FileLocation;
 import model.data.location.S3FileStore;
+import model.job.Job;
 import model.job.PiazzaJobType;
 import model.job.type.GetJob;
 import model.job.type.GetResource;
 import model.job.type.IngestJob;
-import model.job.type.SearchQueryJob;
 import model.job.type.SearchMetadataIngestJob;
+import model.job.type.SearchQueryJob;
 import model.request.FileRequest;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
+import model.status.StatusUpdate;
 
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -184,16 +186,24 @@ public class GatewayController {
 					HttpStatus.UNAUTHORIZED);
 		}
 
+		// Get a Job ID
+		String jobId;
+		try {
+			// Create a GUID for this new Job from the UUIDGen component
+			jobId = uuidFactory.getUUID();
+		} catch (RestClientException exception) {
+			logger.log("Could not connect to UUID Service for UUID.", PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
+					"Could not generate Job ID. Core Piazza Components were not found (UUIDGen).", "UUIDGen"),
+					HttpStatus.SERVICE_UNAVAILABLE);
+		}
+
 		// Determine if this Job is processed via synchronous REST, or via Kafka
 		// message queues.
 		if (isSynchronousJob(request.jobType)) {
-			if ((request.jobType instanceof SearchQueryJob) || (request.jobType instanceof SearchMetadataIngestJob)) {
-				return performDispatcherPost(request);
-			} else {
-				return performDispatcherGet(request);
-			}
+			return processSynchronousJob(jobId, request);
 		} else {
-			return performDispatcherKafka(request, file);
+			return performDispatcherKafka(jobId, request, file);
 		}
 	}
 
@@ -217,6 +227,42 @@ public class GatewayController {
 	}
 
 	/**
+	 * Processes a Synchronous Job. This will send the Job to the appropriate
+	 * Dispatcher endpoint via REST.
+	 * 
+	 * @param jobId
+	 *            The ID of the Job
+	 * @param request
+	 *            The Job Request
+	 * @return The REST response from the Dispatcher
+	 */
+	private ResponseEntity<PiazzaResponse> processSynchronousJob(String jobId, PiazzaJobRequest request) {
+		try {
+			ResponseEntity<PiazzaResponse> response;
+			// Send the Job Status Message to the Job Manager
+			producer.send(JobMessageFactory.getJobManagerCreateJobMessage(new Job(request, jobId)));
+
+			// Proxy the REST request to the Dispatcher
+			if ((request.jobType instanceof SearchQueryJob) || (request.jobType instanceof SearchMetadataIngestJob)) {
+				response = performDispatcherPost(request);
+			} else {
+				response = performDispatcherGet(request);
+			}
+
+			// Update the Job Status with the Job Manager
+			StatusUpdate statusUpdate = new StatusUpdate(StatusUpdate.STATUS_SUCCESS);
+			producer.send(JobMessageFactory.getUpdateStatusMessage(jobId, statusUpdate));
+
+			// Return the Response
+			return response;
+		} catch (Exception exception) {
+			logger.log("Could not relay message to Dispatcher.", PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Error Processing Request: "
+					+ exception.getMessage(), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
 	 * Forwards a Search Query request to the internal Dispatcher component via
 	 * POST REST.
 	 * 
@@ -227,26 +273,20 @@ public class GatewayController {
 	 *            The Job Request
 	 * @return The Response from the Dispatcher
 	 */
-	private ResponseEntity<PiazzaResponse> performDispatcherPost(PiazzaJobRequest request) {
-		try {
-			String endpointString = (request.jobType instanceof SearchMetadataIngestJob) ? "searchmetadataingest"
-					: "search";
-			PiazzaResponse dispatcherResponse = restTemplate.postForObject(String.format("%s://%s:%s/%s",
-					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, endpointString), request.jobType,
-					PiazzaResponse.class);
-			logger.log(String.format("Sent Search Job For User %s to Dispatcher REST services", request.apiKey),
-					PiazzaLogger.INFO);
-			// The status code of the response gets swallowed up no matter what
-			// we do. Infer the status code that we should use based on the type
-			// of Response the REST service responds with.
-			HttpStatus status = dispatcherResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
-					: HttpStatus.OK;
-			return new ResponseEntity<PiazzaResponse>(dispatcherResponse, status);
-		} catch (RestClientException exception) {
-			logger.log("Could not relay message to Dispatcher.", PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Error Processing Request: "
-					+ exception.getMessage(), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+	private ResponseEntity<PiazzaResponse> performDispatcherPost(PiazzaJobRequest request) throws Exception {
+		String endpointString = (request.jobType instanceof SearchMetadataIngestJob) ? "searchmetadataingest"
+				: "search";
+		PiazzaResponse dispatcherResponse = restTemplate.postForObject(
+				String.format("%s://%s:%s/%s", DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, endpointString),
+				request.jobType, PiazzaResponse.class);
+		logger.log(String.format("Sent Search Job For User %s to Dispatcher REST services", request.apiKey),
+				PiazzaLogger.INFO);
+		// The status code of the response gets swallowed up no matter what
+		// we do. Infer the status code that we should use based on the type
+		// of Response the REST service responds with.
+		HttpStatus status = dispatcherResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+				: HttpStatus.OK;
+		return new ResponseEntity<PiazzaResponse>(dispatcherResponse, status);
 	}
 
 	/**
@@ -259,7 +299,7 @@ public class GatewayController {
 	 *            The Job Request
 	 * @return The response object
 	 */
-	private ResponseEntity<PiazzaResponse> performDispatcherGet(PiazzaJobRequest request) {
+	private ResponseEntity<PiazzaResponse> performDispatcherGet(PiazzaJobRequest request) throws Exception {
 		// REST GET request to Dispatcher to fetch the status of the Job ID.
 		// TODO: I would like a way to normalize this.
 		String id = null, serviceName = null;
@@ -270,21 +310,16 @@ public class GatewayController {
 			id = ((GetResource) request.jobType).getResourceId();
 			serviceName = "data";
 		}
-		try {
-			PiazzaResponse dispatcherResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
-					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id), PiazzaResponse.class);
-			logger.log(String.format("Sent Job %s to Dispatcher %s REST services", id, serviceName), PiazzaLogger.INFO);
-			// The status code of the response gets swallowed up no matter what
-			// we do. Infer the status code that we should use based on the type
-			// of Response the REST service responds with.
-			HttpStatus status = dispatcherResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
-					: HttpStatus.OK;
-			return new ResponseEntity<PiazzaResponse>(dispatcherResponse, status);
-		} catch (RestClientException exception) {
-			logger.log("Could not relay message to Dispatcher.", PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Error Processing Request: "
-					+ exception.getMessage(), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+
+		PiazzaResponse dispatcherResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
+				DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id), PiazzaResponse.class);
+		logger.log(String.format("Sent Job %s to Dispatcher %s REST services", id, serviceName), PiazzaLogger.INFO);
+		// The status code of the response gets swallowed up no matter what
+		// we do. Infer the status code that we should use based on the type
+		// of Response the REST service responds with.
+		HttpStatus status = dispatcherResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+				: HttpStatus.OK;
+		return new ResponseEntity<PiazzaResponse>(dispatcherResponse, status);
 	}
 
 	/**
@@ -292,24 +327,16 @@ public class GatewayController {
 	 * Kafka. This is meant for Jobs that will return a job ID, and are
 	 * potentially long-running, and are thus asynchronous.
 	 * 
+	 * @param jobId
+	 *            The ID of the Job
 	 * @param request
 	 *            The Job Request
 	 * @param file
 	 *            The file being uploaded
 	 * @return The response object, which will contain the Job ID
 	 */
-	private ResponseEntity<PiazzaResponse> performDispatcherKafka(PiazzaJobRequest request, MultipartFile file) {
-		String jobId;
-		try {
-			// Create a GUID for this new Job from the UUIDGen component
-			jobId = uuidFactory.getUUID();
-		} catch (RestClientException exception) {
-			logger.log("Could not connect to UUID Service for UUID.", PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
-					"Could not generate Job ID. Core Piazza Components were not found (UUIDGen).", "UUIDGen"),
-					HttpStatus.SERVICE_UNAVAILABLE);
-		}
-
+	private ResponseEntity<PiazzaResponse> performDispatcherKafka(String jobId, PiazzaJobRequest request,
+			MultipartFile file) {
 		// If an Ingest job, persist the file to the Amazon S3 filesystem
 		if (request.jobType instanceof IngestJob && file != null) {
 			try {
