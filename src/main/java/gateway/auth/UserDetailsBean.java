@@ -40,7 +40,7 @@ public class UserDetailsBean implements UserDetailsService {
 
 	private RestTemplate restTemplate = new RestTemplate();
 
-	@Value("${pz.security.endpoint}")
+	@Value("${pz.security.endpoint:}")
 	private String SEC_ENDPOINT;
 
 	@Override

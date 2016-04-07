@@ -10,6 +10,5 @@ applications:
   services:
     - pz-kafka
     - pz-blobstore
-    - pz-security
   env:
     SPRING_PROFILES_ACTIVE: cloud,fade-int

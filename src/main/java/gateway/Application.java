@@ -15,6 +15,9 @@
  **/
 package gateway;
 
+import gateway.auth.PiazzaAccessDecisionVoter;
+import gateway.auth.UserDetailsBean;
+
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +41,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import gateway.auth.PiazzaAccessDecisionVoter;
-import gateway.auth.UserDetailsBean;
-
 /**
  * Spring-boot configuration for the Gateway service.
  * 
@@ -59,41 +59,35 @@ public class Application extends SpringBootServletInitializer {
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}
-	
+
 	@Configuration
-	@Profile({"cloud","localssl"})
+	@Profile({ "ssl" })
 	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 
 		@Autowired
 		private UserDetailsBean userService;
-		
+
 		@Value("${dispatcher.port}")
 		private String DPORT;
-		
+
 		@Value("${dispatcher.host}")
-		private String DHOST;	
-		
+		private String DHOST;
+
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http
-				.addFilterBefore(corsFilter(), ChannelProcessingFilter.class)
-				.x509().userDetailsService(userService)
-				.and()
-				.authorizeRequests().accessDecisionManager(accessDecisionManager())
-				.antMatchers("/job").authenticated()
-				.antMatchers("/file").authenticated()
-				.antMatchers("/admin/**").authenticated()
-				.and()
-				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER)
-				.and()
-				.csrf().disable();
+			http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class).x509().userDetailsService(userService)
+					.and().authorizeRequests().accessDecisionManager(accessDecisionManager()).antMatchers("/job")
+					.authenticated().antMatchers("/file").authenticated().antMatchers("/admin/**").authenticated()
+					.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER).and().csrf()
+					.disable();
 		}
 
 		@Bean
 		public AccessDecisionManager accessDecisionManager() {
 			String dispatcher = (DPORT == null || DPORT.trim().length() == 0) ? DHOST : DHOST + ":" + DPORT;
 
-			return new AffirmativeBased(Arrays.asList((AccessDecisionVoter<?>)new PiazzaAccessDecisionVoter(dispatcher)));
+			return new AffirmativeBased(
+					Arrays.asList((AccessDecisionVoter<?>) new PiazzaAccessDecisionVoter(dispatcher)));
 		}
 
 		@Bean
