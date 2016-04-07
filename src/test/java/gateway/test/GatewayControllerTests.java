@@ -108,7 +108,7 @@ public class GatewayControllerTests {
 		ingestJob.host = true;
 		ingestJob.data = data;
 		mockRequest = new PiazzaJobRequest();
-		mockRequest.userName = "Api-Key";
+		mockRequest.userName = "jsmith";
 		mockRequest.jobType = ingestJob;
 
 		// Mock the Kafka response that Producers will send. This will always
