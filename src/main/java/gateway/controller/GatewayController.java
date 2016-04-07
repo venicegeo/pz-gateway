@@ -15,7 +15,7 @@
  **/
 package gateway.controller;
 
-import gateway.auth.AuthConnector;
+import java.security.Principal;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -71,7 +71,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Controller that handles the incoming POST requests to the Gateway service.
  * 
- * @author Patrick.Doody
+ * @author Patrick.Doody, Russell.Orf
  * 
  */
 @RestController
@@ -165,25 +165,21 @@ public class GatewayController {
 	 */
 	@RequestMapping(value = "/job", method = RequestMethod.POST)
 	public ResponseEntity<PiazzaResponse> job(@RequestParam(required = true) String body,
-			@RequestParam(required = false) final MultipartFile file) {
+			@RequestParam(required = false) final MultipartFile file, Principal user) {
+
+		String userName = (user != null) ? user.getName() : null;
+		System.out.println("The currently authenticated, authorized user is: " + userName);
+
 		// Deserialize the incoming JSON to Request Model objects
 		PiazzaJobRequest request;
 		try {
 			request = JobMessageFactory.parseRequestJson(body);
+			request.userName = userName;
 		} catch (Exception exception) {
 			logger.log(String.format("An Invalid Job Request sent to the Gateway: %s", exception.getMessage()),
 					PiazzaLogger.WARNING);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Error Parsing Job Request: "
 					+ exception.getMessage(), "Gateway"), HttpStatus.BAD_REQUEST);
-		}
-
-		// Authenticate and Authorize the request
-		try {
-			AuthConnector.verifyAuth(request);
-		} catch (SecurityException securityEx) {
-			logger.log("Non-authorized connection to Gateway Blocked.", PiazzaLogger.WARNING);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, "Authentication Error", "Gateway"),
-					HttpStatus.UNAUTHORIZED);
 		}
 
 		// Get a Job ID
@@ -279,7 +275,7 @@ public class GatewayController {
 		PiazzaResponse dispatcherResponse = restTemplate.postForObject(
 				String.format("%s://%s:%s/%s", DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, endpointString),
 				request.jobType, PiazzaResponse.class);
-		logger.log(String.format("Sent Search Job For User %s to Dispatcher REST services", request.apiKey),
+		logger.log(String.format("Sent Search Job For User %s to Dispatcher REST services", request.userName),
 				PiazzaLogger.INFO);
 		// The status code of the response gets swallowed up no matter what
 		// we do. Infer the status code that we should use based on the type
