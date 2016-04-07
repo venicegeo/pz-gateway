@@ -1,7 +1,0 @@
-applications:
-- name: pz-gateway
-  host: pz-gateway
-  memory: 512M
-  instances: 1
-  timeout: 80
-  path: pz-gateway.jar
