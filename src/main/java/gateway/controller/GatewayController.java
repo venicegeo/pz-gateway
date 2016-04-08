@@ -107,6 +107,7 @@ public class GatewayController {
 	 */
 	@PostConstruct
 	public void init() {
+		System.out.print("Paired with Dispatcher at " + DISPATCHER_HOST);
 		producer = KafkaClientFactory.getProducer(KAFKA_ADDRESS.split(":")[0], KAFKA_ADDRESS.split(":")[1]);
 		// Connect to S3 Bucket. Only apply credentials if they are present.
 		if ((AMAZONS3_ACCESS_KEY.isEmpty()) && (AMAZONS3_PRIVATE_KEY.isEmpty())) {
