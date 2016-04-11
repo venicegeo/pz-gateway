@@ -76,6 +76,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 @CrossOrigin
 @RestController
+@Deprecated
 public class GatewayController {
 	@Autowired
 	private PiazzaLogger logger;
