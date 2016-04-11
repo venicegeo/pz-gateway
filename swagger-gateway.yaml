@@ -477,6 +477,46 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /alert:
+    get:
+      summary: Get User Alerts
+      description: "Gets all of the Alerts for the currently authenticated user. Alerts occur when a Trigger's conditions are met."
+      tags:
+        - Workflow
+        - Alert
+      responses:
+        200:
+          description: "The list of Alerts owned by the current User."
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Alert'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /alert/{alertId}:
+    get:
+      summary: Get Alert Information
+      description: "Gets the metadata for a single Alert; referenced by ID."
+      parameters:
+        - name: alertId
+          in: path
+          description: "The ID of the Alert to retrieve metadata for."
+          required: true
+          type: string
+      tags:
+        - Workflow
+        - Alert
+      responses:
+        200:
+          description: "The Alert metadata."
+          schema:
+            $ref: '#/definitions/Alert'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 definitions:
   ErrorResponse:
     description: "The standard response object for an unexpected error within the Piazza core."
