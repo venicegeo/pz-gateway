@@ -333,6 +333,150 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /event/type:
+    post:
+      summary: Register an Event Type
+      description: "Defines an Event Type with the Workflow component, that defines a schema that Events can conform to and be fired for."
+      parameters:
+        - name: eventType
+          in: body
+          description: "The Event Type information. This defines the Schema for the Events that must be followed."
+          required: true
+          schema:
+            $ref: '#/definitions/EventType'
+      tags:
+        - Workflow
+        - Event Type
+      responses:
+        200:
+          description: "The ID of the newly created Event Type"
+          schema:
+            type: string
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    get:
+      summary: List Event Types
+      description: "Lists all Event Types that have been registered with the Piazza Workflow service."
+      tags:
+        - Workflow
+        - Event Type
+      responses:
+        200:
+          description: "The list of Event Types."
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/EventType'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /event:
+    post:
+      summary: Creates an Event
+      description: "Fires an Event with the Piazza Workflow component. Events must conform to an Event Type."
+      parameters:
+        - name: event
+          in: body
+          description: "The Event JSON object."
+          required: true
+          schema:
+            $ref: '#/definitions/Event'
+      tags:
+        - Workflow
+        - Event
+      responses:
+        200:
+          description: "The ID of the newly created Event"
+          schema:
+            type: string
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /trigger:
+    post:
+      summary: Creates a Trigger
+      description: "Creates a new Trigger with the Piazza Workflow component."
+      parameters:
+        - name: trigger
+          in: body
+          description: "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur."
+          required: true
+          schema:
+            $ref: '#/definitions/Trigger'
+      tags:
+        - Workflow
+        - Trigger
+      responses:
+        200:
+          description: "The ID of the newly created Trigger"
+          schema:
+            type: string
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    get:
+      summary: List Triggers
+      description: "Lists all of the defined Triggers in the Piazza Workflow component."
+      tags:
+        - Workflow
+        - Trigger
+      responses:
+        200:
+          description: "The list of Triggers."
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Trigger'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /trigger/{triggerId}:
+    get:
+      summary: Gets Metadata for a Trigger
+      description: "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID."
+      parameters:
+        - name: triggerId
+          in: path
+          description: "The ID of the Trigger to retrieve."
+          required: true
+          type: string
+      tags:
+        - Workflow
+        - Trigger
+      responses:
+        200:
+          description: "The Trigger metadata."
+          schema:
+            $ref: '#/definitions/Trigger'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    delete:
+      summary: Deletes a Trigger
+      description: "Deletes a Trigger with the Workflow component. This Trigger will no longer listen for conditions for events to fire."
+      parameters:
+        - name: triggerId
+          in: path
+          description: "The ID of the Trigger to delete."
+          required: true
+          type: string
+      tags:
+        - Workflow
+        - Trigger
+      responses:
+        200:
+          description: "Confirmation of Trigger deletion.."
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 definitions:
   ErrorResponse:
     description: "The standard response object for an unexpected error within the Piazza core."
