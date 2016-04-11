@@ -515,6 +515,74 @@ definitions:
       dataOutput: 
         type: object
         description: "The Output for the execution."
+  EventType:
+    type: object
+    description: "Describes an Event Type within Piazza Workflow component. This defines the schema for a specific type of event."
+    properties:
+      id:
+        type: string
+        description: "The unique identifier of this Event Type."
+      name:
+        type: string
+        description: "The human-readable name for this Event Type."
+      mapping:
+        type: object
+        description: "The map of key-value pairs that define the properties of this Event Type. The key is the name of the property, and the value is the type of that property. Valid types are 'string' and 'integer'."
+  Event:
+    type: object
+    description: "Describes an Event that can be triggered through Piazza Workflow component. Each Event conforms to an Event Type schema."
+    required:
+      - id
+      - eventtype_id
+      - data
+    properties:
+      id: 
+        type: string
+        description: "The unique identifier for this Event."
+      eventtype_id:
+        type: string
+        description: "The unique identifier of the Event Type whose schema this Event conforms to."
+      date: 
+        type: string
+        format: date-time
+        description: "The date and time that the Event has generated."
+      data:
+        type: object
+        description: "The populated values for the Key-value pairs defined by the Event Type's 'mapping' dictionary. Each value in this dictionary must be populated here under this 'data' property."
+  Trigger:
+    type: object
+    description: "Defines an action that is to be taken when a specific Event occurs."
+    properties:
+      id:
+        type: string
+        description: "The unique identifier for this Event."
+      title:
+        type: string
+        description: "The human-readable description of what this Trigger intends to accomplish."
+      condition:
+        type: object
+        description: "Defines the trigger conditions, the query replacements, and the Job to execute upon this object becoming Triggered."
+  Alert:
+    type: object
+    description: "Defines the event for when a Trigger has been fired based on a condition defined within that Trigger."
+    properties:
+      id: 
+        type: string
+        description: "The unique identifier for this Alert."
+      trigger_id:
+        type: string
+        description: "The unique identifier for the Trigger that was hit."
+      event_id:
+        type: string
+        description: "The unique identifier for the Event that triggered the Trigger."
+
+
+
+
+
+
+
+
 
 
 
