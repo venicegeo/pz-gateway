@@ -31,7 +31,7 @@ paths:
         200:
           description: "Information regarding the requested Job. At bare minimum, this will contain the Job ID of the Job that has been spawned as a result of the POSTed message. If more information is available, such as Status, it will also be included."
           schema:
-            $ref: '#/definitions/JobStatusResponse'
+            $ref: '#/definitions/JobStatus'
         default:
           description: "Unexpected Error"
           schema:
@@ -119,6 +119,53 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /data/query:
+    post:
+      summary: Query Metadata in Piazza Data holdings
+      description: "Sends a complex query message to the Piazza Search component, that allow users to search for loaded data. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information."
+      parameters:
+        - name: search
+          in: body
+          description: "The Query string for the Search component."
+          required: true
+          schema:
+            $ref: '#/definitions/SearchJob'
+      tags:
+        - Data
+        - Search
+      responses:
+        200:
+          description: "The list of Search results that match the query string."
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/DataResource'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /deployment:
+    post:
+      summary: Obtain a GeoServer deployment for a Data Resource object.
+      description: "Data that has been ingested into Piazza can be deployed to GeoServer. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed."
+      parameters:
+        - name: data
+          in: body
+          description: "The Data ID and deployment information for creating the Deployment"
+          required: true
+          schema:
+            $ref: '#/definitions/DeploymentJob'
+      tags:
+        - Data
+      responses:
+        200:
+          description: "The Deployment metadata for the newly created Deployment."
+          schema:
+            $ref: '#/definitions/Deployment'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 definitions:
   ErrorResponse:
     description: "The standard response object for an unexpected error within the Piazza core."
@@ -142,7 +189,7 @@ definitions:
       jobId:
         description: "The ID of the Job that has been created from the request."
         type: string
-  JobStatusResponse:
+  JobStatus:
     type: object
     description: "Represents the status of a Job in the Piazza system; either running or completed. Contains information such as progress, time remaining, errors encountered, Job results, or general Job Status."
     required:
@@ -202,11 +249,45 @@ definitions:
           host:
             description: "Dictates if Piazza should internally host the data or not. If set to true, then the data will be stored in Piazza's data holdings. If false, then Piazza will point to the location of the data, but will not store the data internally."
             type: boolean
-
-
-
-
-
+  SearchJob:
+    type: object
+    description: "Defines the payload for submitting a Search Request to Piazza data."
+    properties:
+      data:
+        description: "The ElasticSearch DSL Query string that will be forwarded to Piazza data holdings."
+        type: string
+  DeploymentJob:
+    type: object
+    description: "Defines the payload for submitting the request to create a Deployment for a Data Resource."
+    properties:
+      dataId:
+        type: string
+        description: "The Data ID of the Data to stand up as a Deployment service."
+      deploymentType:
+        type: string
+        description: "The type of deployment to create. By default, this value will be 'geoserver' and will create a GeoServer WFS/WMS/WCS service."
+  Deployment:
+    type: object
+    description: "Represents metadata for a Deployment (GeoServer, etc) of Piazza data."
+    properties:
+      id:
+        type: string
+        description: "The unique identifier for this Deployment."
+      dataId:
+        type: string
+        description: "The unique identifier of the Data that this deployment hosts."
+      host:
+        type: string
+        description: "The host name for the deployment server."
+      port:
+        type: string
+        description: "The port number for the deployment server."
+      layer:
+        type: string
+        description: "The layer name for the hosted service on the deployment server."
+      capabilitiesUrl:
+        type: string
+        description: "Fully qualified URL for accessing the GetCapabilities action for the deployment service."
 
 
 
