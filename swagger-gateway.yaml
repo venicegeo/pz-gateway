@@ -580,7 +580,7 @@ definitions:
     type: object
     description: "Defines a Data Resource in the Piazza core data holdings. Includes information as to the data's format, location, spatial content, and metadata."
     properties:
-      dataType:
+      data:
         description: "Polymorphically defines the information specific to this Data Resource, based on its format."
         type: object
       metadata:
