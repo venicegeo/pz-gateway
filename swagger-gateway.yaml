@@ -60,11 +60,12 @@ paths:
       summary: Abort Job
       description: "Cancels a Running Job. If the Job is already completed in some way, then cancellation will not occur."
       parameters:
-        - name: jobId
+        - name: abort
           in: path
           description: "ID of the Job to Cancel"
           required: true
-          type: string
+          schema:
+            $ref: '#/definitions/AbortJob'
       tags:
         - Job
       responses:
@@ -598,6 +599,18 @@ definitions:
           host:
             description: "Dictates if Piazza should internally host the data or not. If set to true, then the data will be stored in Piazza's data holdings. If false, then Piazza will point to the location of the data, but will not store the data internally."
             type: boolean
+  AbortJob:
+    type: object
+    description: "Defines the payload for requesting a running Piazza Job to be cancelled."
+    required:
+      - jobId
+    properties:
+      jobId:
+        type: string
+        description: "The ID of the Job to cancel."
+      reason:
+        type: string
+        description: "The reason for the job to be cancelled. This is tracked within the Job table for quality control purposes."
   SearchJob:
     type: object
     description: "Defines the payload for submitting a Search Request to Piazza data."
