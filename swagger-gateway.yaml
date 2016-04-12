@@ -62,16 +62,20 @@ paths:
       parameters:
         - name: jobId
           in: path
-          description: "ID of the Job to Cancel"
+          description: "ID of the Job to cancel."
           required: true
           type: string
+        - name: abort
+          in: body
+          description: "Details for the cancellation of the Job."
+          required: false
+          schema:
+            $ref: '#/definitions/AbortDetails'
       tags:
         - Job
       responses:
         200:
           description: "The Job has requested to be cancelled. This may take some time, as the process may not be in an easily cancelled state at the time the request is made."
-          schema:
-            $ref: '#/definitions/JobResponse'
         default:
           description: "Unexpected Error"
           schema:
@@ -580,7 +584,7 @@ definitions:
     type: object
     description: "Defines a Data Resource in the Piazza core data holdings. Includes information as to the data's format, location, spatial content, and metadata."
     properties:
-      dataType:
+      data:
         description: "Polymorphically defines the information specific to this Data Resource, based on its format."
         type: object
       metadata:
@@ -598,6 +602,13 @@ definitions:
           host:
             description: "Dictates if Piazza should internally host the data or not. If set to true, then the data will be stored in Piazza's data holdings. If false, then Piazza will point to the location of the data, but will not store the data internally."
             type: boolean
+  AbortDetails:
+    type: object
+    description: "Defines the payload for requesting a running Piazza Job to be cancelled."
+    properties:
+      reason:
+        type: string
+        description: "The reason for the job to be cancelled. This is tracked within the Job table for quality control purposes."
   SearchJob:
     type: object
     description: "Defines the payload for submitting a Search Request to Piazza data."
@@ -640,17 +651,21 @@ definitions:
   Service:
     type: object
     description: "Represents an external service that is registered through Piazza. External services registered can be invoked directly by Piazza, and will have their inputs and outputs validated as part of the Piazza brokering. Service objects are described by their endpoint URL, their inputs and outputs, and other metadata including availability and classification."
-    allOf:
-      - $ref: '#/definitions/ResourceMetadata'
-      - required:
-        - id
-        properties:
-          id:
-            description: "The unique identifier of the Service."
-            type: string
-          name:
-            description: "Human-readable identifier for the service."
-            type: string
+    properties:
+      id:
+        description: "The unique identifier of the Service."
+        type: string
+      name:
+        description: "Human-readable identifier for the service."
+        type: string
+      resourceMetadata:
+        $ref: '#/definitions/ResourceMetadata'
+      inputs:
+        type: object
+        description: "The inputs that the service expects to be provided."
+      outputs:
+        type: object
+        description: "The outputs that the service expects to provide upon successful execution."
   ResourceMetadata:
     type: object
     description: "Describes general Metadata containers for certain types of metadata that apply to Piazza Services and Data. Such as classification, author, availability, etc. All properties for Metadata are optional, and none are enforced or required. However, good practice dictates to specify as much metadata as possible when able."
