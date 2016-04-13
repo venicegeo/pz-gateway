@@ -355,12 +355,12 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /event/{eventType}:
+  /event/{eventTypeId}:
     get:
       summary: Get Events of a Specific Type
       description: "Retrieves all Events of the Specific Type."
       parameters:
-        - name: eventType
+        - name: eventTypeId
           in: path
           description: "The name of the Event Type."
           required: true
@@ -383,7 +383,7 @@ paths:
       summary: Creates an Event for the Event Type
       description: "Fires an Event with the Piazza Workflow component. Events must conform to the specified Event Type."
       parameters:
-        - name: eventType
+        - name: eventTypeId
           in: path
           description: "The Event Type that the Event conforms to."
           required: true
