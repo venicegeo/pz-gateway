@@ -337,7 +337,127 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /event/type:
+  /event:
+    get:
+      summary: Get all Events
+      description: "Retrieves a list of all Events."
+      tags:
+        - Workflow
+        - Event
+      responses:
+        200:
+          description: "The list of Events."
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Event'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /event/{eventType}:
+    get:
+      summary: Get Events of a Specific Type
+      description: "Retrieves all Events of the Specific Type."
+      parameters:
+        - name: eventType
+          in: path
+          description: "The name of the Event Type."
+          required: true
+          type: string
+      tags:
+        - Workflow
+        - Event
+      responses:
+        200:
+          description: "The list of Events."
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Event'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    post:
+      summary: Creates an Event for the Event Type
+      description: "Fires an Event with the Piazza Workflow component. Events must conform to the specified Event Type."
+      parameters:
+        - name: eventType
+          in: path
+          description: "The Event Type that the Event conforms to."
+          required: true
+          type: string
+        - name: event
+          in: body
+          description: "The Event JSON object."
+          required: true
+          schema:
+            $ref: '#/definitions/Event'
+      tags:
+        - Workflow
+        - Event
+      responses:
+        200:
+          description: "The ID of the newly created Event"
+          schema:
+            type: string
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /event/{eventTypeId}/{eventId}:
+    get:
+      summary: Get a specifc Event
+      description: "Gets a specific Event by it's ID, that corresponds with the Event Type."
+      parameters:
+        - name: eventTypeId
+          in: path
+          description: "The Event Type that the Event implements."
+          required: true
+          type: string
+        - name: eventId
+          in: path
+          description: "The Event ID for the event to retrieve."
+          required: true
+          type: string
+      tags:
+        - Workflow
+        - Event
+      responses:
+        200:
+          description: "The requested Event."
+          schema:
+            $ref: '#/definitions/Event'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    delete:
+      summary: Delete a specific Event
+      description: "Deletes a specific Event by it's ID, that corresponds with the Event Type."
+      parameters:
+        - name: eventTypeId
+          in: path
+          description: "The Event Type that the Event implements."
+          required: true
+          type: string
+        - name: eventId
+          in: path
+          description: "The Event ID for the event to retrieve."
+          required: true
+          type: string
+      tags:
+        - Workflow
+        - Event
+      responses:
+        200:
+          description: "Confirmation of delete."
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /eventType:
     post:
       summary: Register an Event Type
       description: "Defines an Event Type with the Workflow component, that defines a schema that Events can conform to and be fired for."
@@ -377,25 +497,43 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /event:
-    post:
-      summary: Creates an Event
-      description: "Fires an Event with the Piazza Workflow component. Events must conform to an Event Type."
+  /eventType/{eventTypeId}:
+    get:
+      summary: Get an Event Type
+      description: "Returns the metadata for a specific Event Type by its unique identifier."
       parameters:
-        - name: event
-          in: body
-          description: "The Event JSON object."
+        - name: eventTypeId
+          in: path
+          description: "The unique identifier for the Event Type."
           required: true
-          schema:
-            $ref: '#/definitions/Event'
+          type: string
       tags:
         - Workflow
-        - Event
+        - Event Type
       responses:
         200:
-          description: "The ID of the newly created Event"
+          description: "The Event Type metadata."
           schema:
-            type: string
+            $ref: '#/definitions/EventType'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    delete:
+      summary: Delete an Event Type
+      description: "Deletes a specific Event Type, specified by its unique identifier."
+      parameters:
+        - name: eventTypeId
+          in: path
+          description: "The unique identifier for the Event Type to delete."
+          required: true
+          type: string
+      tags:
+        - Workflow
+        - Event Type
+      responses:
+        200:
+          description: "Confirmation of Event Type deletion."
         default:
           description: "Unexpected Error"
           schema:
@@ -517,6 +655,25 @@ paths:
           description: "The Alert metadata."
           schema:
             $ref: '#/definitions/Alert'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    delete:
+      summary: Delete Alert
+      description: "Deletes an Alert; referenced by ID."
+      parameters:
+        - name: alertId
+          in: path
+          description: "The ID of the Alert to Delete."
+          required: true
+          type: string
+      tags:
+        - Workflow
+        - Alert
+      responses:
+        200:
+          description: "Confirmation of Delete."
         default:
           description: "Unexpected Error"
           schema:
