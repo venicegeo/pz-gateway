@@ -21,7 +21,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import gateway.controller.GatewayController;
+import gateway.controller.LegacyController;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,7 +81,7 @@ public class GatewayControllerTests {
 	@Mock
 	private AmazonS3 s3Client;
 	@InjectMocks
-	private GatewayController gatewayController;
+	private LegacyController gatewayController;
 
 	private Job mockIngestJob;
 	private PiazzaJobRequest mockRequest;

@@ -71,13 +71,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Controller that handles the incoming POST requests to the Gateway service.
  * 
+ * This controller is now legacy.
+ * 
  * @author Patrick.Doody, Russell.Orf
  * 
  */
 @CrossOrigin
 @RestController
 @Deprecated
-public class GatewayController {
+public class LegacyController {
 	@Autowired
 	private PiazzaLogger logger;
 	@Autowired
