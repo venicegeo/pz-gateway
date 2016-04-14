@@ -5,14 +5,20 @@ import java.security.Principal;
 import javax.annotation.PostConstruct;
 
 import messaging.job.KafkaClientFactory;
+import model.response.ErrorResponse;
+import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 
 import util.PiazzaLogger;
+import util.UUIDFactory;
 
 /**
  * Utility class that defines common procedures for handling requests,
@@ -23,6 +29,8 @@ import util.PiazzaLogger;
  */
 @Component
 public class GatewayUtil {
+	@Autowired
+	private UUIDFactory uuidFactory;
 	@Autowired
 	PiazzaLogger logger;
 	@Value("${vcap.services.pz-kafka.credentials.host}")
@@ -53,6 +61,19 @@ public class GatewayUtil {
 	 */
 	public void sendKafkaMessage(ProducerRecord<String, String> message) throws Exception {
 		producer.send(message).get();
+	}
+
+	/**
+	 * Gets a UUID from the Piazza UUID Factory.
+	 * 
+	 * @return UUID
+	 */
+	public String getUuid() throws Exception {
+		try {
+			return uuidFactory.getUUID();
+		} catch (Exception exception) {
+			throw new Exception(String.format("Could not connect to UUID Service for UUID: %s", exception.getMessage()));
+		}
 	}
 
 	/**

@@ -6,6 +6,7 @@ import java.security.Principal;
 
 import messaging.job.JobMessageFactory;
 import model.job.type.AbortJob;
+import model.job.type.RepeatJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import util.PiazzaLogger;
+import util.UUIDFactory;
 
 /**
  * Controller that defines REST end points dealing with Job interactions such as
@@ -58,7 +60,7 @@ public class JobController {
 	 *            The ID of the Job.
 	 * @param user
 	 *            User information
-	 * @return The response. Contains Job Status, or an appropriate Error.
+	 * @return Contains Job Status, or an appropriate Error.
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.GET)
 	public ResponseEntity<PiazzaResponse> getJobStatus(@PathVariable(value = "jobId") String jobId, Principal user) {
@@ -78,7 +80,7 @@ public class JobController {
 			exception.printStackTrace();
 			String error = String.format("Error requesting Job Status for ID %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(jobId, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -92,17 +94,19 @@ public class JobController {
 	 *            The ID of the Job to delete.
 	 * @param user
 	 *            User information
-	 * @return
+	 * @return No response body if successful, or an appropriate Error
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> abortJob(@PathVariable(value = "jobId") String jobId,
 			@RequestParam(value = "reason", required = false) String reason, Principal user) {
 		try {
+			// Get a Job ID
+			String newJobId = gatewayUtil.getUuid();
 			// Create the Kafka request object
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.userName = gatewayUtil.getPrincipalName(user);
 			request.jobType = new AbortJob(jobId, reason);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, jobId);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId);
 			// Send the Message
 			try {
 				gatewayUtil.sendKafkaMessage(message);
@@ -112,18 +116,67 @@ public class JobController {
 				String error = String.format("Error Sending Kafka Message for %s Job %s: %s", "Abort", jobId,
 						exception.getMessage());
 				logger.log(error, PiazzaLogger.ERROR);
-				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(jobId, error, "Gateway"),
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 						HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 			// Log the request
-			logger.log(
-					String.format("User %s requested Job Abort for Job ID %s with reason %s",
-							gatewayUtil.getPrincipalName(user), jobId, reason), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Job Abort for Job ID %s with reason %s , tracked by Job ID %s",
+					gatewayUtil.getPrincipalName(user), jobId, reason, newJobId), PiazzaLogger.INFO);
 			// Respond
 			return new ResponseEntity<Void>(HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error requesting Job Abort for ID %s: %s", jobId, exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Repeats a Job that has previously been submitted to Piazza. This will
+	 * spawn a new Job with new corresponding ID.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/put_job_jobId
+	 * 
+	 * @param jobId
+	 *            The ID of the Job to repeat.
+	 * @param user
+	 *            User information
+	 * @return Response containing the ID of the newly created Job, or
+	 *         appropriate error
+	 */
+	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.PUT)
+	public ResponseEntity<PiazzaResponse> repeatJob(@PathVariable(value = "jobId") String jobId, Principal user) {
+		try {
+			// Get a Job ID
+			String newJobId = gatewayUtil.getUuid();
+			// Create the Kafka request object
+			PiazzaJobRequest request = new PiazzaJobRequest();
+			request.userName = gatewayUtil.getPrincipalName(user);
+			request.jobType = new RepeatJob(jobId);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId);
+			// Send the Message
+			try {
+				gatewayUtil.sendKafkaMessage(message);
+			} catch (Exception exception) {
+				exception.printStackTrace();
+				// Handle Kafka errors
+				String error = String.format("Error Sending Kafka Message for %s Job %s: %s", "Repeat", jobId,
+						exception.getMessage());
+				logger.log(error, PiazzaLogger.ERROR);
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+			// Log the request
+			logger.log(
+					String.format("User %s requested to Repeat Job %s. New Job created under ID %s",
+							gatewayUtil.getPrincipalName(user), jobId, newJobId), PiazzaLogger.INFO);
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(newJobId), HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Repeating Job ID %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
