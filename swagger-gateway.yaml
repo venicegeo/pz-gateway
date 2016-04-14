@@ -868,7 +868,7 @@ definitions:
     properties:
       result:
         description: "A reference to the Result of the Job. This could be a Resource ID, or a Service ID, in certain cases. Or perhaps an error if the Job encountered an error during processing."
-        type: string
+        type: object
       status:
         description: "The status of the Job. Submitted, Running, Success, Error, or Failure."
         type: string
