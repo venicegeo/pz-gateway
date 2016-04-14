@@ -104,6 +104,36 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
   /data:
+    get:
+      summary: Query Piazza Data
+      description: "Sends a simple GET Query for fetching lists of Piazza Data."
+      parameters:
+        - name: keyword
+          in: query
+          description: "A general keyword search to apply to all Datasets."
+          required: false
+          type: string
+        - name: page
+          in: query
+          description: "Paginating large datasets. This will determine the starting page for the query."
+          required: false
+          type: number
+        - name: per_page
+          in: query
+          description: "The number of results to be returned per query."
+          required: false
+          type: number
+      tags:
+        - Data
+      responses:
+        200:
+          description: "The list of Search results that match the query string."
+          schema:
+              $ref: '#/definitions/DataResourceResults'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       summary: Load Data into Piazza
       description: "Loads data into the Piazza Core metadata holdings. Piazza can either host the data, or reflect an external location where the data is stored. Data must be loaded into Piazza before core components such as the Service Controller, or other external services, are able to consume that data."
@@ -225,6 +255,11 @@ paths:
           description: "The ID of the Data to download."
           required: true
           type: string
+        - name: fileName
+          in: query
+          description: "Specify the name of the file that the user wishes to retrieve the data as. This will set the content-disposition header."
+          required: false
+          type: string
       tags:
         - Data
       responses:
@@ -253,7 +288,7 @@ paths:
         200:
           description: "The ID of the newly created Service"
           schema:
-            type: string
+            $ref: '#/definitions/ServiceResponse'
         default:
           description: "Unexpected Error"
           schema:
@@ -261,15 +296,65 @@ paths:
     get:
       summary: Retrieve list of Services
       description: "Retrieves the list of available Services currently registered to this Piazza system."
+      parameters:
+        - name: keyword
+          in: query
+          description: "A general keyword search to apply to all Services."
+          required: false
+          type: string
+        - name: userName
+          in: query
+          description: "Filter for the username that published the service."
+          required: false
+          type: string
+        - name: page
+          in: query
+          description: "Paginating large results. This will determine the starting page for the query."
+          required: false
+          type: number
+        - name: per_page
+          in: query
+          description: "The number of results to be returned per query."
+          required: false
+          type: number
       tags:
         - Service
       responses:
         200:
           description: "The list of Services registered to Piazza."
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Service'
+              $ref: '#/definitions/ServiceResults'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /service/me:
+    get:
+      summary: Returns current user Services
+      description: "Returns all of the Services that are registered and owned by the currently logged in user. This request is roughly equivalent to the /service endpoint, but will implicitly fill in the username property based on the username of the request."
+      parameters:
+        - name: keyword
+          in: query
+          description: "A general keyword search to apply to all Services."
+          required: false
+          type: string
+        - name: page
+          in: query
+          description: "Paginating large results. This will determine the starting page for the query."
+          required: false
+          type: number
+        - name: per_page
+          in: query
+          description: "The number of results to be returned per query."
+          required: false
+          type: number
+      tags:
+        - Service
+      responses:
+        200:
+          description: "The list of Services registered to Piazza for the currently logged in user."
+          schema:
+              $ref: '#/definitions/ServiceResults'
         default:
           description: "Unexpected Error"
           schema:
@@ -341,6 +426,17 @@ paths:
     get:
       summary: Get all Events
       description: "Retrieves a list of all Events."
+      parameters:
+        - name: page
+          in: query
+          description: "Paginating large numbers of results. This will determine the starting page for the query."
+          required: false
+          type: number
+        - name: per_page
+          in: query
+          description: "The number of results to be returned per query."
+          required: false
+          type: number
       tags:
         - Workflow
         - Event
@@ -348,9 +444,7 @@ paths:
         200:
           description: "The list of Events."
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Event'
+            $ref: '#/definitions/EventResults'
         default:
           description: "Unexpected Error"
           schema:
@@ -401,7 +495,7 @@ paths:
         200:
           description: "The ID of the newly created Event"
           schema:
-            type: string
+            $ref: '#/definitions/EventResponse'
         default:
           description: "Unexpected Error"
           schema:
@@ -475,7 +569,7 @@ paths:
         200:
           description: "The ID of the newly created Event Type"
           schema:
-            type: string
+            $ref: '#/definitions/EventTypeResponse'
         default:
           description: "Unexpected Error"
           schema:
@@ -483,6 +577,17 @@ paths:
     get:
       summary: List Event Types
       description: "Lists all Event Types that have been registered with the Piazza Workflow service."
+      parameters:
+        - name: page
+          in: query
+          description: "Paginating large numbers of results. This will determine the starting page for the query."
+          required: false
+          type: number
+        - name: per_page
+          in: query
+          description: "The number of results to be returned per query."
+          required: false
+          type: number
       tags:
         - Workflow
         - Event Type
@@ -490,9 +595,7 @@ paths:
         200:
           description: "The list of Event Types."
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/EventType'
+            $ref: '#/definitions/EventTypeResults'
         default:
           description: "Unexpected Error"
           schema:
@@ -556,7 +659,7 @@ paths:
         200:
           description: "The ID of the newly created Trigger"
           schema:
-            type: string
+            $ref: '#/definitions/TriggerResponse'
         default:
           description: "Unexpected Error"
           schema:
@@ -564,6 +667,17 @@ paths:
     get:
       summary: List Triggers
       description: "Lists all of the defined Triggers in the Piazza Workflow component."
+      parameters:
+        - name: page
+          in: query
+          description: "Paginating large numbers of results. This will determine the starting page for the query."
+          required: false
+          type: number
+        - name: per_page
+          in: query
+          description: "The number of results to be returned per query."
+          required: false
+          type: number
       tags:
         - Workflow
         - Trigger
@@ -571,9 +685,7 @@ paths:
         200:
           description: "The list of Triggers."
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Trigger'
+            $ref: '#/definitions/TriggerResults'
         default:
           description: "Unexpected Error"
           schema:
@@ -623,6 +735,17 @@ paths:
     get:
       summary: Get User Alerts
       description: "Gets all of the Alerts for the currently authenticated user. Alerts occur when a Trigger's conditions are met."
+      parameters:
+        - name: page
+          in: query
+          description: "Paginating large numbers of results. This will determine the starting page for the query."
+          required: false
+          type: number
+        - name: per_page
+          in: query
+          description: "The number of results to be returned per query."
+          required: false
+          type: number
       tags:
         - Workflow
         - Alert
@@ -630,9 +753,7 @@ paths:
         200:
           description: "The list of Alerts owned by the current User."
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Alert'
+            $ref: '#/definitions/AlertResults'
         default:
           description: "Unexpected Error"
           schema:
@@ -701,6 +822,42 @@ definitions:
       jobId:
         description: "The ID of the Job that has been created from the request."
         type: string
+  ServiceResponse:
+    type: object
+    description: "A response specifying the ID of a newly created service, or an updated service."
+    required:
+      - serviceId
+    properties:
+      serviceId:
+        description: "The ID of the Service that has been created or updated from the request."
+        type: string
+  EventResponse:
+    type: object
+    description: "A response specifying the ID of a newly created Event"
+    required:
+      - eventId
+    properties:
+      eventId:
+        description: "The ID of the Event that has been created or updated from the request."
+        type: string
+  EventTypeResponse:
+    type: object
+    description: "A response specifying the ID of a newly created EventType"
+    required:
+      - eventTypeId
+    properties:
+      eventTypeId:
+        description: "The ID of the Event Type that has been created or updated from the request."
+        type: string
+  TriggerResponse:
+    type: object
+    description: "A response specifying the ID of a newly created Trigger"
+    required:
+      - triggerId
+    properties:
+      triggerId:
+        description: "The ID of the Trigger that has been created or updated from the request."
+        type: string
   JobStatus:
     type: object
     description: "Represents the status of a Job in the Piazza system; either running or completed. Contains information such as progress, time remaining, errors encountered, Job results, or general Job Status."
@@ -747,7 +904,79 @@ definitions:
       metadata:
         $ref: '#/definitions/ResourceMetadata'
       spatialMetadata:
-        $ref: '#/definitions/SpatialMetadata' 
+        $ref: '#/definitions/SpatialMetadata'
+  DataResourceResults:
+    type: object
+    description: "Describes a list of returned query results of Data Resource objects."
+    properties:
+      results:
+        description: "The array of Data Resource results."
+        type: array
+        items: 
+          $ref: '#/definitions/DataResource'
+      pagination:
+        description: "The pagination metadata for this query."
+        $ref: '#/definitions/Pagination'
+  ServiceResults:
+    type: object
+    description: "Describes a list of returned query results of Service objects."
+    properties:
+      results:
+        description: "The array of Service results."
+        type: array
+        items: 
+          $ref: '#/definitions/Service'
+      pagination:
+        description: "The pagination metadata for this query."
+        $ref: '#/definitions/Pagination'
+  EventResults:
+    type: object
+    description: "Describes a list of returned query results of Event objects."
+    properties:
+      results:
+        description: "The array of results."
+        type: array
+        items: 
+          $ref: '#/definitions/Event'
+      pagination:
+        description: "The pagination metadata for this query."
+        $ref: '#/definitions/Pagination'
+  EventTypeResults:
+    type: object
+    description: "Describes a list of returned query results of Event Type objects."
+    properties:
+      results:
+        description: "The array of results."
+        type: array
+        items: 
+          $ref: '#/definitions/EventType'
+      pagination:
+        description: "The pagination metadata for this query."
+        $ref: '#/definitions/Pagination'
+  TriggerResults:
+    type: object
+    description: "Describes a list of returned query results of Trigger objects."
+    properties:
+      results:
+        description: "The array of results."
+        type: array
+        items: 
+          $ref: '#/definitions/Trigger'
+      pagination:
+        description: "The pagination metadata for this query."
+        $ref: '#/definitions/Pagination'
+  AlertResults:
+    type: object
+    description: "Describes a list of returned query results of Alert objects."
+    properties:
+      results:
+        description: "The array of results."
+        type: array
+        items: 
+          $ref: '#/definitions/Alert'
+      pagination:
+        description: "The pagination metadata for this query."
+        $ref: '#/definitions/Pagination'
   IngestJob:
     type: object
     description: "Defines the payload for requesting Data to be loaded into Piazza."
@@ -772,7 +1001,7 @@ definitions:
     properties:
       data:
         description: "The ElasticSearch DSL Query string that will be forwarded to Piazza data holdings."
-        type: string
+        type: object
   DeploymentJob:
     type: object
     description: "Defines the payload for submitting the request to create a Deployment for a Data Resource."
@@ -931,7 +1160,19 @@ definitions:
       event_id:
         type: string
         description: "The unique identifier for the Event that triggered the Trigger."
-
+  Pagination:
+    type: object
+    description: "Defines how to navigate large datasets in queries that contain more data than can be returned."
+    properties:
+      count:
+        type: number
+        description: "The number of results that matched the query."
+      page:
+        type: number
+        description: "The current page returned."
+      per_page:
+        type: number
+        description: "The current number of results returned per page."
 
 
 
