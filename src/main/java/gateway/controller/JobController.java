@@ -157,27 +157,23 @@ public class JobController {
 			// Log the request
 			logger.log(String.format("User %s requested to Repeat Job %s", gatewayUtil.getPrincipalName(user), jobId),
 					PiazzaLogger.INFO);
-			// Get a Job ID
-			String newJobId = gatewayUtil.getUuid();
-			// Create the Kafka request object
+			// Create the Request Object from the input parameters
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.userName = gatewayUtil.getPrincipalName(user);
 			request.jobType = new RepeatJob(jobId);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId);
-			// Send the Message
-			try {
-				gatewayUtil.sendKafkaMessage(message);
-			} catch (Exception exception) {
-				exception.printStackTrace();
-				// Handle Kafka errors
-				String error = String.format("Error Sending Kafka Message for %s Job %s: %s", "Repeat", jobId,
-						exception.getMessage());
-				logger.log(error, PiazzaLogger.ERROR);
-				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
-						HttpStatus.INTERNAL_SERVER_ERROR);
-			}
-			// Respond
-			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(newJobId), HttpStatus.OK);
+			// Proxy the request to the Job Manager
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
+			ResponseEntity<PiazzaResponse> jobResponse = restTemplate.postForEntity(
+					String.format("%s://%s:%s/%s", JOBMANAGER_PROTOCOL, JOBMANAGER_HOST, JOBMANAGER_PORT, "repeat"),
+					entity, PiazzaResponse.class);
+			// Check if the response was an error. If so, set the status code
+			// appropriately.
+			HttpStatus status = jobResponse.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Send back the proxied response to the client
+			return new ResponseEntity<PiazzaResponse>(jobResponse.getBody(), status);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Repeating Job ID %s: %s", jobId, exception.getMessage());
