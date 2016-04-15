@@ -14,7 +14,10 @@ import model.response.PiazzaResponse;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,7 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import util.PiazzaLogger;
-import util.UUIDFactory;
 
 /**
  * Controller that defines REST end points dealing with Job interactions such as
@@ -48,6 +50,12 @@ public class JobController {
 	private String DISPATCHER_PORT;
 	@Value("${dispatcher.protocol}")
 	private String DISPATCHER_PROTOCOL;
+	@Value("${jobmanager.host}")
+	private String JOBMANAGER_HOST;
+	@Value("${jobmanager.port}")
+	private String JOBMANAGER_PORT;
+	@Value("${jobmanager.protocol}")
+	private String JOBMANAGER_PROTOCOL;
 
 	private RestTemplate restTemplate = new RestTemplate();
 
@@ -65,15 +73,15 @@ public class JobController {
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.GET)
 	public ResponseEntity<PiazzaResponse> getJobStatus(@PathVariable(value = "jobId") String jobId, Principal user) {
 		try {
+			// Log the request
+			logger.log(
+					String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId),
+					PiazzaLogger.INFO);
 			// Proxy the request to the Dispatcher
 			PiazzaResponse jobStatusResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
 					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, "job", jobId), PiazzaResponse.class);
 			HttpStatus status = jobStatusResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
-			// Log the request
-			logger.log(
-					String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId),
-					PiazzaLogger.INFO);
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(jobStatusResponse, status);
 		} catch (Exception exception) {
@@ -97,33 +105,30 @@ public class JobController {
 	 * @return No response body if successful, or an appropriate Error
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.DELETE)
-	public ResponseEntity<?> abortJob(@PathVariable(value = "jobId") String jobId,
+	public ResponseEntity<PiazzaResponse> abortJob(@PathVariable(value = "jobId") String jobId,
 			@RequestParam(value = "reason", required = false) String reason, Principal user) {
 		try {
-			// Get a Job ID
-			String newJobId = gatewayUtil.getUuid();
-			// Create the Kafka request object
+			// Log the request
+			logger.log(
+					String.format("User %s requested Job Abort for Job ID %s with reason %s",
+							gatewayUtil.getPrincipalName(user), jobId, reason), PiazzaLogger.INFO);
+			// Create the Request object
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.userName = gatewayUtil.getPrincipalName(user);
 			request.jobType = new AbortJob(jobId, reason);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId);
-			// Send the Message
-			try {
-				gatewayUtil.sendKafkaMessage(message);
-			} catch (Exception exception) {
-				exception.printStackTrace();
-				// Handle Kafka errors
-				String error = String.format("Error Sending Kafka Message for %s Job %s: %s", "Abort", jobId,
-						exception.getMessage());
-				logger.log(error, PiazzaLogger.ERROR);
-				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
-						HttpStatus.INTERNAL_SERVER_ERROR);
-			}
-			// Log the request
-			logger.log(String.format("User %s requested Job Abort for Job ID %s with reason %s , tracked by Job ID %s",
-					gatewayUtil.getPrincipalName(user), jobId, reason, newJobId), PiazzaLogger.INFO);
-			// Respond
-			return new ResponseEntity<Void>(HttpStatus.OK);
+			// Proxy the request to the Job Manager
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
+			ResponseEntity<PiazzaResponse> cancelResponse = restTemplate.postForEntity(
+					String.format("%s://%s:%s/%s", JOBMANAGER_PROTOCOL, JOBMANAGER_HOST, JOBMANAGER_PORT, "abort"),
+					entity, PiazzaResponse.class);
+			// Check if the response was an error. If so, set the status code
+			// appropriately.
+			HttpStatus status = cancelResponse.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Send back the proxied response to the client
+			return new ResponseEntity<PiazzaResponse>(cancelResponse.getBody(), status);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error requesting Job Abort for ID %s: %s", jobId, exception.getMessage());
@@ -149,6 +154,9 @@ public class JobController {
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.PUT)
 	public ResponseEntity<PiazzaResponse> repeatJob(@PathVariable(value = "jobId") String jobId, Principal user) {
 		try {
+			// Log the request
+			logger.log(String.format("User %s requested to Repeat Job %s", gatewayUtil.getPrincipalName(user), jobId),
+					PiazzaLogger.INFO);
 			// Get a Job ID
 			String newJobId = gatewayUtil.getUuid();
 			// Create the Kafka request object
@@ -168,10 +176,6 @@ public class JobController {
 				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 						HttpStatus.INTERNAL_SERVER_ERROR);
 			}
-			// Log the request
-			logger.log(
-					String.format("User %s requested to Repeat Job %s. New Job created under ID %s",
-							gatewayUtil.getPrincipalName(user), jobId, newJobId), PiazzaLogger.INFO);
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(newJobId), HttpStatus.OK);
 		} catch (Exception exception) {
