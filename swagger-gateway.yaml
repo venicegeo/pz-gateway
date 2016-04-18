@@ -159,7 +159,7 @@ paths:
       summary: Load a Data File into Piazza
       description: "Loads a local user data file into the Piazza Core metadata holdings. This functions the same as /data endpoint, but a file is specified instead of a URI."
       parameters:
-        - name: job
+        - name: data
           in: formData
           description: "The Ingest Job metadata. This is the identical model to the IngestJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency."
           required: true
