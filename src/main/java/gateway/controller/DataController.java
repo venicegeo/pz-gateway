@@ -32,6 +32,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import util.PiazzaLogger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * REST controller serving end points that are related to Piazza data, such as
  * loading or accessing spatial data.
@@ -151,9 +153,22 @@ public class DataController {
 	 *         ErrorResponse
 	 */
 	@RequestMapping(value = "/data/file", method = RequestMethod.POST)
-	public ResponseEntity<PiazzaResponse> ingestDataFile(@RequestParam(required = true) IngestJob job,
+	public ResponseEntity<PiazzaResponse> ingestDataFile(@RequestParam(required = true) String data,
 			@RequestParam(required = true) final MultipartFile file, Principal user) {
 		try {
+			IngestJob job;
+			try {
+				// Serialize the JSON payload of the multipart request
+				job = new ObjectMapper().readValue(data, IngestJob.class);
+			} catch (Exception exception) {
+				throw new Exception(String.format(
+						"Incorrect JSON passed through the `data` parameter. Please verify input. Error: %s",
+						exception.getMessage()));
+			}
+			// Ensure the file was uploaded. This is required.
+			if (file == null) {
+				throw new Exception("File not specified in request.");
+			}
 			// Log the request
 			logger.log(String.format("User %s requested Ingest Job of type %s with file",
 					gatewayUtil.getPrincipalName(user), job.getData().getDataType(), file.getOriginalFilename()),
@@ -180,8 +195,8 @@ public class DataController {
 			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(jobId), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Loading Data File for user %s of type %s: %s",
-					gatewayUtil.getPrincipalName(user), job.getData().getDataType(), exception.getMessage());
+			String error = String.format("Error Loading Data File for user %s of type %s",
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
