@@ -49,7 +49,45 @@ public class DataController {
 	@Value("${access.protocol}")
 	private String ACCESS_PROTOCOL;
 
+	private static final String DEFAULT_PAGE_SIZE = "10";
+	private static final String DEFAULT_PAGE = "0";
 	private RestTemplate restTemplate = new RestTemplate();
+
+	/**
+	 * Returns a queried list of Data Resources previously loaded into Piazza.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_data
+	 * 
+	 * @param user
+	 *            The user making the request
+	 * @return The list of results, with pagination information included.
+	 *         ErrorResponse if something goes wrong.
+	 */
+	@RequestMapping(value = "/data", method = RequestMethod.GET)
+	public ResponseEntity<PiazzaResponse> getData(
+			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)),
+					PiazzaLogger.INFO);
+			// Proxy the request to Pz-Access
+			PiazzaResponse dataResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s?page=%s&per_page=%s",
+					ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, "data", page, pageSize), PiazzaResponse.class);
+			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(dataResponse, status);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 
 	/**
 	 * Process the request to Ingest data. This endpoint will process an ingest
@@ -161,17 +199,46 @@ public class DataController {
 			logger.log(String.format("User %s requested Resource Metadata for %s.", gatewayUtil.getPrincipalName(user),
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			PiazzaResponse jobStatusResponse = restTemplate.getForObject(
+			PiazzaResponse dataResponse = restTemplate.getForObject(
 					String.format("%s://%s:%s/%s/%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, "data", dataId),
 					PiazzaResponse.class);
-			HttpStatus status = jobStatusResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
-			return new ResponseEntity<PiazzaResponse>(jobStatusResponse, status);
+			return new ResponseEntity<PiazzaResponse>(dataResponse, status);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Metadata for item %s by user %s: %s", dataId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Proxies an ElasticSearch DSL query to the Pz-Search component to return a
+	 * list of DataResource items.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/post_data_query
+	 * 
+	 * @return The list of DataResource items matching the query.
+	 */
+	@RequestMapping(value = "/data/query", method = RequestMethod.POST)
+	public ResponseEntity<PiazzaResponse> searchData(Principal user) {
+		try {
+			return null;
+
+			// Log the request
+
+			// Send the query to the Pz-Search component
+
+			// Gather the results and return the response
+
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
