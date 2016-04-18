@@ -259,4 +259,38 @@ public class DataController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	/**
+	 * Downloads the bytes of a file that is stored within Piazza.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_file_dataId
+	 * 
+	 * @param dataId
+	 *            The ID of the Data to download
+	 * @param user
+	 *            The user submitting the request
+	 * @return The bytes of the file as a download, or an Error if the file
+	 *         cannot be retrieved.
+	 */
+	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET)
+	public ResponseEntity<byte[]> getFile(@PathVariable(value = "dataId") String dataId, Principal user)
+			throws Exception {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested file download for Data %s", gatewayUtil.getPrincipalName(user),
+					dataId), PiazzaLogger.INFO);
+			// Get the bytes of the Data
+			ResponseEntity<byte[]> accessResponse = restTemplate.getForEntity(
+					String.format("%s://%s:%s/file/%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, dataId),
+					byte[].class);
+			return accessResponse;
+			// Stream the bytes back
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error downloading file for Data %s by user %s: %s", dataId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.INFO);
+			throw new Exception(error);
+		}
+	}
 }
