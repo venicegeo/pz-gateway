@@ -7,6 +7,7 @@ import java.security.Principal;
 import messaging.job.JobMessageFactory;
 import model.data.FileRepresentation;
 import model.job.type.IngestJob;
+import model.job.type.SearchQueryJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
@@ -14,7 +15,10 @@ import model.response.PiazzaResponse;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +52,10 @@ public class DataController {
 	private String ACCESS_PORT;
 	@Value("${access.protocol}")
 	private String ACCESS_PROTOCOL;
+	@Value("${pz.search.protocol}")
+	private String SEARCH_PROTOCOL;
+	@Value("${pz.search.url}")
+	private String SEARCH_URL;
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
@@ -225,16 +233,23 @@ public class DataController {
 	 * @return The list of DataResource items matching the query.
 	 */
 	@RequestMapping(value = "/data/query", method = RequestMethod.POST)
-	public ResponseEntity<PiazzaResponse> searchData(Principal user) {
+	public ResponseEntity<PiazzaResponse> searchData(@RequestBody SearchQueryJob query, Principal user) {
 		try {
-			return null;
-
 			// Log the request
-
+			logger.log(
+					String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)),
+					PiazzaLogger.INFO);
 			// Send the query to the Pz-Search component
-
-			// Gather the results and return the response
-
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<SearchQueryJob> entity = new HttpEntity<SearchQueryJob>(query, headers);
+			PiazzaResponse searchResponse = restTemplate.postForObject(
+					String.format("%s://%s", SEARCH_PROTOCOL, SEARCH_URL), entity, PiazzaResponse.class);
+			// Not logging for now; since there's nothing useful to log.
+			HttpStatus status = searchResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(searchResponse, status);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
