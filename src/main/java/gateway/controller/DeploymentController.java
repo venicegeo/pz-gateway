@@ -12,9 +12,11 @@ import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,11 +38,20 @@ public class DeploymentController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
+	@Value("${access.host}")
+	private String ACCESS_HOST;
+	@Value("${access.port}")
+	private String ACCESS_PORT;
+	@Value("${access.protocol}")
+	private String ACCESS_PROTOCOL;
 
 	private RestTemplate restTemplate = new RestTemplate();
 
 	/**
 	 * Processes a request to create a GeoServer deployment for Piazza data.
+	 * 
+	 * @see http 
+	 *      ://pz-swagger.stage.geointservices.io/#!/Deployment/post_deployment
 	 * 
 	 * @param job
 	 *            The job, defining details on the deployment
@@ -72,6 +83,44 @@ public class DeploymentController {
 			String error = String.format("Error Loading Data for user %s for ID %s of type %s: %s",
 					gatewayUtil.getPrincipalName(user), job.getDataId(), job.getDeploymentType(),
 					exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Gets Deployment information for an active deployment, including URL and
+	 * Data ID.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Deployment/
+	 *      get_deployment_deploymentId
+	 * 
+	 * @param deploymentId
+	 *            The ID of the deployment to fetch
+	 * @param user
+	 *            The user requesting the deployment information
+	 * @return The deployment information, or an ErrorResponse if exceptions
+	 *         occur
+	 */
+	@RequestMapping(value = "/deployment/{deploymentId}", method = RequestMethod.GET)
+	public ResponseEntity<PiazzaResponse> getDeployment(@PathVariable(value = "deploymentId") String deploymentId,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested Deployment Data for %s", gatewayUtil.getPrincipalName(user),
+					deploymentId), PiazzaLogger.INFO);
+			// Broker the request to Pz-Access
+			PiazzaResponse deploymentResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
+					ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, "deployment", deploymentId), PiazzaResponse.class);
+			HttpStatus status = deploymentResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(deploymentResponse, status);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error fetching Deployment for ID %s by user %s: %s", deploymentId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
