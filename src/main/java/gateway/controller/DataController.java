@@ -5,6 +5,9 @@ import gateway.controller.util.GatewayUtil;
 import java.security.Principal;
 
 import messaging.job.JobMessageFactory;
+import model.data.FileRepresentation;
+import model.data.location.FileLocation;
+import model.data.location.S3FileStore;
 import model.job.type.IngestJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
@@ -18,7 +21,11 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import util.PiazzaLogger;
 
@@ -38,7 +45,9 @@ public class DataController {
 	private PiazzaLogger logger;
 
 	/**
-	 * Process the request to Ingest data.
+	 * Process the request to Ingest data. This endpoint will process an ingest
+	 * request. If a file is to be specified, then the ingestDataFile() endpoint
+	 * should be called, which is a multipart request.
 	 * 
 	 * @param job
 	 *            The Ingest Job, describing the data to be ingested.
@@ -66,6 +75,55 @@ public class DataController {
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data for user %s of type %s:  %s",
+					gatewayUtil.getPrincipalName(user), job.getData().getDataType(), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Processes the request to Ingest data as a file.
+	 * 
+	 * @param job
+	 *            The ingest job, describing the data to be ingested param file
+	 *            The file bytes
+	 * @param user
+	 *            The user submitting the request
+	 * @return The response containing the Job ID, or containing the appropriate
+	 *         ErrorResponse
+	 */
+	@RequestMapping(value = "/data/file", method = RequestMethod.POST)
+	public ResponseEntity<PiazzaResponse> ingestDataFile(@RequestParam(required = true) IngestJob job,
+			@RequestParam(required = true) final MultipartFile file, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested Ingest Job of type %s with file",
+					gatewayUtil.getPrincipalName(user), job.getData().getDataType(), file.getOriginalFilename()),
+					PiazzaLogger.INFO);
+			// Validate the Job inputs to ensure we are able to process the file
+			// and attach it to the job metadata.
+			if (job.getHost() == false) {
+				throw new Exception("Host parameter must be set to true when loading a file.");
+			} else if (job.getData().getDataType() instanceof FileRepresentation == false) {
+				throw new Exception("The uploaded file cannot be attached to the specified Data Type: "
+						+ job.getData().getDataType().getType());
+			}
+			// Send the file to S3.
+			String jobId = gatewayUtil.getUuid();
+			job = gatewayUtil.pushS3File(jobId, job, file);
+			// Create the Request to send to Kafka
+			PiazzaJobRequest request = new PiazzaJobRequest();
+			request.jobType = job;
+			request.userName = gatewayUtil.getPrincipalName(user);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, jobId);
+			// Send the message to Kafka
+			gatewayUtil.sendKafkaMessage(message);
+			// Return the Job ID of the newly created Job
+			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(jobId), HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Loading Data File for user %s of type %s: %s",
 					gatewayUtil.getPrincipalName(user), job.getData().getDataType(), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),

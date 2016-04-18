@@ -154,6 +154,32 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /data/file:
+    post:
+      summary: Load a Data File into Piazza
+      description: "Loads a local user data file into the Piazza Core metadata holdings. This functions the same as /data endpoint, but a file is specified instead of a URI."
+      parameters:
+        - name: job
+          in: formData
+          description: "The Ingest Job metadata. This is the identical model to the IngestJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency."
+          required: true
+          type: string
+        - name: file
+          in: formData
+          description: "The file to be uploaded."
+          required: true
+          type: file
+      tags:
+        - Data
+      responses:
+        200:
+          description: "The ID of the Job created to handle the Loading of the Data."
+          schema:
+            $ref: '#/definitions/JobResponse'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /data/{dataId}:
     get:
       summary: Get Metadata for Loaded Data
