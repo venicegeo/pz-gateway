@@ -1,0 +1,176 @@
+package gateway.controller;
+
+import gateway.controller.util.GatewayUtil;
+
+import java.security.Principal;
+
+import model.job.type.AbortJob;
+import model.job.type.RepeatJob;
+import model.request.PiazzaJobRequest;
+import model.response.ErrorResponse;
+import model.response.PiazzaResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import util.PiazzaLogger;
+
+/**
+ * Controller that defines REST end points dealing with Job interactions such as
+ * retrieving Job status, or executing Jobs.
+ * 
+ * @author Patrick.Doody
+ * 
+ */
+@CrossOrigin
+@RestController
+public class JobController {
+	@Autowired
+	private GatewayUtil gatewayUtil;
+	@Autowired
+	private PiazzaLogger logger;
+	@Value("${jobmanager.host}")
+	private String JOBMANAGER_HOST;
+	@Value("${jobmanager.port}")
+	private String JOBMANAGER_PORT;
+	@Value("${jobmanager.protocol}")
+	private String JOBMANAGER_PROTOCOL;
+
+	private RestTemplate restTemplate = new RestTemplate();
+
+	/**
+	 * Returns the Status of a Job.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/get_job_jobId
+	 * 
+	 * @param jobId
+	 *            The ID of the Job.
+	 * @param user
+	 *            User information
+	 * @return Contains Job Status, or an appropriate Error.
+	 */
+	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.GET)
+	public ResponseEntity<PiazzaResponse> getJobStatus(@PathVariable(value = "jobId") String jobId, Principal user) {
+		try {
+			// Log the request
+			logger.log(
+					String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId),
+					PiazzaLogger.INFO);
+			// Proxy the request to the Job Manager
+			PiazzaResponse jobStatusResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
+					JOBMANAGER_PROTOCOL, JOBMANAGER_HOST, JOBMANAGER_PORT, "job", jobId), PiazzaResponse.class);
+			HttpStatus status = jobStatusResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(jobStatusResponse, status);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error requesting Job Status for ID %s: %s", jobId, exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(jobId, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Cancels a running Job, specified by it's Job ID.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/delete_job_jobId
+	 * 
+	 * @param jobId
+	 *            The ID of the Job to delete.
+	 * @param user
+	 *            User information
+	 * @return No response body if successful, or an appropriate Error
+	 */
+	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.DELETE)
+	public ResponseEntity<PiazzaResponse> abortJob(@PathVariable(value = "jobId") String jobId,
+			@RequestParam(value = "reason", required = false) String reason, Principal user) {
+		try {
+			// Log the request
+			logger.log(
+					String.format("User %s requested Job Abort for Job ID %s with reason %s",
+							gatewayUtil.getPrincipalName(user), jobId, reason), PiazzaLogger.INFO);
+			// Create the Request object
+			PiazzaJobRequest request = new PiazzaJobRequest();
+			request.userName = gatewayUtil.getPrincipalName(user);
+			request.jobType = new AbortJob(jobId, reason);
+			// Proxy the request to the Job Manager
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
+			ResponseEntity<PiazzaResponse> cancelResponse = restTemplate.postForEntity(
+					String.format("%s://%s:%s/%s", JOBMANAGER_PROTOCOL, JOBMANAGER_HOST, JOBMANAGER_PORT, "abort"),
+					entity, PiazzaResponse.class);
+			// Check if the response was an error. If so, set the status code
+			// appropriately.
+			HttpStatus status = cancelResponse.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Send back the proxied response to the client
+			return new ResponseEntity<PiazzaResponse>(cancelResponse.getBody(), status);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error requesting Job Abort for ID %s: %s", jobId, exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Repeats a Job that has previously been submitted to Piazza. This will
+	 * spawn a new Job with new corresponding ID.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/put_job_jobId
+	 * 
+	 * @param jobId
+	 *            The ID of the Job to repeat.
+	 * @param user
+	 *            User information
+	 * @return Response containing the ID of the newly created Job, or
+	 *         appropriate error
+	 */
+	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.PUT)
+	public ResponseEntity<PiazzaResponse> repeatJob(@PathVariable(value = "jobId") String jobId, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested to Repeat Job %s", gatewayUtil.getPrincipalName(user), jobId),
+					PiazzaLogger.INFO);
+			// Create the Request Object from the input parameters
+			PiazzaJobRequest request = new PiazzaJobRequest();
+			request.userName = gatewayUtil.getPrincipalName(user);
+			request.jobType = new RepeatJob(jobId);
+			// Proxy the request to the Job Manager
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
+			ResponseEntity<PiazzaResponse> jobResponse = restTemplate.postForEntity(
+					String.format("%s://%s:%s/%s", JOBMANAGER_PROTOCOL, JOBMANAGER_HOST, JOBMANAGER_PORT, "repeat"),
+					entity, PiazzaResponse.class);
+			// Check if the response was an error. If so, set the status code
+			// appropriately.
+			HttpStatus status = jobResponse.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Send back the proxied response to the client
+			return new ResponseEntity<PiazzaResponse>(jobResponse.getBody(), status);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Repeating Job ID %s: %s", jobId, exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+}

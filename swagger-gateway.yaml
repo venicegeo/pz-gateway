@@ -65,12 +65,11 @@ paths:
           description: "ID of the Job to cancel."
           required: true
           type: string
-        - name: abort
-          in: body
+        - name: reason
+          in: query
           description: "Details for the cancellation of the Job."
           required: false
-          schema:
-            $ref: '#/definitions/AbortDetails'
+          type: string
       tags:
         - Job
       responses:
@@ -144,6 +143,32 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/IngestJob'
+      tags:
+        - Data
+      responses:
+        200:
+          description: "The ID of the Job created to handle the Loading of the Data."
+          schema:
+            $ref: '#/definitions/JobResponse'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /data/file:
+    post:
+      summary: Load a Data File into Piazza
+      description: "Loads a local user data file into the Piazza Core metadata holdings. This functions the same as /data endpoint, but a file is specified instead of a URI."
+      parameters:
+        - name: data
+          in: formData
+          description: "The Ingest Job metadata. This is the identical model to the IngestJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency."
+          required: true
+          type: string
+        - name: file
+          in: formData
+          description: "The file to be uploaded."
+          required: true
+          type: file
       tags:
         - Data
       responses:
@@ -868,7 +893,7 @@ definitions:
     properties:
       result:
         description: "A reference to the Result of the Job. This could be a Resource ID, or a Service ID, in certain cases. Or perhaps an error if the Job encountered an error during processing."
-        type: string
+        type: object
       status:
         description: "The status of the Job. Submitted, Running, Success, Error, or Failure."
         type: string
@@ -988,13 +1013,6 @@ definitions:
           host:
             description: "Dictates if Piazza should internally host the data or not. If set to true, then the data will be stored in Piazza's data holdings. If false, then Piazza will point to the location of the data, but will not store the data internally."
             type: boolean
-  AbortDetails:
-    type: object
-    description: "Defines the payload for requesting a running Piazza Job to be cancelled."
-    properties:
-      reason:
-        type: string
-        description: "The reason for the job to be cancelled. This is tracked within the Job table for quality control purposes."
   SearchJob:
     type: object
     description: "Defines the payload for submitting a Search Request to Piazza data."
