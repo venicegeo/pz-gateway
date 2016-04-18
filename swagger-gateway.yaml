@@ -1009,10 +1009,15 @@ definitions:
       - $ref: '#/definitions/DataResource'
       - required:
         - host
+        - type
         properties:
           host:
             description: "Dictates if Piazza should internally host the data or not. If set to true, then the data will be stored in Piazza's data holdings. If false, then Piazza will point to the location of the data, but will not store the data internally."
             type: boolean
+          type:
+            description: "Legacy. This will eventually be removed."
+            type: string
+            default: "ingest"
   SearchJob:
     type: object
     description: "Defines the payload for submitting a Search Request to Piazza data."
