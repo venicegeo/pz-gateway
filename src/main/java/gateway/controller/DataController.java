@@ -6,8 +6,6 @@ import java.security.Principal;
 
 import messaging.job.JobMessageFactory;
 import model.data.FileRepresentation;
-import model.data.location.FileLocation;
-import model.data.location.S3FileStore;
 import model.job.type.IngestJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
@@ -15,17 +13,18 @@ import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import util.PiazzaLogger;
 
@@ -43,11 +42,21 @@ public class DataController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
+	@Value("${access.host}")
+	private String ACCESS_HOST;
+	@Value("${access.port}")
+	private String ACCESS_PORT;
+	@Value("${access.protocol}")
+	private String ACCESS_PROTOCOL;
+
+	private RestTemplate restTemplate = new RestTemplate();
 
 	/**
 	 * Process the request to Ingest data. This endpoint will process an ingest
 	 * request. If a file is to be specified, then the ingestDataFile() endpoint
 	 * should be called, which is a multipart request.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/post_data
 	 * 
 	 * @param job
 	 *            The Ingest Job, describing the data to be ingested.
@@ -84,6 +93,8 @@ public class DataController {
 
 	/**
 	 * Processes the request to Ingest data as a file.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/post_data_file
 	 * 
 	 * @param job
 	 *            The ingest job, describing the data to be ingested param file
@@ -125,6 +136,42 @@ public class DataController {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data File for user %s of type %s: %s",
 					gatewayUtil.getPrincipalName(user), job.getData().getDataType(), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Gets the metadata for a Data Resource
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_data
+	 * 
+	 * @param dataId
+	 *            The ID of the Resource
+	 * @param user
+	 *            The user submitting the request
+	 * @return The status and metadata of the data resource, or appropriate
+	 *         ErrorResponse if failed.
+	 */
+	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.GET)
+	public ResponseEntity<PiazzaResponse> getMetadata(@PathVariable(value = "dataId") String dataId, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested Resource Metadata for %s.", gatewayUtil.getPrincipalName(user),
+					dataId), PiazzaLogger.INFO);
+			// Proxy the request to Pz-Access
+			PiazzaResponse jobStatusResponse = restTemplate.getForObject(
+					String.format("%s://%s:%s/%s/%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, "data", dataId),
+					PiazzaResponse.class);
+			HttpStatus status = jobStatusResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(jobStatusResponse, status);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Loading Metadata for item %s by user %s: %s", dataId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);

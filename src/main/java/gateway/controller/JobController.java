@@ -41,12 +41,6 @@ public class JobController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("${dispatcher.host}")
-	private String DISPATCHER_HOST;
-	@Value("${dispatcher.port}")
-	private String DISPATCHER_PORT;
-	@Value("${dispatcher.protocol}")
-	private String DISPATCHER_PROTOCOL;
 	@Value("${jobmanager.host}")
 	private String JOBMANAGER_HOST;
 	@Value("${jobmanager.port}")
@@ -74,9 +68,9 @@ public class JobController {
 			logger.log(
 					String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId),
 					PiazzaLogger.INFO);
-			// Proxy the request to the Dispatcher
+			// Proxy the request to the Job Manager
 			PiazzaResponse jobStatusResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
-					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, "job", jobId), PiazzaResponse.class);
+					JOBMANAGER_PROTOCOL, JOBMANAGER_HOST, JOBMANAGER_PORT, "job", jobId), PiazzaResponse.class);
 			HttpStatus status = jobStatusResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
