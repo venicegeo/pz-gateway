@@ -4,14 +4,12 @@ import gateway.controller.util.GatewayUtil;
 
 import java.security.Principal;
 
-import messaging.job.JobMessageFactory;
 import model.job.type.AbortJob;
 import model.job.type.RepeatJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -34,8 +32,7 @@ import util.PiazzaLogger;
  * retrieving Job status, or executing Jobs.
  * 
  * @author Patrick.Doody
- *
- *
+ * 
  */
 @CrossOrigin
 @RestController
