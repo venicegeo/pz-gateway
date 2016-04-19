@@ -186,4 +186,39 @@ public class EventController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	/**
+	 * Deletes the Specific Event
+	 * 
+	 * @see "http://pz-swagger.stage.geointservices.io/#!/Event/delete_event_eventTypeId_eventId"
+	 * 
+	 * @param eventType
+	 *            The event type of the event to delete
+	 * @param eventId
+	 *            the unique ID of the event to delete
+	 * @param user
+	 *            The user executing the request
+	 * @return 200 OK, or an error
+	 */
+	@RequestMapping(value = "/event/{eventType}/{eventId}", method = RequestMethod.DELETE)
+	public ResponseEntity<?> deleteEvent(@PathVariable(value = "eventType") String eventType,
+			@PathVariable(value = "eventId") String eventId, Principal user) {
+		try {
+			// Log the message
+			logger.log(
+					String.format("User %s Requesting Deletion for Event %s under Type %s",
+							gatewayUtil.getPrincipalName(user), eventId, eventType), PiazzaLogger.INFO);
+			// Broker the request to pz-workflow
+			restTemplate.delete(String.format("%s://%s/v1/%s/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "events",
+					eventType, eventId), String.class);
+			return null;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Deleting Event %s under Type %s by user %: %s", eventId, eventType,
+					gatewayUtil.getPrincipalName(user));
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 }
