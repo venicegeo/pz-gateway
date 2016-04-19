@@ -462,6 +462,16 @@ paths:
           description: "The number of results to be returned per query."
           required: false
           type: number
+        - name: key
+          in: query
+          description: "The field to use for sorting."
+          required: false
+          type: string
+        - name: order
+          in: query
+          description: "Indicates ascending or descending order. False for ascending, true for descending."
+          required: false
+          type: boolean
       tags:
         - Workflow
         - Event

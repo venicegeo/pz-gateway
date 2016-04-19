@@ -5,13 +5,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller defining end points that interact with the Piazza workflow
- * service; including events, triggers, and alerts.
+ * service; including alerts and triggers.
  * 
  * @author Patrick.Doody
  *
  */
 @CrossOrigin
 @RestController
-public class WorkflowController {
+public class AlertController {
 
 }
