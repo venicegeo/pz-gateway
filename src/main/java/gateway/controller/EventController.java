@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,6 +50,8 @@ public class EventController {
 	/**
 	 * Gets all events from the workflow component.
 	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Event/get_event
+	 * 
 	 * @param user
 	 *            The user submitting the request
 	 * @return The list of events, or the appropriate error.
@@ -63,13 +67,47 @@ public class EventController {
 			logger.log(String.format("User %s queried for Events.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s://%s/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST,
-					"v1/events", page, pageSize, order, key != null ? key : "");
+			String url = String.format("%s://%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_PROTOCOL,
+					WORKFLOW_HOST, "events", page, pageSize, order, key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Querying Events by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Fires a new event to the workflow component.
+	 * 
+	 * @see http 
+	 *      ://pz-swagger.stage.geointservices.io/#!/Event/post_event_eventTypeId
+	 * 
+	 * @param event
+	 *            The event to be fired
+	 * @param user
+	 *            The user submitting the event
+	 * @return The event ID, or an error.
+	 */
+	@RequestMapping(value = "/event/{eventType}", method = RequestMethod.POST)
+	public ResponseEntity<?> fireEvent(@PathVariable(value = "eventType") String eventType, @RequestBody String event,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s has fired an event.", gatewayUtil.getPrincipalName(user)),
+					PiazzaLogger.INFO);
+			// Broker the request to Workflow
+			String response = restTemplate.postForObject(
+					String.format("%s://%s/v1/%s/:%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "events", eventType), event,
+					String.class);
+			return new ResponseEntity<String>(response, HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Submitting Event by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
