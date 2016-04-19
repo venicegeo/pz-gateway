@@ -121,6 +121,38 @@ public class ServiceController {
 	}
 
 	/**
+	 * De-registers a single service with Piazza.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/delete_service
+	 * 
+	 * @param serviceId
+	 *            The ID of the service to delete.
+	 * @param user
+	 *            The user submitting the request
+	 * @return Service metadata, or an error.
+	 */
+	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE)
+	public ResponseEntity<PiazzaResponse> deleteService(@PathVariable(value = "serviceId") String serviceId,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s has requested Service deletion of %s",
+					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
+			// Proxy the request to the Service Controller instance
+			restTemplate.delete(String.format("%s://%s/%s/%s", SERVICE_CONTROLLER_PROTOCOL, SERVICE_CONTROLLER_HOST,
+					"service", serviceId));
+			return null;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
 	 * Gets the list of all Services held by Piazza.
 	 * 
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/get_service
