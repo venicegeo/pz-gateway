@@ -84,8 +84,7 @@ public class EventController {
 	/**
 	 * Fires a new event to the workflow component.
 	 * 
-	 * @see http 
-	 *      ://pz-swagger.stage.geointservices.io/#!/Event/post_event_eventTypeId
+	 * @see pz-swagger.stage.geointservices.io/#!/Event/post_event_eventTypeId
 	 * 
 	 * @param event
 	 *            The event to be fired
@@ -102,13 +101,51 @@ public class EventController {
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
 			String response = restTemplate.postForObject(
-					String.format("%s://%s/v1/%s/:%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "events", eventType), event,
+					String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "events", eventType), event,
 					String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Submitting Event by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Get all Events for the specified event type.
+	 * 
+	 * @see pz-swagger.stage.geointservices.io/#!/Event/get_event_eventTypeId
+	 * 
+	 * @param eventType
+	 *            The event ID
+	 * @param user
+	 *            The user executing the request
+	 * @return The list of events, or an error
+	 */
+	@RequestMapping(value = "event/{eventType}", method = RequestMethod.GET)
+	public ResponseEntity<?> getEventsForType(
+			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
+			@RequestParam(value = "key", required = false) String key,
+			@PathVariable(value = "eventType") String eventType, Principal user) {
+		try {
+			// Log the request
+			logger.log(
+					String.format("User %s has requested a list of Events for Type %s",
+							gatewayUtil.getPrincipalName(user), eventType), PiazzaLogger.INFO);
+			// Broker the request to Workflow
+			String url = String.format("%s://%s/v1/%s/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_PROTOCOL,
+					WORKFLOW_HOST, "events", eventType, page, pageSize, order, key != null ? key : "");
+			String response = restTemplate.getForObject(url, String.class);
+			return new ResponseEntity<String>(response, HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Querying Events by user %s for Event Type %s: %s",
+					gatewayUtil.getPrincipalName(user), eventType, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
