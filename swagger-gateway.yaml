@@ -242,9 +242,9 @@ paths:
         - Deployment
       responses:
         200:
-          description: "The Deployment metadata for the newly created Deployment."
+          description: "The Job ID for the specified Deployment. This could be a long-running process to copy the data over to GeoServer, so a new Job is spawned."
           schema:
-            $ref: '#/definitions/Deployment'
+            $ref: '#/definitions/JobResponse'
         default:
           description: "Unexpected Error"
           schema:
