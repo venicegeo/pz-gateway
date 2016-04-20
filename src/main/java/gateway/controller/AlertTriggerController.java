@@ -153,7 +153,7 @@ public class AlertTriggerController {
 	 *            The user submitting the request
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
-	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.GET)
+	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> deleteTrigger(@PathVariable(value = "triggerId") String triggerId, Principal user) {
 		try {
 			// Log the request
@@ -172,4 +172,99 @@ public class AlertTriggerController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	/**
+	 * Gets the list of Alerts
+	 * 
+	 * @see "http://pz-swagger.stage.geointservices.io/#!/Alert/get_alert"
+	 * 
+	 * @return The list of Alerts, or an error
+	 */
+	@RequestMapping(value = "/alert", method = RequestMethod.GET)
+	public ResponseEntity<?> getAlerts(
+			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
+			@RequestParam(value = "key", required = false) String key, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s has requested a list of Alerts.", gatewayUtil.getPrincipalName(user)),
+					PiazzaLogger.INFO);
+			// Broker the request to Workflow
+			String url = String.format("%s://%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_PROTOCOL,
+					WORKFLOW_HOST, "alerts", page, pageSize, order, key != null ? key : "");
+			String response = restTemplate.getForObject(url, String.class);
+			return new ResponseEntity<String>(response, HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Querying Alerts by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Deletes an Alert by its ID
+	 * 
+	 * @see "http://pz-swagger.stage.geointservices.io/#!/Alert/delete_alert_alertId"
+	 * 
+	 * @param alertId
+	 *            The ID of the trigger to delete
+	 * @param user
+	 *            The user submitting the request
+	 * @return 200 OK if deleted, error if exceptions occurred
+	 */
+	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE)
+	public ResponseEntity<?> deleteAlert(@PathVariable(value = "alertId") String alertId, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s has requested deletion of Alert %s", gatewayUtil.getPrincipalName(user),
+					alertId), PiazzaLogger.INFO);
+			// Proxy the request to Workflow
+			String url = String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "alerts", alertId);
+			restTemplate.delete(url);
+			return null;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Deleting Alert ID %s by user %s: %s", alertId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Gets Alert metadata
+	 * 
+	 * @see "http://pz-swagger.stage.geointservices.io/#!/Alert/get_alert_alertId"
+	 * 
+	 * @param alertId
+	 *            The trigger ID
+	 * @param user
+	 *            The user submitting the request
+	 * @return Trigger information, or an error
+	 */
+	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET)
+	public ResponseEntity<?> getAlert(@PathVariable(value = "alertId") String alertId, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s has requested information for Alert %s",
+					gatewayUtil.getPrincipalName(user), alertId), PiazzaLogger.INFO);
+			// Proxy the request to Workflow
+			String url = String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "alerts", alertId);
+			String response = restTemplate.getForObject(url, String.class);
+			return new ResponseEntity<String>(response, HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Getting Alert ID %s by user %s: %s", alertId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
 }
