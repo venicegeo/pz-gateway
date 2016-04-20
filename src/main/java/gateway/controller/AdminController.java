@@ -2,8 +2,12 @@ package gateway.controller;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -20,15 +24,15 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin
 @RestController
 public class AdminController {
+
 	/**
-	 * Gets administrative statistics for the Gateway service.
+	 * Returns administrative statistics for this Gateway component.
 	 * 
-	 * @param user
-	 *            The user making this request
-	 * @return Administrative statistics
+	 * @return Component information
 	 */
 	@RequestMapping(value = "/admin/stats", method = RequestMethod.GET)
-	public Map<String, String> getAdminStats(Principal user) {
-		return new HashMap<String, String>();
+	public ResponseEntity<Map<String, Object>> getAdminStats() {
+		Map<String, Object> stats = new HashMap<String, Object>();
+		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
 	}
 }

@@ -423,26 +423,6 @@ public class LegacyController {
 	}
 
 	/**
-	 * Returns administrative statistics for this Gateway component.
-	 * 
-	 * @return Component information
-	 */
-	@RequestMapping(value = "/admin/stats", method = RequestMethod.GET)
-	public ResponseEntity<Map<String, Object>> getAdminStats() {
-		Map<String, Object> stats = new HashMap<String, Object>();
-		// Get S3 Metrics
-		stats.put("S3Location", s3Client.getBucketLocation(AMAZONS3_BUCKET_NAME));
-		// Get Kafka Producer Metrics
-		Iterator<?> iterator = producer.metrics().entrySet().iterator();
-		while (iterator.hasNext()) {
-			Entry<?, ?> pair = (Entry<?, ?>) iterator.next();
-			stats.put(pair.getKey().toString(), pair.getValue().toString());
-		}
-
-		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
-	}
-
-	/**
 	 * Health Check. Returns OK if this component is up and running.
 	 * 
 	 */
