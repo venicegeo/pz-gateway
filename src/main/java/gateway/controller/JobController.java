@@ -4,12 +4,15 @@ import gateway.controller.util.GatewayUtil;
 
 import java.security.Principal;
 
+import messaging.job.JobMessageFactory;
 import model.job.type.AbortJob;
+import model.job.type.ExecuteServiceJob;
 import model.job.type.RepeatJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -19,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -168,6 +172,46 @@ public class JobController {
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Repeating Job ID %s: %s", jobId, exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Executes a job with the Piazza service controller. This will create a Job
+	 * ID and then return that ID immediately. The job itself will be
+	 * long-running and status can be tracked by requesting the status of that
+	 * Job ID. When the complete has completed, it will be made available
+	 * through the Job result field. The ServiceController handles the execution
+	 * of the Job.
+	 * 
+	 * @param job
+	 *            The job to execute
+	 * @param user
+	 *            The user executing the Job
+	 * @return The job ID, or the error if encountered
+	 */
+	@RequestMapping(value = "/v2/job", method = RequestMethod.POST)
+	public ResponseEntity<PiazzaResponse> executeService(@RequestBody ExecuteServiceJob job, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested Execute Job for Service %s.",
+					gatewayUtil.getPrincipalName(user), job.data.getServiceId()), PiazzaLogger.INFO);
+			// Create the Request to send to Kafka
+			String newJobId = gatewayUtil.getUuid();
+			PiazzaJobRequest request = new PiazzaJobRequest();
+			request.jobType = job;
+			request.userName = gatewayUtil.getPrincipalName(user);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId);
+			// Send the message to Kafka
+			gatewayUtil.sendKafkaMessage(message);
+			// Return the Job ID of the newly created Job
+			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(newJobId), HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Executing for user %s for Service %s: %s",
+					gatewayUtil.getPrincipalName(user), job.data.getServiceId(), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);

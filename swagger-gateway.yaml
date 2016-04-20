@@ -79,7 +79,7 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /job:
+  /v2/job:
     post:
       summary: Executes a registered Service
       description: "Creates a Piazza Job to execute a registered service in the system, with the specified parameters."
@@ -462,6 +462,16 @@ paths:
           description: "The number of results to be returned per query."
           required: false
           type: number
+        - name: key
+          in: query
+          description: "The field to use for sorting."
+          required: false
+          type: string
+        - name: order
+          in: query
+          description: "Indicates ascending or descending order. False for ascending, true for descending."
+          required: false
+          type: boolean
       tags:
         - Workflow
         - Event
