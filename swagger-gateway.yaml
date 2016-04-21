@@ -944,7 +944,7 @@ definitions:
     type: object
     description: "Describes a list of returned query results of Data Resource objects."
     properties:
-      results:
+      data:
         description: "The array of Data Resource results."
         type: array
         items: 
@@ -956,7 +956,7 @@ definitions:
     type: object
     description: "Describes a list of returned query results of Service objects."
     properties:
-      results:
+      data:
         description: "The array of Service results."
         type: array
         items: 
@@ -968,7 +968,7 @@ definitions:
     type: object
     description: "Describes a list of returned query results of Event objects."
     properties:
-      results:
+      data:
         description: "The array of results."
         type: array
         items: 
@@ -980,7 +980,7 @@ definitions:
     type: object
     description: "Describes a list of returned query results of Event Type objects."
     properties:
-      results:
+      data:
         description: "The array of results."
         type: array
         items: 
@@ -992,7 +992,7 @@ definitions:
     type: object
     description: "Describes a list of returned query results of Trigger objects."
     properties:
-      results:
+      data:
         description: "The array of results."
         type: array
         items: 
@@ -1004,7 +1004,7 @@ definitions:
     type: object
     description: "Describes a list of returned query results of Alert objects."
     properties:
-      results:
+      data:
         description: "The array of results."
         type: array
         items: 
