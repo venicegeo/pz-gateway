@@ -79,8 +79,8 @@ public class ServiceController {
 	public ResponseEntity<PiazzaResponse> registerService(@RequestBody Service service, Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested registration of service %s",
-					gatewayUtil.getPrincipalName(user), service.getName()), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Service registration.", gatewayUtil.getPrincipalName(user)),
+					PiazzaLogger.INFO);
 			// Create the Service Job to forward
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
 			jobRequest.userName = gatewayUtil.getPrincipalName(user);
