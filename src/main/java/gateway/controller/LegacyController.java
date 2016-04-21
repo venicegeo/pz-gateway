@@ -99,6 +99,8 @@ public class LegacyController {
 	private String AMAZONS3_ACCESS_KEY;
 	@Value("${vcap.services.pz-blobstore.credentials.private:}")
 	private String AMAZONS3_PRIVATE_KEY;
+	@Value("${space}")
+	private String space;
 
 	/**
 	 * Initializing the Kafka Producer on Controller startup.
@@ -381,7 +383,7 @@ public class LegacyController {
 		// Create the Kafka Message for an incoming Job to be created.
 		final ProducerRecord<String, String> message;
 		try {
-			message = JobMessageFactory.getRequestJobMessage(request, jobId);
+			message = JobMessageFactory.getRequestJobMessage(request, jobId, space);
 		} catch (JsonProcessingException exception) {
 			exception.printStackTrace();
 			logger.log(String.format("Error Creating Kafka Message for Job %s", jobId), PiazzaLogger.ERROR);

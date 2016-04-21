@@ -73,6 +73,8 @@ public class DataController {
 	private String SEARCH_PROTOCOL;
 	@Value("${pz.search.url}")
 	private String SEARCH_URL;
+	@Value("${space}")
+	private String space;
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
@@ -144,7 +146,7 @@ public class DataController {
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, space);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
 			// Return the Job ID of the newly created Job
@@ -208,7 +210,7 @@ public class DataController {
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, jobId);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, jobId, space);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
 			// Return the Job ID of the newly created Job

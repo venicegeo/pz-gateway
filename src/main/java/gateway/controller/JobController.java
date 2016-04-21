@@ -66,6 +66,8 @@ public class JobController {
 	private String JOBMANAGER_PORT;
 	@Value("${jobmanager.protocol}")
 	private String JOBMANAGER_PROTOCOL;
+	@Value("${space}")
+	private String space;
 
 	private RestTemplate restTemplate = new RestTemplate();
 
@@ -218,7 +220,7 @@ public class JobController {
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, space);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
 			// Return the Job ID of the newly created Job

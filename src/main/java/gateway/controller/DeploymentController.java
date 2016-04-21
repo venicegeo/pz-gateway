@@ -59,6 +59,8 @@ public class DeploymentController {
 	private String ACCESS_PORT;
 	@Value("${access.protocol}")
 	private String ACCESS_PROTOCOL;
+	@Value("${space}")
+	private String space;
 
 	private RestTemplate restTemplate = new RestTemplate();
 
@@ -88,7 +90,7 @@ public class DeploymentController {
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
 			jobRequest.userName = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = job;
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(jobRequest, jobId);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(jobRequest, jobId, space);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
 			// Send the response back to the user
