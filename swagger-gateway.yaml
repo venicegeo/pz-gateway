@@ -1047,6 +1047,10 @@ definitions:
     type: object
     description: "Defines the payload for submitting a Search Request to Piazza data."
     properties:
+      type:
+        description: "Denotes a Search Query that will be entered using ElasticSearch DSL query language."
+        type: string
+        default: "search-query"
       data:
         description: "The ElasticSearch DSL Query string that will be forwarded to Piazza data holdings."
         type: object
