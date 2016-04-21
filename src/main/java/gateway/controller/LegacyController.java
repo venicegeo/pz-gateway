@@ -16,10 +16,6 @@
 package gateway.controller;
 
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -29,7 +25,6 @@ import messaging.job.KafkaClientFactory;
 import model.data.FileRepresentation;
 import model.data.location.FileLocation;
 import model.data.location.S3FileStore;
-import model.job.Job;
 import model.job.PiazzaJobType;
 import model.job.type.GetJob;
 import model.job.type.GetResource;
@@ -40,7 +35,6 @@ import model.request.FileRequest;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
-import model.status.StatusUpdate;
 
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -240,8 +234,6 @@ public class LegacyController {
 	private ResponseEntity<PiazzaResponse> processSynchronousJob(String jobId, PiazzaJobRequest request) {
 		try {
 			ResponseEntity<PiazzaResponse> response;
-			// Send the Job Status Message to the Job Manager
-			producer.send(JobMessageFactory.getJobManagerCreateJobMessage(new Job(request, jobId)));
 
 			// Proxy the REST request to the Dispatcher
 			if ((request.jobType instanceof SearchQueryJob) || (request.jobType instanceof SearchMetadataIngestJob)) {
@@ -249,10 +241,6 @@ public class LegacyController {
 			} else {
 				response = performDispatcherGet(request);
 			}
-
-			// Update the Job Status with the Job Manager
-			StatusUpdate statusUpdate = new StatusUpdate(StatusUpdate.STATUS_SUCCESS);
-			producer.send(JobMessageFactory.getUpdateStatusMessage(jobId, statusUpdate));
 
 			// Return the Response
 			return response;
