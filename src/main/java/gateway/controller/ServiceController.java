@@ -210,6 +210,8 @@ public class ServiceController {
 	 *            The start page
 	 * @param pageSize
 	 *            The size per page
+	 * @param keyword
+	 *            The keywords to search on
 	 * @param user
 	 *            The user submitting the request
 	 * @return The list of services; or an error.
@@ -218,15 +220,19 @@ public class ServiceController {
 	public ResponseEntity<PiazzaResponse> getServices(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "pageSize", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			Principal user) {
+			@RequestParam(value = "keyword", required = false) String keyword, Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to the Service Controller
-			PiazzaResponse servicesResponse = restTemplate.getForObject(String.format("%s://%s/%s?page=%s&pageSize=%s",
-					SERVICE_CONTROLLER_PROTOCOL, SERVICE_CONTROLLER_HOST, "service", page, pageSize),
-					PiazzaResponse.class);
+			String url = String.format("%s://%s/%s?page=%s&pageSize=%s", SERVICE_CONTROLLER_PROTOCOL,
+					SERVICE_CONTROLLER_HOST, "service", page, pageSize);
+			// Attach keywords if specified
+			if ((keyword != null) && (keyword.isEmpty() == false)) {
+				url = String.format("%s&keyword=%s", url, keyword);
+			}
+			PiazzaResponse servicesResponse = restTemplate.getForObject(url, PiazzaResponse.class);
 			HttpStatus status = servicesResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond

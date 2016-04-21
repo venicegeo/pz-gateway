@@ -92,14 +92,19 @@ public class DataController {
 	public ResponseEntity<PiazzaResponse> getData(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			Principal user) {
+			@RequestParam(value = "keyword", required = false) String keyword, Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			PiazzaResponse dataResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s?page=%s&pageSize=%s",
-					ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, "data", page, pageSize), PiazzaResponse.class);
+			String url = String.format("%s://%s:%s/%s?page=%s&pageSize=%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT,
+					"data", page, pageSize);
+			// Attach keywords if specified
+			if ((keyword != null) && (keyword.isEmpty() == false)) {
+				url = String.format("%s&keyword=%s", url, keyword);
+			}
+			PiazzaResponse dataResponse = restTemplate.getForObject(url, PiazzaResponse.class);
 			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
