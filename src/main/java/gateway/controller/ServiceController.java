@@ -226,7 +226,7 @@ public class ServiceController {
 			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to the Service Controller
-			String url = String.format("%s://%s/%s?page=%s&pageSize=%s", SERVICE_CONTROLLER_PROTOCOL,
+			String url = String.format("%s://%s/%s?page=%s&per_page=%s", SERVICE_CONTROLLER_PROTOCOL,
 					SERVICE_CONTROLLER_HOST, "service", page, pageSize);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
