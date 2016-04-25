@@ -17,10 +17,7 @@ package gateway.controller;
 
 import gateway.controller.util.GatewayUtil;
 
-import java.io.IOException;
 import java.security.Principal;
-
-import javax.servlet.http.HttpServletResponse;
 
 import model.job.type.RegisterServiceJob;
 import model.request.PiazzaJobRequest;
@@ -32,9 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,8 +41,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.servlet.NoHandlerFoundException;
-
 import util.PiazzaLogger;
 
 /**
