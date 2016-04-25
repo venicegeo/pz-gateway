@@ -18,6 +18,7 @@ package gateway.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -36,6 +37,16 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin
 @RestController
 public class AdminController {
+	@Value("${vcap.services.pz-kafka.credentials.host}")
+	private String KAFKA_ADDRESS;
+	@Value("${jobmanager.host}")
+	private String JOBMANAGER_HOST;
+	@Value("${pz.search.url}")
+	private String SEARCH_URL;
+	@Value("${access.host}")
+	private String ACCESS_HOST;
+	@Value("${space}")
+	private String SPACE;
 
 	/**
 	 * Returns administrative statistics for this Gateway component.
@@ -45,6 +56,14 @@ public class AdminController {
 	@RequestMapping(value = "/admin/stats", method = RequestMethod.GET)
 	public ResponseEntity<Map<String, Object>> getAdminStats() {
 		Map<String, Object> stats = new HashMap<String, Object>();
+		// Write the Kafka configs
+		stats.put("Kafka Address", KAFKA_ADDRESS);
+		// Write the URL configs
+		stats.put("Job Manager Host", JOBMANAGER_HOST);
+		stats.put("Access Host", ACCESS_HOST);
+		stats.put("Search Host", SEARCH_URL);
+		stats.put("Space", SPACE);
+		// Return
 		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
 	}
 }
