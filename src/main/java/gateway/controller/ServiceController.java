@@ -17,7 +17,10 @@ package gateway.controller;
 
 import gateway.controller.util.GatewayUtil;
 
+import java.io.IOException;
 import java.security.Principal;
+
+import javax.servlet.http.HttpServletResponse;
 
 import model.job.type.RegisterServiceJob;
 import model.request.PiazzaJobRequest;
@@ -29,14 +32,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import util.PiazzaLogger;
 
@@ -245,5 +255,39 @@ public class ServiceController {
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+	
+	/*
+	 * This method needs to be declared once within the app.
+	 */
+	@RequestMapping(value = "/error", method = RequestMethod.GET)
+	public String missingEndpoint_GetRequest() {
+		return "missing get request endpoint";
+	}
+	
+	/*
+	 * This method needs to be declared once within the app.
+	 */
+	@RequestMapping(value = "/error", method = RequestMethod.POST)
+	public String missingEndpoint_PostRequest() {
+		return "missing post request endpoint";
+	}
+	
+	@ExceptionHandler(Exception.class)
+	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	//public ResponseEntity<POJO> genericHandler(Exception e) { 
+	public ResponseEntity<String> genericHandler(Exception e) {
+		return new ResponseEntity<>("Caught general exception, message format under construction!", HttpStatus.BAD_REQUEST);
+		// return new ResponseEntity<>(new POJO(errorCode, errorMsg);
+	}
+    
+	@ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	//public ResponseEntity<POJO> specificHandler(HttpMediaTypeNotSupportedException e) {
+	public ResponseEntity<String> specificHandler(HttpMediaTypeNotSupportedException e) {
+		return new ResponseEntity<>("Caught specific exception, message format under construction!", HttpStatus.BAD_REQUEST);
+		// return new ResponseEntity<>(new POJO(errorCode, errorMsg),
 	}
 }
