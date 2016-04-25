@@ -223,6 +223,9 @@ public class JobController {
 			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, space);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
+			// Attempt to wait until the user is able to query the Job ID
+			// immediately.
+			gatewayUtil.verifyDatabaseInsertion(newJobId);
 			// Return the Job ID of the newly created Job
 			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(newJobId), HttpStatus.OK);
 		} catch (Exception exception) {

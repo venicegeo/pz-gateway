@@ -93,6 +93,9 @@ public class DeploymentController {
 			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(jobRequest, jobId, space);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
+			// Attempt to wait until the user is able to query the Job ID
+			// immediately.
+			gatewayUtil.verifyDatabaseInsertion(jobId);
 			// Send the response back to the user
 			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(jobId), HttpStatus.OK);
 		} catch (Exception exception) {
