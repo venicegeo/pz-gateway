@@ -10,12 +10,16 @@ import model.data.FileRepresentation;
 import model.data.location.FileLocation;
 import model.data.location.S3FileStore;
 import model.job.type.IngestJob;
+import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import util.PiazzaLogger;
@@ -51,9 +55,16 @@ public class GatewayUtil {
 	private String AMAZONS3_PRIVATE_KEY;
 	@Value("${vcap.services.pz-blobstore.credentials.bucket}")
 	private String AMAZONS3_BUCKET_NAME;
+	@Value("${jobmanager.host}")
+	private String JOBMANAGER_HOST;
+	@Value("${jobmanager.port}")
+	private String JOBMANAGER_PORT;
+	@Value("${jobmanager.protocol}")
+	private String JOBMANAGER_PROTOCOL;
 
 	private Producer<String, String> producer;
 	private AmazonS3 s3Client;
+	private RestTemplate restTemplate = new RestTemplate();
 
 	/**
 	 * Initializing the Kafka Producer on Controller startup.
@@ -145,5 +156,60 @@ public class GatewayUtil {
 		logger.log(String.format("S3 File for Job %s Persisted to %s:%s", jobId, AMAZONS3_BUCKET_NAME, fileKey),
 				PiazzaLogger.INFO);
 		return job;
+	}
+
+	/**
+	 * <p>
+	 * Verifies that the Job has been inserted into the Job Manager's jobs
+	 * table. This is intended to be used in cases where the Gateway request
+	 * intends to "busily wait" until a newly created Job ID is queryable by the
+	 * user. This is to prevent cases where a Job ID is returned to the user
+	 * before that ID can actually be queried by the database.
+	 * </p>
+	 * 
+	 * <p>
+	 * Since we are using Kafka to asynchronously move messages around, there's
+	 * no way for the Gateway to know that the Jobs table has been updated. So
+	 * the solution here is to query the Job's table until the Job appears.
+	 * There elegant solution that we will eventually move to is a REST-based
+	 * solution, where Kafka is not in the loop at all - or perhaps where the
+	 * Gateway has query access to the database. However, for now, this is an
+	 * easy way to ensure that the Job ID's are immediately queryable by users
+	 * who submit a Job.
+	 * </p>
+	 * 
+	 * <p>
+	 * This will time out after 3 attempts, in which case it will cease
+	 * blocking.
+	 * </p>
+	 * 
+	 * @param jobId
+	 *            The Job ID to ensure exists.
+	 */
+	public void verifyDatabaseInsertion(String id) {
+		ResponseEntity<PiazzaResponse> response = null;
+		int iteration = 0, delay = 250;
+		do {
+			// Check the status of the ID
+			try {
+				Thread.sleep(delay);
+				response = restTemplate.getForEntity(String.format("%s://%s:%s/%s/%s", JOBMANAGER_PROTOCOL,
+						JOBMANAGER_HOST, JOBMANAGER_PORT, "job", id), PiazzaResponse.class);
+			} catch (Exception exception) {
+				// ID is not ready yet.
+			}
+			// If OK, then return. If not OK, then the database has not yet
+			// indexed. Wait and try again.
+			if (response.getStatusCode() == HttpStatus.OK) {
+				return;
+			}
+			iteration++;
+		} while (iteration < 3);
+		// If we have reached the maximum number of iterations, then at least
+		// log that the ID has not been inserted into the database yet.
+		logger.log(
+				String.format(
+						"Gateway processed an Job ID %s that was returned to a user before it was detected as committed to the database. The user may not be able to query this ID immediately.",
+						id), PiazzaLogger.WARNING);
 	}
 }
