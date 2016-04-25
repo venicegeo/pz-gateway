@@ -1090,20 +1090,17 @@ definitions:
     type: object
     description: "Represents an external service that is registered through Piazza. External services registered can be invoked directly by Piazza, and will have their inputs and outputs validated as part of the Piazza brokering. Service objects are described by their endpoint URL, their inputs and outputs, and other metadata including availability and classification."
     properties:
-      id:
-        description: "The unique identifier of the Service."
+      url:
         type: string
-      name:
-        description: "Human-readable identifier for the service."
+        description: "The URL to the service to be executed."
+      contractUrl:
+        type: string
+        description: "URL to the schema or contract to interface with the service, such as a Swagger file, or documentation."
+      serviceId:
+        description: "The unique identifier of the Service."
         type: string
       resourceMetadata:
         $ref: '#/definitions/ResourceMetadata'
-      inputs:
-        type: object
-        description: "The inputs that the service expects to be provided."
-      outputs:
-        type: object
-        description: "The outputs that the service expects to provide upon successful execution."
   ResourceMetadata:
     type: object
     description: "Describes general Metadata containers for certain types of metadata that apply to Piazza Services and Data. Such as classification, author, availability, etc. All properties for Metadata are optional, and none are enforced or required. However, good practice dictates to specify as much metadata as possible when able."
@@ -1114,9 +1111,6 @@ definitions:
       description:
         type: string
         description: "Human-readable description of the object."
-      url:
-        type: string
-        description: "Associated URL location for the object."
   SpatialMetadata:
     type: object
     description: "Describes common spatial metadata that applies to Data ingested through Piazza."
