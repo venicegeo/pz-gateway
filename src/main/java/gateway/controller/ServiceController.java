@@ -222,7 +222,7 @@ public class ServiceController {
 	@RequestMapping(value = "/service", method = RequestMethod.GET)
 	public ResponseEntity<PiazzaResponse> getServices(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@RequestParam(value = "pageSize", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
 			@RequestParam(value = "keyword", required = false) String keyword, Principal user) {
 		try {
 			// Log the request
