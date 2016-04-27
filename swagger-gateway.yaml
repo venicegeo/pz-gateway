@@ -1141,6 +1141,10 @@ definitions:
     type: object
     description: "The payload that describes a Service Controller execution Job."
     properties:
+      type:
+        type: "string"
+        description: "Legacy. This will eventually be removed."
+        default: "execute-service"
       serviceId:
         type: string
         description: "The ID of the Service to Execute."
