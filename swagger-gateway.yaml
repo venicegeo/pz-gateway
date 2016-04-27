@@ -1058,6 +1058,10 @@ definitions:
     type: object
     description: "Defines the payload for submitting the request to create a Deployment for a Data Resource."
     properties:
+      type:
+        description: "Legacy. This will eventually be removed."
+        type: string
+        default: "access"
       dataId:
         type: string
         description: "The Data ID of the Data to stand up as a Deployment service."
