@@ -47,6 +47,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import util.PiazzaLogger;
 
+import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -316,23 +317,24 @@ public class DataController {
 	 *         cannot be retrieved.
 	 */
 	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET)
-	public ResponseEntity<byte[]> getFile(@PathVariable(value = "dataId") String dataId, Principal user)
-			throws Exception {
+	public ResponseEntity<byte[]> getFile(@PathVariable(value = "dataId") String dataId,
+			@RequestParam(value = "filename", required = false) String fileName, Principal user) throws Exception {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested file download for Data %s", gatewayUtil.getPrincipalName(user),
-					dataId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested file download for Data %s", gatewayUtil.getPrincipalName(user), dataId), PiazzaLogger.INFO);
+			
 			// Get the bytes of the Data
-			ResponseEntity<byte[]> accessResponse = restTemplate.getForEntity(
-					String.format("%s://%s:%s/file/%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, dataId),
-					byte[].class);
-			return accessResponse;
+			String url = String.format("%s://%s:%s/file/%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, dataId);
+			url = (StringUtils.isNullOrEmpty(fileName) )?(url):(String.format("%s?filename=%s", url, fileName));
+			ResponseEntity<byte[]> accessResponse = restTemplate.getForEntity(url, byte[].class);
+
 			// Stream the bytes back
+			return accessResponse;
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error downloading file for Data %s by user %s: %s", dataId,
-					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			String error = String.format("Error downloading file for Data %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.INFO);
+
 			throw new Exception(error);
 		}
 	}
