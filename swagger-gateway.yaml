@@ -99,7 +99,7 @@ paths:
       summary: Executes a registered Service
       description: "Creates a Piazza Job to execute a registered service in the system, with the specified parameters."
       parameters:
-        - name: data
+        - name: body
           in: body
           description: "The Payload that describes the Service to be executed, and the inputs for that service."
           required: true
@@ -1140,11 +1140,25 @@ definitions:
   ExecuteJob:
     type: object
     description: "The payload that describes a Service Controller execution Job."
+    required:
+      - type
+      - data
     properties:
       type:
         type: "string"
         description: "Legacy. This will eventually be removed."
         default: "execute-service"
+      data:
+        description: "The parameter inputs for Service execution."
+        $ref: '#/definitions/ExecuteServiceData'
+  ExecuteServiceData:
+    type: object
+    description: "Describes the required parameters for executing a Service."
+    required:
+      - serviceId
+      - dataInputs
+      - dataOutput
+    properties:
       serviceId:
         type: string
         description: "The ID of the Service to Execute."
