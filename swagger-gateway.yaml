@@ -947,14 +947,41 @@ definitions:
   DataResource:
     type: object
     description: "Defines a Data Resource in the Piazza core data holdings. Includes information as to the data's format, location, spatial content, and metadata."
+    required:
+      - dataType
     properties:
-      data:
+      dataType:
         description: "Polymorphically defines the information specific to this Data Resource, based on its format."
-        type: object
+        $ref: '#/definitions/DataType'
       metadata:
         $ref: '#/definitions/ResourceMetadata'
       spatialMetadata:
         $ref: '#/definitions/SpatialMetadata'
+  DataType:
+    type: object
+    description: "Defines Resource information regarding a file representing geospatial data, either vector or raster. This contains the location of the file or URI."
+    required:
+      - type
+    properties:
+      type:
+        description: "The type of the Data. Valid options are raster, shapefile, wfs, text, postgis, geojson, and pointcloud."
+        type: string
+      location:
+        description: "Optional. The location of the data. Used to describe S3 stores, or folder shares, for where the data is located."
+        $ref: '#/definitions/Location'
+  Location:
+    type: object
+    description: "Defines the location for a file."
+    properties:
+      bucketName:
+        description: "The S3 bucket name, if the file resides in S3."
+        type: string
+      fileName:
+        description: "The name of the file, if this file resides in S3 or a folder share."
+        type: string
+      domainname:
+        description: "The S3 domain name, if this file resides in S3."
+        type: string
   DataResourceResults:
     type: object
     description: "Describes a list of returned query results of Data Resource objects."
@@ -1030,19 +1057,21 @@ definitions:
   IngestJob:
     type: object
     description: "Defines the payload for requesting Data to be loaded into Piazza."
-    allOf:
-      - $ref: '#/definitions/DataResource'
-      - required:
-        - host
-        - type
-        properties:
-          host:
-            description: "Dictates if Piazza should internally host the data or not. If set to true, then the data will be stored in Piazza's data holdings. If false, then Piazza will point to the location of the data, but will not store the data internally."
-            type: boolean
-          type:
-            description: "Legacy. This will eventually be removed."
-            type: string
-            default: "ingest"
+    required:
+      - host
+      - type
+      - data
+    properties:
+      host:
+        description: "Dictates if Piazza should internally host the data or not. If set to true, then the data will be stored in Piazza's data holdings. If false, then Piazza will point to the location of the data, but will not store the data internally."
+        type: boolean
+      type:
+        description: "Legacy. This will eventually be removed."
+        type: string
+        default: "ingest"
+      data:
+        description: "The Description of the Data being ingested, including metadata, and the path to the data."
+        $ref: '#/definitions/DataResource'
   SearchJob:
     type: object
     description: "Defines the payload for submitting a Search Request to Piazza data."
