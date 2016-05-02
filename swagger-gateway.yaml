@@ -979,8 +979,8 @@ definitions:
       fileName:
         description: "The name of the file, if this file resides in S3 or a folder share."
         type: string
-      domainname:
-        description: "The S3 domain name, if this file resides in S3."
+      domainName:
+        description: "Optional. The S3 domain name, if this file resides in S3."
         type: string
   DataResourceResults:
     type: object
