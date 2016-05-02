@@ -242,6 +242,36 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
   /deployment:
+    get:
+      summary: Obtain a list of all GeoServer deployments held by Piazza.
+      description: "Data can be made available through the Piazza GeoServer as WMS/WCS/WFS. This must be done through POSTing to the /deployment endpoint. This endpoint will return a list of all Deployed resources."
+      parameters:
+        - name: keyword
+          in: query
+          description: "A general keyword search to apply to all Deployments."
+          required: false
+          type: string
+        - name: page
+          in: query
+          description: "Paginating large datasets. This will determine the starting page for the query."
+          required: false
+          type: number
+        - name: per_page
+          in: query
+          description: "The number of results to be returned per query."
+          required: false
+          type: number
+      tags:
+        - Deployment
+      responses:
+        200:
+          description: "The list of Search results that match the query string."
+          schema:
+              $ref: '#/definitions/DeploymentResults'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'    
     post:
       summary: Obtain a GeoServer deployment for a Data Resource object.
       description: "Data that has been ingested into Piazza can be deployed to GeoServer. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed."
@@ -994,6 +1024,18 @@ definitions:
       pagination:
         description: "The pagination metadata for this query."
         $ref: '#/definitions/Pagination'
+  DeploymentResults:
+    type: object
+    description: "Describes a list of returned query results of Deployment objects."
+    properties:
+      data:
+        description: "The array of Deployment results."
+        type: array
+        items: 
+          $ref: '#/definitions/Deployment'
+      pagination:
+        description: "The pagination metadata for this query."
+        $ref: '#/definitions/Pagination'        
   ServiceResults:
     type: object
     description: "Describes a list of returned query results of Service objects."
