@@ -216,8 +216,11 @@ public class GatewayUtil {
 			}
 			// If OK, then return. If not OK, then the database has not yet
 			// indexed. Wait and try again.
-			if ((response.getStatusCode() == HttpStatus.OK) && (response.getBody() instanceof ErrorResponse == false)) {
-				return;
+			if (response != null) {
+				if ((response.getStatusCode() == HttpStatus.OK)
+						&& (response.getBody() instanceof ErrorResponse == false)) {
+					return;
+				}
 			}
 			iteration++;
 		} while (iteration < 4);
