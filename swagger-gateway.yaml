@@ -1284,8 +1284,23 @@ definitions:
         type: string
         description: "The human-readable description of what this Trigger intends to accomplish."
       condition:
-        type: object
+        $ref: '#/definitions/Condition'
         description: "Defines the trigger conditions, the query replacements, and the Job to execute upon this object becoming Triggered."
+  Condition:
+    type: object
+    description: "Describes a Condition for a Piazza Trigger. This specifies the action(s) that must take place, and the action(s) to occur on triggering."
+    properties:
+      eventtype_ids:
+        type: array
+        items:
+          type: string
+        description: "The array of Event Type IDs."
+      query:
+        type: object
+        description: "The Elastic Search query string."
+      job:
+        type: object
+        description: "The Template of the Job to be executed when the conditions are met."
   Alert:
     type: object
     description: "Defines the event for when a Trigger has been fired based on a condition defined within that Trigger."
