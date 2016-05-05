@@ -16,6 +16,7 @@
 package gateway.controller;
 
 import gateway.controller.util.GatewayUtil;
+import gateway.controller.util.PiazzaRestController;
 
 import java.security.Principal;
 
@@ -49,7 +50,7 @@ import util.PiazzaLogger;
  */
 @CrossOrigin
 @RestController
-public class ServiceController {
+public class ServiceController extends PiazzaRestController {
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
@@ -246,5 +247,4 @@ public class ServiceController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-
 }

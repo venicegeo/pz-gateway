@@ -16,6 +16,7 @@
 package gateway.controller;
 
 import gateway.controller.util.GatewayUtil;
+import gateway.controller.util.PiazzaRestController;
 
 import java.security.Principal;
 
@@ -58,7 +59,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 @CrossOrigin
 @RestController
-public class DataController {
+public class DataController extends PiazzaRestController {
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
