@@ -250,42 +250,4 @@ public class ServiceController extends ErrorController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-
-//	/*
-//	 * This method needs to be declared once within the app.
-//	 */
-//	@RequestMapping(value = "/error", method = RequestMethod.GET)
-//	public String missingEndpoint_GetRequest() {
-//		return "missing get request endpoint";
-//	}
-//
-//	/*
-//	 * This method needs to be declared once within the app.
-//	 */
-//	@RequestMapping(value = "/error", method = RequestMethod.POST)
-//	public String missingEndpoint_PostRequest() {
-//		return "missing post request endpoint";
-//	}
-//
-//	@ExceptionHandler(Exception.class)
-//	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
-//	@ResponseBody
-//	// public ResponseEntity<POJO> genericHandler(Exception e) {
-//	public ResponseEntity<String> genericHandler(Exception e) {
-//		return new ResponseEntity<>("Caught general exception, message format under construction!",
-//				HttpStatus.BAD_REQUEST);
-//		// return new ResponseEntity<>(new POJO(errorCode, errorMsg);
-//	}
-//
-//	@ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-//	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
-//	@ResponseBody
-//	// public ResponseEntity<POJO>
-//	// specificHandler(HttpMediaTypeNotSupportedException e) {
-//	public ResponseEntity<String> specificHandler(HttpMediaTypeNotSupportedException e) {
-//		return new ResponseEntity<>("Caught specific exception, message format under construction!",
-//				HttpStatus.BAD_REQUEST);
-//		// return new ResponseEntity<>(new POJO(errorCode, errorMsg),
-//	}
-
 }
