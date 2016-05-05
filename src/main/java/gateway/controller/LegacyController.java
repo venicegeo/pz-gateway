@@ -15,6 +15,8 @@
  **/
 package gateway.controller;
 
+import gateway.controller.util.PiazzaRestController;
+
 import java.security.Principal;
 
 import javax.annotation.PostConstruct;
@@ -73,7 +75,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @CrossOrigin
 @RestController
 @Deprecated
-public class LegacyController extends ErrorController {
+public class LegacyController extends PiazzaRestController {
 	@Autowired
 	private PiazzaLogger logger;
 	@Autowired

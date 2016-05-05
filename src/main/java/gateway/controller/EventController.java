@@ -16,6 +16,7 @@
 package gateway.controller;
 
 import gateway.controller.util.GatewayUtil;
+import gateway.controller.util.PiazzaRestController;
 
 import java.security.Principal;
 
@@ -46,7 +47,7 @@ import util.PiazzaLogger;
  */
 @CrossOrigin
 @RestController
-public class EventController extends ErrorController {
+public class EventController extends PiazzaRestController {
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
