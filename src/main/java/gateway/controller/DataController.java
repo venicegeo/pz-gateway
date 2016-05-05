@@ -48,7 +48,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import util.PiazzaLogger;
 
-import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**

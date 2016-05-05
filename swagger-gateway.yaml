@@ -19,9 +19,9 @@ info:
   description: Piazza Core Services API
   version: "0.1.0"
   contact: 
-    name: Patrick Doody
-    email: patrick.doody@rgi-corp.com
-    url: https://github.com/venicegeo/venice/wiki
+    name: The VeniceGeo Project
+    email: venice@radiantblue.com
+    url: http://radiantblue.com
 host: pz-gateway.stage.geointservices.io
 schemes:
   - https
