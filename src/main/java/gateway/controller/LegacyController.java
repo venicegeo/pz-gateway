@@ -73,7 +73,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @CrossOrigin
 @RestController
 @Deprecated
-public class LegacyController {
+public class LegacyController extends ErrorController {
 	@Autowired
 	private PiazzaLogger logger;
 	@Autowired

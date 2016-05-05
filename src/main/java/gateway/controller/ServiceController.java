@@ -53,7 +53,7 @@ import util.PiazzaLogger;
  */
 @CrossOrigin
 @RestController
-public class ServiceController {
+public class ServiceController extends ErrorController {
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired

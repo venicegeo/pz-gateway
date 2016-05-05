@@ -45,7 +45,7 @@ import util.PiazzaLogger;
  */
 @CrossOrigin
 @RestController
-public class AlertTriggerController {
+public class AlertTriggerController extends ErrorController {
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired

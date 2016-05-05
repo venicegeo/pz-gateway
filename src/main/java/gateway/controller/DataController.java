@@ -62,7 +62,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 @CrossOrigin
 @RestController
-public class DataController {
+public class DataController extends ErrorController {
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
@@ -339,13 +339,5 @@ public class DataController {
 			logger.log(error, PiazzaLogger.INFO);
 			throw new Exception(error);
 		}
-	}
-	
-	@ExceptionHandler(Exception.class)
-	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
-	@ResponseBody
-	public ResponseEntity<PiazzaResponse> genericHandler(Exception e) {
-		String message = String.format("%s%s", "Piazza exception occurred. ", e.toString());
-		return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST);
 	}
 }

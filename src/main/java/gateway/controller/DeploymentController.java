@@ -50,7 +50,7 @@ import util.PiazzaLogger;
  */
 @CrossOrigin
 @RestController
-public class DeploymentController {
+public class DeploymentController extends ErrorController {
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired

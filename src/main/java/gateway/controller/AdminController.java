@@ -43,7 +43,7 @@ import model.response.PiazzaResponse;
  */
 @CrossOrigin
 @RestController
-public class AdminController {
+public class AdminController extends ErrorController {
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
 	@Value("${jobmanager.host}")
@@ -87,10 +87,11 @@ public class AdminController {
 
 	/**
 	 * Error handling for missing POST request
+	 * 
 	 * @return ResponseEntity<?> error describing the missing POST endpoint
 	 */
 	@RequestMapping(value = "/error", method = RequestMethod.POST)
-	public ResponseEntity<?>  missingEndpoint_PostRequest() {
+	public ResponseEntity<?> missingEndpoint_PostRequest() {
 		String message = "Missing POST request endpoint, please check the API.";
 		return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST);
 	}
