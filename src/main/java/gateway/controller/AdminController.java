@@ -21,10 +21,17 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import model.response.ErrorResponse;
+import model.response.PiazzaResponse;
 
 /**
  * REST Controller that defines administrative end points that reference
@@ -65,5 +72,26 @@ public class AdminController {
 		stats.put("Space", SPACE);
 		// Return
 		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
+	}
+	
+	/**
+	 * Error handling for missing GET request
+	 * 
+	 * @return ResponseEntity<?> error describing the missing GET endpoint
+	 */
+	@RequestMapping(value = "/error", method = RequestMethod.GET)
+	public ResponseEntity<?> missingEndpoint_GetRequest() {
+		String message = "Missing GET request endpoint, please check the API.";
+		return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST);
+	}
+
+	/**
+	 * Error handling for missing POST request
+	 * @return ResponseEntity<?> error describing the missing POST endpoint
+	 */
+	@RequestMapping(value = "/error", method = RequestMethod.POST)
+	public ResponseEntity<?>  missingEndpoint_PostRequest() {
+		String message = "Missing POST request endpoint, please check the API.";
+		return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST);
 	}
 }
