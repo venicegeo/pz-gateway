@@ -1,3 +1,18 @@
+/**
+ * Copyright 2016, RadiantBlue Technologies, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 package gateway.controller.util;
 
 import java.security.Principal;
@@ -10,6 +25,7 @@ import model.data.FileRepresentation;
 import model.data.location.FileLocation;
 import model.data.location.S3FileStore;
 import model.job.type.IngestJob;
+import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.Producer;
@@ -49,9 +65,9 @@ public class GatewayUtil {
 	private String KAFKA_GROUP;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
-	@Value("${vcap.services.pz-blobstore.credentials.access:}")
+	@Value("${vcap.services.pz-blobstore.credentials.access_key_id:}")
 	private String AMAZONS3_ACCESS_KEY;
-	@Value("${vcap.services.pz-blobstore.credentials.private:}")
+	@Value("${vcap.services.pz-blobstore.credentials.secret_access_key:}")
 	private String AMAZONS3_PRIVATE_KEY;
 	@Value("${vcap.services.pz-blobstore.credentials.bucket}")
 	private String AMAZONS3_BUCKET_NAME;
@@ -200,11 +216,14 @@ public class GatewayUtil {
 			}
 			// If OK, then return. If not OK, then the database has not yet
 			// indexed. Wait and try again.
-			if (response.getStatusCode() == HttpStatus.OK) {
-				return;
+			if (response != null) {
+				if ((response.getStatusCode() == HttpStatus.OK)
+						&& (response.getBody() instanceof ErrorResponse == false)) {
+					return;
+				}
 			}
 			iteration++;
-		} while (iteration < 3);
+		} while (iteration < 4);
 		// If we have reached the maximum number of iterations, then at least
 		// log that the ID has not been inserted into the database yet.
 		logger.log(

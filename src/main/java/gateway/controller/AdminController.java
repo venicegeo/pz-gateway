@@ -15,8 +15,13 @@
  **/
 package gateway.controller;
 
+import gateway.controller.util.PiazzaRestController;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import model.response.ErrorResponse;
+import model.response.PiazzaResponse;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -36,7 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @CrossOrigin
 @RestController
-public class AdminController {
+public class AdminController extends PiazzaRestController {
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
 	@Value("${jobmanager.host}")
@@ -65,5 +70,27 @@ public class AdminController {
 		stats.put("Space", SPACE);
 		// Return
 		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
+	}
+
+	/**
+	 * Error handling for missing GET request
+	 * 
+	 * @return Error describing the missing GET end point
+	 */
+	@RequestMapping(value = "/error", method = RequestMethod.GET)
+	public ResponseEntity<?> missingEndpoint_GetRequest() {
+		String message = "Gateway GET endpoint not defined. Please verify the API for the correct call.";
+		return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST);
+	}
+
+	/**
+	 * Error handling for missing POST request
+	 * 
+	 * @return Error describing the missing POST endpoint
+	 */
+	@RequestMapping(value = "/error", method = RequestMethod.POST)
+	public ResponseEntity<?> missingEndpoint_PostRequest() {
+		String message = "Gateway POST endpoint not defined. Please verify the API for the correct call.";
+		return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST);
 	}
 }

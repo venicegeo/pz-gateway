@@ -99,7 +99,7 @@ paths:
       summary: Executes a registered Service
       description: "Creates a Piazza Job to execute a registered service in the system, with the specified parameters."
       parameters:
-        - name: data
+        - name: body
           in: body
           description: "The Payload that describes the Service to be executed, and the inputs for that service."
           required: true
@@ -242,6 +242,36 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
   /deployment:
+    get:
+      summary: Obtain a list of all GeoServer deployments held by Piazza.
+      description: "Data can be made available through the Piazza GeoServer as WMS/WCS/WFS. This must be done through POSTing to the /deployment endpoint. This endpoint will return a list of all Deployed resources."
+      parameters:
+        - name: keyword
+          in: query
+          description: "A general keyword search to apply to all Deployments."
+          required: false
+          type: string
+        - name: page
+          in: query
+          description: "Paginating large datasets. This will determine the starting page for the query."
+          required: false
+          type: number
+        - name: per_page
+          in: query
+          description: "The number of results to be returned per query."
+          required: false
+          type: number
+      tags:
+        - Deployment
+      responses:
+        200:
+          description: "The list of Search results that match the query string."
+          schema:
+              $ref: '#/definitions/DeploymentResults'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse' 
     post:
       summary: Obtain a GeoServer deployment for a Data Resource object.
       description: "Data that has been ingested into Piazza can be deployed to GeoServer. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed."
@@ -281,6 +311,24 @@ paths:
           description: "The metadata about the Deployment. Contains the unique ID of the deployment; the Data ID that it represents; and server information regarding the access of the deployed service (likely GeoServer) including the GetCapabilities document."
           schema:
             $ref: '#/definitions/Deployment'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    delete:
+      summary: Remove an active deployment.
+      description: "If a user wishes to delete a deployment before its lease time is up (and automatic deletion could take place) then this endpoint provides a way to do so manually."
+      parameters:
+        - name: deploymentId
+          in: path
+          description: "ID of the Deployment to Delete."
+          required: true
+          type: string
+      tags:
+        - Deployment
+      responses:
+        200:
+          description: "Confirmation that the deployment has been deleted."
         default:
           description: "Unexpected Error"
           schema:
@@ -947,14 +995,41 @@ definitions:
   DataResource:
     type: object
     description: "Defines a Data Resource in the Piazza core data holdings. Includes information as to the data's format, location, spatial content, and metadata."
+    required:
+      - dataType
     properties:
-      data:
+      dataType:
         description: "Polymorphically defines the information specific to this Data Resource, based on its format."
-        type: object
+        $ref: '#/definitions/DataType'
       metadata:
         $ref: '#/definitions/ResourceMetadata'
       spatialMetadata:
         $ref: '#/definitions/SpatialMetadata'
+  DataType:
+    type: object
+    description: "Defines Resource information regarding a file representing geospatial data, either vector or raster. This contains the location of the file or URI."
+    required:
+      - type
+    properties:
+      type:
+        description: "The type of the Data. Valid options are raster, shapefile, wfs, text, postgis, geojson, and pointcloud."
+        type: string
+      location:
+        description: "Optional. The location of the data. Used to describe S3 stores, or folder shares, for where the data is located."
+        $ref: '#/definitions/Location'
+  Location:
+    type: object
+    description: "Defines the location for a file."
+    properties:
+      bucketName:
+        description: "The S3 bucket name, if the file resides in S3."
+        type: string
+      fileName:
+        description: "The name of the file, if this file resides in S3 or a folder share."
+        type: string
+      domainName:
+        description: "Optional. The S3 domain name, if this file resides in S3."
+        type: string
   DataResourceResults:
     type: object
     description: "Describes a list of returned query results of Data Resource objects."
@@ -967,6 +1042,18 @@ definitions:
       pagination:
         description: "The pagination metadata for this query."
         $ref: '#/definitions/Pagination'
+  DeploymentResults:
+    type: object
+    description: "Describes a list of returned query results of Deployment objects."
+    properties:
+      data:
+        description: "The array of Deployment results."
+        type: array
+        items: 
+          $ref: '#/definitions/Deployment'
+      pagination:
+        description: "The pagination metadata for this query."
+        $ref: '#/definitions/Pagination'        
   ServiceResults:
     type: object
     description: "Describes a list of returned query results of Service objects."
@@ -1030,19 +1117,21 @@ definitions:
   IngestJob:
     type: object
     description: "Defines the payload for requesting Data to be loaded into Piazza."
-    allOf:
-      - $ref: '#/definitions/DataResource'
-      - required:
-        - host
-        - type
-        properties:
-          host:
-            description: "Dictates if Piazza should internally host the data or not. If set to true, then the data will be stored in Piazza's data holdings. If false, then Piazza will point to the location of the data, but will not store the data internally."
-            type: boolean
-          type:
-            description: "Legacy. This will eventually be removed."
-            type: string
-            default: "ingest"
+    required:
+      - host
+      - type
+      - data
+    properties:
+      host:
+        description: "Dictates if Piazza should internally host the data or not. If set to true, then the data will be stored in Piazza's data holdings. If false, then Piazza will point to the location of the data, but will not store the data internally."
+        type: boolean
+      type:
+        description: "Legacy. This will eventually be removed."
+        type: string
+        default: "ingest"
+      data:
+        description: "The Description of the Data being ingested, including metadata, and the path to the data."
+        $ref: '#/definitions/DataResource'
   SearchJob:
     type: object
     description: "Defines the payload for submitting a Search Request to Piazza data."
@@ -1058,6 +1147,10 @@ definitions:
     type: object
     description: "Defines the payload for submitting the request to create a Deployment for a Data Resource."
     properties:
+      type:
+        description: "Legacy. This will eventually be removed."
+        type: string
+        default: "access"
       dataId:
         type: string
         description: "The Data ID of the Data to stand up as a Deployment service."
@@ -1136,6 +1229,24 @@ definitions:
   ExecuteJob:
     type: object
     description: "The payload that describes a Service Controller execution Job."
+    required:
+      - type
+      - data
+    properties:
+      type:
+        type: "string"
+        description: "Legacy. This will eventually be removed."
+        default: "execute-service"
+      data:
+        description: "The parameter inputs for Service execution."
+        $ref: '#/definitions/ExecuteServiceData'
+  ExecuteServiceData:
+    type: object
+    description: "Describes the required parameters for executing a Service."
+    required:
+      - serviceId
+      - dataInputs
+      - dataOutput
     properties:
       serviceId:
         type: string
@@ -1191,8 +1302,23 @@ definitions:
         type: string
         description: "The human-readable description of what this Trigger intends to accomplish."
       condition:
-        type: object
+        $ref: '#/definitions/Condition'
         description: "Defines the trigger conditions, the query replacements, and the Job to execute upon this object becoming Triggered."
+  Condition:
+    type: object
+    description: "Describes a Condition for a Piazza Trigger. This specifies the action(s) that must take place, and the action(s) to occur on triggering."
+    properties:
+      eventtype_ids:
+        type: array
+        items:
+          type: string
+        description: "The array of Event Type IDs."
+      query:
+        type: object
+        description: "The Elastic Search query string."
+      job:
+        type: object
+        description: "The Template of the Job to be executed when the conditions are met."
   Alert:
     type: object
     description: "Defines the event for when a Trigger has been fired based on a condition defined within that Trigger."

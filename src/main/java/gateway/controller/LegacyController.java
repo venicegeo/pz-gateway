@@ -15,6 +15,8 @@
  **/
 package gateway.controller;
 
+import gateway.controller.util.PiazzaRestController;
+
 import java.security.Principal;
 
 import javax.annotation.PostConstruct;
@@ -73,7 +75,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @CrossOrigin
 @RestController
 @Deprecated
-public class LegacyController {
+public class LegacyController extends PiazzaRestController {
 	@Autowired
 	private PiazzaLogger logger;
 	@Autowired
@@ -95,9 +97,9 @@ public class LegacyController {
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
-	@Value("${vcap.services.pz-blobstore.credentials.access:}")
+	@Value("${vcap.services.pz-blobstore.credentials.access_key_id:}")
 	private String AMAZONS3_ACCESS_KEY;
-	@Value("${vcap.services.pz-blobstore.credentials.private:}")
+	@Value("${vcap.services.pz-blobstore.credentials.secret_access_key:}")
 	private String AMAZONS3_PRIVATE_KEY;
 	@Value("${space}")
 	private String space;
