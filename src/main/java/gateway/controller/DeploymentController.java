@@ -192,4 +192,38 @@ public class DeploymentController extends PiazzaRestController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	/**
+	 * Deletes Deployment information for an active deployment.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Deployment/
+	 *      delete_deployment_deploymentId
+	 * 
+	 * @param deploymentId
+	 *            The ID of the deployment to delete.
+	 * @param user
+	 *            The user requesting the deployment information
+	 * @return OK confirmation if deleted, or an ErrorResponse if exceptions
+	 *         occur
+	 */
+	@RequestMapping(value = "/deployment/{deploymentId}", method = RequestMethod.DELETE)
+	public ResponseEntity<PiazzaResponse> deleteDeployment(@PathVariable(value = "deploymentId") String deploymentId,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested Deletion for Deployment %s",
+					gatewayUtil.getPrincipalName(user), deploymentId), PiazzaLogger.INFO);
+			// Broker the request to Pz-Access
+			restTemplate.delete(String.format("%s://%s:%s/%s/%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT,
+					"deployment", deploymentId));
+			return null;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Deleting Deployment by ID %s by user %s: %s", deploymentId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 }

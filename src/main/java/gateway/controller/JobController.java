@@ -125,11 +125,20 @@ public class JobController extends PiazzaRestController {
 			logger.log(
 					String.format("User %s requested Job Abort for Job ID %s with reason %s",
 							gatewayUtil.getPrincipalName(user), jobId, reason), PiazzaLogger.INFO);
-			// Create the Request object
+
+			// Create the Request object.
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.userName = gatewayUtil.getPrincipalName(user);
 			request.jobType = new AbortJob(jobId, reason);
-			// Proxy the request to the Job Manager
+
+			// Send the message through Kafka to delete the Job. This message
+			// will get picked up by whatever component is running the Job.
+			ProducerRecord<String, String> abortMessage = JobMessageFactory.getAbortJobMessage(request,
+					gatewayUtil.getUuid(), space);
+			gatewayUtil.sendKafkaMessage(abortMessage);
+
+			// Proxy the request to the Job Manager, where the Job Table will be
+			// updated.
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);

@@ -271,7 +271,7 @@ paths:
         default:
           description: "Unexpected Error"
           schema:
-            $ref: '#/definitions/ErrorResponse'    
+            $ref: '#/definitions/ErrorResponse' 
     post:
       summary: Obtain a GeoServer deployment for a Data Resource object.
       description: "Data that has been ingested into Piazza can be deployed to GeoServer. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed."
@@ -311,6 +311,24 @@ paths:
           description: "The metadata about the Deployment. Contains the unique ID of the deployment; the Data ID that it represents; and server information regarding the access of the deployed service (likely GeoServer) including the GetCapabilities document."
           schema:
             $ref: '#/definitions/Deployment'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    delete:
+      summary: Remove an active deployment.
+      description: "If a user wishes to delete a deployment before its lease time is up (and automatic deletion could take place) then this endpoint provides a way to do so manually."
+      parameters:
+        - name: deploymentId
+          in: path
+          description: "ID of the Deployment to Delete."
+          required: true
+          type: string
+      tags:
+        - Deployment
+      responses:
+        200:
+          description: "Confirmation that the deployment has been deleted."
         default:
           description: "Unexpected Error"
           schema:
@@ -1284,8 +1302,23 @@ definitions:
         type: string
         description: "The human-readable description of what this Trigger intends to accomplish."
       condition:
-        type: object
+        $ref: '#/definitions/Condition'
         description: "Defines the trigger conditions, the query replacements, and the Job to execute upon this object becoming Triggered."
+  Condition:
+    type: object
+    description: "Describes a Condition for a Piazza Trigger. This specifies the action(s) that must take place, and the action(s) to occur on triggering."
+    properties:
+      eventtype_ids:
+        type: array
+        items:
+          type: string
+        description: "The array of Event Type IDs."
+      query:
+        type: object
+        description: "The Elastic Search query string."
+      job:
+        type: object
+        description: "The Template of the Job to be executed when the conditions are met."
   Alert:
     type: object
     description: "Defines the event for when a Trigger has been fired based on a condition defined within that Trigger."

@@ -25,6 +25,7 @@ import model.data.FileRepresentation;
 import model.data.location.FileLocation;
 import model.data.location.S3FileStore;
 import model.job.type.IngestJob;
+import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.Producer;
@@ -215,11 +216,14 @@ public class GatewayUtil {
 			}
 			// If OK, then return. If not OK, then the database has not yet
 			// indexed. Wait and try again.
-			if (response.getStatusCode() == HttpStatus.OK) {
-				return;
+			if (response != null) {
+				if ((response.getStatusCode() == HttpStatus.OK)
+						&& (response.getBody() instanceof ErrorResponse == false)) {
+					return;
+				}
 			}
 			iteration++;
-		} while (iteration < 3);
+		} while (iteration < 4);
 		// If we have reached the maximum number of iterations, then at least
 		// log that the ID has not been inserted into the database yet.
 		logger.log(
