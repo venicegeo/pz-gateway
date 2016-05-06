@@ -54,6 +54,16 @@ public class AdminController extends PiazzaRestController {
 	private String SPACE;
 
 	/**
+	 * Healthcheck required for all Piazza Core Services
+	 * 
+	 * @return String
+	 */
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	public String getHealthCheck() {
+		return "Hello, Health Check here for pz-gateway.";
+	}
+	
+	/**
 	 * Returns administrative statistics for this Gateway component.
 	 * 
 	 * @return Component information
