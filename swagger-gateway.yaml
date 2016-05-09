@@ -1194,6 +1194,16 @@ definitions:
         type: string
       resourceMetadata:
         $ref: '#/definitions/ResourceMetadata'
+  ServiceDataType:
+    type: object
+    description: "The JSON representation of some Resource that is fed in as an input to a Service execution."
+    properties:
+      type:
+        type: string
+        description: "The type of the data. See the Service documentation for details on the type."
+      mimeType:
+        type: string
+        description: "The mime type of the data."
   ResourceMetadata:
     type: object
     description: "Describes general Metadata containers for certain types of metadata that apply to Piazza Services and Data. Such as classification, author, availability, etc. All properties for Metadata are optional, and none are enforced or required. However, good practice dictates to specify as much metadata as possible when able."
@@ -1254,8 +1264,10 @@ definitions:
       dataInputs:
         type: object
         description: "The Inputs for the execution."
+        additionalProperties:
+          $ref: '#/definitions/ServiceDataType'
       dataOutput: 
-        type: object
+        $ref: '#/definitions/ServiceDataType'
         description: "The Output for the execution."
   EventType:
     type: object
