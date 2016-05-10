@@ -184,19 +184,16 @@ public class GatewayUtil {
 	 * </p>
 	 * 
 	 * <p>
-	 * Since we are using Kafka to asynchronously move messages around, there's
-	 * no way for the Gateway to know that the Jobs table has been updated. So
-	 * the solution here is to query the Job's table until the Job appears.
-	 * There elegant solution that we will eventually move to is a REST-based
-	 * solution, where Kafka is not in the loop at all - or perhaps where the
-	 * Gateway has query access to the database. However, for now, this is an
-	 * easy way to ensure that the Job ID's are immediately queryable by users
-	 * who submit a Job.
+	 * This will time out after 3 attempts, in which case it will cease
+	 * blocking.
 	 * </p>
 	 * 
 	 * <p>
-	 * This will time out after 3 attempts, in which case it will cease
-	 * blocking.
+	 * This is now deprecated. With the removal of the Dispatcher component, the
+	 * Job Manager handles both the writing to the Jobs table and the forwarding
+	 * of the Job. Thus, the Job will never be forwarded until it is in the Jobs
+	 * table. This method will linger until the old legacy API is removed - at
+	 * which point, this method should be removed.
 	 * </p>
 	 * 
 	 * @param jobId
