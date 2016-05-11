@@ -26,7 +26,7 @@ import org.springframework.web.client.RestTemplate;
 import util.PiazzaLogger;
 
 /**
- * Bean that communicates with the pz-security project for authorization
+ * Bean that communicates with the pz-security project for authentication
  * information.
  * 
  * @author Russell.Orf
