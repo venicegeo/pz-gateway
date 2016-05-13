@@ -17,6 +17,7 @@ package gateway;
 
 import gateway.auth.PiazzaBasicAuthenticationEntryPoint;
 import gateway.auth.PiazzaBasicAuthenticationProvider;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -26,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -36,7 +38,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 /**
- * Spring-boot configuration for the Gateway service. 
+ * Spring-boot configuration for the Gateway service.
  * 
  * @author Patrick.Doody, Russell.Orf
  * 
@@ -54,34 +56,32 @@ public class Application extends SpringBootServletInitializer {
 		SpringApplication.run(Application.class, args);
 	}
 
+	@Bean
+	public Jackson2ObjectMapperBuilder jacksonBuilder() {
+		Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+		builder.indentOutput(true);
+		return builder;
+	}
+
 	@Configuration
 	@Profile({ "secure" })
 	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
-
 		@Autowired
 		private PiazzaBasicAuthenticationProvider basicAuthProvider;
-		@Autowired 
+		@Autowired
 		private PiazzaBasicAuthenticationEntryPoint basicEntryPoint;
 
 		@Override
 		protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 			auth.authenticationProvider(basicAuthProvider);
 		}
-		
+
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http
-				.addFilterBefore(corsFilter(), ChannelProcessingFilter.class)
-				.httpBasic()
-				.authenticationEntryPoint(basicEntryPoint)				
-				.and()
-				.authorizeRequests()
-				.anyRequest()
-				.authenticated()
-				.and()
-				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER)
-				.and()
-				.csrf().disable();
+			http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class).httpBasic()
+					.authenticationEntryPoint(basicEntryPoint).and().authorizeRequests().anyRequest().authenticated()
+					.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER).and().csrf()
+					.disable();
 		}
 
 		@Bean
