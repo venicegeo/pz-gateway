@@ -43,7 +43,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 /**
- * Spring-boot configuration for the Gateway service. 
+ * Spring-boot configuration for the Gateway service.
  * 
  * @author Patrick.Doody, Russell.Orf
  * 
@@ -63,21 +63,18 @@ public class Application extends SpringBootServletInitializer {
 
 	@Bean
 	public Jackson2ObjectMapperBuilder jacksonBuilder() {
-		Jackson2ObjectMapperBuilder b = new Jackson2ObjectMapperBuilder();
-		b.indentOutput(true);
-		return b;
+		Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+		builder.indentOutput(true);
+		return builder;
 	}
-	
+
 	@Configuration
 	@Profile({ "ssl" })
 	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
-
 		@Autowired
 		private UserDetailsBean userService;
-
 		@Value("${dispatcher.port}")
 		private String DPORT;
-
 		@Value("${dispatcher.host}")
 		private String DHOST;
 
