@@ -15,13 +15,10 @@
  **/
 package gateway;
 
-import gateway.auth.PiazzaAccessDecisionVoter;
-import gateway.auth.UserDetailsBean;
-
-import java.util.Arrays;
+import gateway.auth.PiazzaBasicAuthenticationEntryPoint;
+import gateway.auth.PiazzaBasicAuthenticationProvider;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -31,9 +28,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.security.access.AccessDecisionManager;
-import org.springframework.security.access.AccessDecisionVoter;
-import org.springframework.security.access.vote.AffirmativeBased;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -69,30 +64,24 @@ public class Application extends SpringBootServletInitializer {
 	}
 
 	@Configuration
-	@Profile({ "ssl" })
+	@Profile({ "secure" })
 	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 		@Autowired
-		private UserDetailsBean userService;
-		@Value("${dispatcher.port}")
-		private String DPORT;
-		@Value("${dispatcher.host}")
-		private String DHOST;
+		private PiazzaBasicAuthenticationProvider basicAuthProvider;
+		@Autowired
+		private PiazzaBasicAuthenticationEntryPoint basicEntryPoint;
+
+		@Override
+		protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+			auth.authenticationProvider(basicAuthProvider);
+		}
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class).x509().userDetailsService(userService)
-					.and().authorizeRequests().accessDecisionManager(accessDecisionManager()).antMatchers("/job")
-					.authenticated().antMatchers("/file").authenticated().antMatchers("/admin/**").authenticated()
+			http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class).httpBasic()
+					.authenticationEntryPoint(basicEntryPoint).and().authorizeRequests().anyRequest().authenticated()
 					.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER).and().csrf()
 					.disable();
-		}
-
-		@Bean
-		public AccessDecisionManager accessDecisionManager() {
-			String dispatcher = (DPORT == null || DPORT.trim().length() == 0) ? DHOST : DHOST + ":" + DPORT;
-
-			return new AffirmativeBased(
-					Arrays.asList((AccessDecisionVoter<?>) new PiazzaAccessDecisionVoter(dispatcher)));
 		}
 
 		@Bean

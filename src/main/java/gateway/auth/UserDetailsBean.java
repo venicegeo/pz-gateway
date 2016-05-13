@@ -15,46 +15,62 @@
  **/
 package gateway.auth;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import util.PiazzaLogger;
+
 /**
- * Bean that communicates with the pz-security project for authorization
+ * Bean that communicates with the pz-security project for authentication
  * information.
  * 
  * @author Russell.Orf
  * 
  */
 @Service
-public class UserDetailsBean implements UserDetailsService {
+public class UserDetailsBean {
 
-	private RestTemplate restTemplate = new RestTemplate();
-
+	@Autowired
+	private PiazzaLogger logger;
 	@Value("${pz.security.endpoint:}")
 	private String SEC_ENDPOINT;
-
-	@Override
-	public UserDetails loadUserByUsername(String username) {
-		List<GrantedAuthority> gas = new ArrayList<GrantedAuthority>();
-
-		@SuppressWarnings("rawtypes")
-		ResponseEntity<List> roles = restTemplate.getForEntity("http://" + SEC_ENDPOINT + "/users/" + username + "/roles", List.class);
-
-		for (Object role : roles.getBody()) {
-			System.out.println("Adding " + username + " role: " + role);
-			gas.add(new SimpleGrantedAuthority(role.toString()));
+	
+	public boolean getAuthenticationDecision(String username, String credential) {
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			
+			HttpEntity<PiazzaVerificationRequest> entity = 
+					new HttpEntity<PiazzaVerificationRequest>(new PiazzaVerificationRequest(username, credential), headers);
+			
+			return new RestTemplate().postForEntity("https://" + SEC_ENDPOINT + "/verification", entity, Boolean.class).getBody();
+		} catch( Exception e ) {
+			e.printStackTrace();
+			logger.log(e.getMessage(), PiazzaLogger.ERROR);			
+			return false;
+		}
+	}
+	
+	class PiazzaVerificationRequest {
+		private String username;
+		private String credential;
+		
+		PiazzaVerificationRequest(String username, String credential) {
+			this.username = username;
+			this.credential = credential;
+		}
+		
+		public String getUsername() {
+			return username;
 		}
 
-		return new User(username, "password", true, true, true, true, gas);
+		public String getCredential() {
+			return credential;
+		}	
 	}
 }
