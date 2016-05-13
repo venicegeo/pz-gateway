@@ -80,7 +80,7 @@ public class Application extends SpringBootServletInitializer {
 		protected void configure(HttpSecurity http) throws Exception {
 			http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class).httpBasic()
 					.authenticationEntryPoint(basicEntryPoint).and().authorizeRequests().anyRequest().authenticated()
-					.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER).and().csrf()
+					.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().csrf()
 					.disable();
 		}
 
