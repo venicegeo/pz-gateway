@@ -22,6 +22,7 @@ import java.security.Principal;
 
 import messaging.job.JobMessageFactory;
 import model.data.FileRepresentation;
+import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
 import model.job.type.SearchQueryJob;
 import model.request.PiazzaJobRequest;
@@ -70,6 +71,12 @@ public class DataController extends PiazzaRestController {
 	private String ACCESS_PORT;
 	@Value("${access.protocol}")
 	private String ACCESS_PROTOCOL;
+	@Value("${ingest.host}")
+	private String INGEST_HOST;
+	@Value("${ingest.port}")
+	private String INGEST_PORT;
+	@Value("${ingest.protocol}")
+	private String INGEST_PROTOCOL;
 	@Value("${pz.search.protocol}")
 	private String SEARCH_PROTOCOL;
 	@Value("${pz.search.url}")
@@ -261,6 +268,43 @@ public class DataController extends PiazzaRestController {
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Metadata for item %s by user %s: %s", dataId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Update the metadata of a Data Resource
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/post_data
+	 * 
+	 * @param dataId
+	 *            The ID of the resource
+	 * @param user
+	 *            the user submitting the request
+	 * @return OK if successful; error if not.
+	 */
+	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.POST)
+	public ResponseEntity<PiazzaResponse> updateMetadata(@PathVariable(value = "dataId") String dataId,
+			@RequestBody ResourceMetadata metadata, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested Update of Metadata for %s.",
+					gatewayUtil.getPrincipalName(user), dataId), PiazzaLogger.INFO);
+			// Proxy the request to Ingest
+			PiazzaResponse response = restTemplate.postForObject(
+					String.format("%s://%s:%s/%s/%s", INGEST_PROTOCOL, INGEST_HOST, INGEST_PORT, "data", dataId),
+					metadata, PiazzaResponse.class);
+			if (response instanceof ErrorResponse) {
+				throw new Exception(((ErrorResponse) response).message);
+			}
+			// Response
+			return null;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Updating Metadata for item %s by user %s: %s", dataId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
