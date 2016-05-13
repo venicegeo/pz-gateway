@@ -362,7 +362,7 @@ public class LegacyController extends PiazzaRestController {
 					return new ResponseEntity<PiazzaResponse>(
 							new ErrorResponse(
 									null,
-									"Invalid input: Host parameter for an Ingest Job cannot be set to false if a file has been specified.",
+									"Invalid input: Host parameter for a Data Load Job cannot be set to false if a file has been specified.",
 									"Gateway"), HttpStatus.BAD_REQUEST);
 				}
 			} catch (AmazonServiceException awsServiceException) {
