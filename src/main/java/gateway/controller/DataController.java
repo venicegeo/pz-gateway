@@ -147,7 +147,7 @@ public class DataController extends PiazzaRestController {
 	public ResponseEntity<PiazzaResponse> ingestData(@RequestBody IngestJob job, Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Ingest Job of type %s.", gatewayUtil.getPrincipalName(user),
+			logger.log(String.format("User %s requested Data Load Job of type %s.", gatewayUtil.getPrincipalName(user),
 					job.getData().getDataType()), PiazzaLogger.INFO);
 			// Create the Request to send to Kafka
 			String newJobId = gatewayUtil.getUuid();
@@ -203,7 +203,7 @@ public class DataController extends PiazzaRestController {
 				throw new Exception("File not specified in request.");
 			}
 			// Log the request
-			logger.log(String.format("User %s requested Ingest Job of type %s with file",
+			logger.log(String.format("User %s requested Data Load Job of type %s with file",
 					gatewayUtil.getPrincipalName(user), job.getData().getDataType(), file.getOriginalFilename()),
 					PiazzaLogger.INFO);
 			// Validate the Job inputs to ensure we are able to process the file

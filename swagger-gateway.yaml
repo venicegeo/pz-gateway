@@ -157,7 +157,7 @@ paths:
           description: "The description, location, and metadata for the Data to be loaded into Piazza."
           required: true
           schema:
-            $ref: '#/definitions/IngestJob'
+            $ref: '#/definitions/LoadJob'
       tags:
         - Data
       responses:
@@ -176,7 +176,7 @@ paths:
       parameters:
         - name: data
           in: formData
-          description: "The Ingest Job metadata. This is the identical model to the IngestJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency."
+          description: "The Load Job metadata. This is the identical model to the LoadJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency."
           required: true
           type: string
         - name: file
@@ -298,7 +298,7 @@ paths:
             $ref: '#/definitions/ErrorResponse' 
     post:
       summary: Obtain a GeoServer deployment for a Data Resource object.
-      description: "Data that has been ingested into Piazza can be deployed to GeoServer. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed."
+      description: "Data that has been loaded into Piazza can be deployed to GeoServer. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed."
       parameters:
         - name: data
           in: body
@@ -360,7 +360,7 @@ paths:
   /file/{dataId}:
     get:
       summary: Download Data File
-      description: "Gets the Bytes of Data ingested into Piazza. Only works for data that is stored internally by Piazza."
+      description: "Gets the Bytes of Data loaded into Piazza. Only works for data that is stored internally by Piazza."
       parameters:
         - name: dataId
           in: path
@@ -1138,7 +1138,7 @@ definitions:
       pagination:
         description: "The pagination metadata for this query."
         $ref: '#/definitions/Pagination'
-  IngestJob:
+  LoadJob:
     type: object
     description: "Defines the payload for requesting Data to be loaded into Piazza."
     required:
@@ -1154,7 +1154,7 @@ definitions:
         type: string
         default: "ingest"
       data:
-        description: "The Description of the Data being ingested, including metadata, and the path to the data."
+        description: "The Description of the Data being loaded, including metadata, and the path to the data."
         $ref: '#/definitions/DataResource'
   SearchJob:
     type: object
@@ -1240,7 +1240,7 @@ definitions:
         description: "Human-readable description of the object."
   SpatialMetadata:
     type: object
-    description: "Describes common spatial metadata that applies to Data ingested through Piazza."
+    description: "Describes common spatial metadata that applies to Data loaded into Piazza."
     properties:
       coordinateReferenceSystem:
         type: string
