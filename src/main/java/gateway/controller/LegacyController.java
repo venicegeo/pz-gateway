@@ -87,12 +87,8 @@ public class LegacyController extends PiazzaRestController {
 	private String KAFKA_ADDRESS;
 	@Value("${kafka.group}")
 	private String KAFKA_GROUP;
-	@Value("${dispatcher.host}")
-	private String DISPATCHER_HOST;
-	@Value("${dispatcher.port}")
-	private String DISPATCHER_PORT;
-	@Value("${dispatcher.protocol}")
-	private String DISPATCHER_PROTOCOL;
+	@Value("#{'${dispatcher.protocol}' + '://' + '${dispatcher.prefix}' + '.' + '${DOMAIN}' + ':' + '${dispatcher.port}'}")
+	private String DISPATCHER_URL;
 	@Value("${vcap.services.pz-blobstore.credentials.bucket}")
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${s3.domain}")
@@ -101,15 +97,15 @@ public class LegacyController extends PiazzaRestController {
 	private String AMAZONS3_ACCESS_KEY;
 	@Value("${vcap.services.pz-blobstore.credentials.secret_access_key:}")
 	private String AMAZONS3_PRIVATE_KEY;
-	@Value("${space}")
-	private String space;
+	@Value("${SPACE}")
+	private String SPACE;
 
 	/**
 	 * Initializing the Kafka Producer on Controller startup.
 	 */
 	@PostConstruct
 	public void init() {
-		System.out.print("Paired with Dispatcher at " + DISPATCHER_HOST);
+		System.out.print("Paired with Dispatcher at " + DISPATCHER_URL);
 		producer = KafkaClientFactory.getProducer(KAFKA_ADDRESS.split(":")[0], KAFKA_ADDRESS.split(":")[1]);
 		// Connect to S3 Bucket. Only apply credentials if they are present.
 		if ((AMAZONS3_ACCESS_KEY.isEmpty()) && (AMAZONS3_PRIVATE_KEY.isEmpty())) {
@@ -144,8 +140,8 @@ public class LegacyController extends PiazzaRestController {
 			// The Request object will contain the information needed to acquire
 			// the file bytes. Pass this off to the Dispatcher to get the file
 			// from the Access component.
-			ResponseEntity<byte[]> dispatcherResponse = restTemplate.getForEntity(String.format("%s://%s:%s/file/%s",
-					DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, request.dataId), byte[].class);
+			ResponseEntity<byte[]> dispatcherResponse = restTemplate.getForEntity(
+					String.format("%s/file/%s", DISPATCHER_URL, request.dataId), byte[].class);
 			logger.log(String.format("Sent File Request Job %s to Dispatcher.", request.dataId), PiazzaLogger.INFO);
 			// The status code of the response gets swallowed up no matter what
 			// we do. Infer the status code that we should use based on the type
@@ -270,8 +266,7 @@ public class LegacyController extends PiazzaRestController {
 		String endpointString = (request.jobType instanceof SearchMetadataIngestJob) ? "searchmetadataingest"
 				: "search";
 		PiazzaResponse dispatcherResponse = restTemplate.postForObject(
-				String.format("%s://%s:%s/%s", DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, endpointString),
-				request.jobType, PiazzaResponse.class);
+				String.format("%s/%s", DISPATCHER_URL, endpointString), request.jobType, PiazzaResponse.class);
 		logger.log(String.format("Sent Search Job For User %s to Dispatcher REST services", request.userName),
 				PiazzaLogger.INFO);
 		// The status code of the response gets swallowed up no matter what
@@ -304,8 +299,8 @@ public class LegacyController extends PiazzaRestController {
 			serviceName = "data";
 		}
 
-		PiazzaResponse dispatcherResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
-				DISPATCHER_PROTOCOL, DISPATCHER_HOST, DISPATCHER_PORT, serviceName, id), PiazzaResponse.class);
+		PiazzaResponse dispatcherResponse = restTemplate.getForObject(
+				String.format("%s/%s/%s", DISPATCHER_URL, serviceName, id), PiazzaResponse.class);
 		logger.log(String.format("Sent Job %s to Dispatcher %s REST services", id, serviceName), PiazzaLogger.INFO);
 		// The status code of the response gets swallowed up no matter what
 		// we do. Infer the status code that we should use based on the type
@@ -385,7 +380,7 @@ public class LegacyController extends PiazzaRestController {
 		// Create the Kafka Message for an incoming Job to be created.
 		final ProducerRecord<String, String> message;
 		try {
-			message = JobMessageFactory.getRequestJobMessage(request, jobId, space);
+			message = JobMessageFactory.getRequestJobMessage(request, jobId, SPACE);
 		} catch (JsonProcessingException exception) {
 			exception.printStackTrace();
 			logger.log(String.format("Error Creating Kafka Message for Job %s", jobId), PiazzaLogger.ERROR);
