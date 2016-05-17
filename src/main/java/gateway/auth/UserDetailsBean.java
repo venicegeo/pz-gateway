@@ -34,43 +34,42 @@ import util.PiazzaLogger;
  */
 @Service
 public class UserDetailsBean {
-
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("${pz.security.endpoint:}")
-	private String SEC_ENDPOINT;
-	
+	@Value("#{'${security.protocol}' + '://' + '${security.prefix}' + '.' + '${DOMAIN}' + ':' + '${security.port}'}")
+	private String SECURITY_URL;
+
 	public boolean getAuthenticationDecision(String username, String credential) {
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
-			
-			HttpEntity<PiazzaVerificationRequest> entity = 
-					new HttpEntity<PiazzaVerificationRequest>(new PiazzaVerificationRequest(username, credential), headers);
-			
-			return new RestTemplate().postForEntity("https://" + SEC_ENDPOINT + "/verification", entity, Boolean.class).getBody();
-		} catch( Exception e ) {
+
+			HttpEntity<PiazzaVerificationRequest> entity = new HttpEntity<PiazzaVerificationRequest>(
+					new PiazzaVerificationRequest(username, credential), headers);
+			String url = String.format("%s/%s", SECURITY_URL, "/verification");
+			return new RestTemplate().postForEntity(url, entity, Boolean.class).getBody();
+		} catch (Exception e) {
 			e.printStackTrace();
-			logger.log(e.getMessage(), PiazzaLogger.ERROR);			
+			logger.log(e.getMessage(), PiazzaLogger.ERROR);
 			return false;
 		}
 	}
-	
+
 	class PiazzaVerificationRequest {
 		private String username;
 		private String credential;
-		
+
 		PiazzaVerificationRequest(String username, String credential) {
 			this.username = username;
 			this.credential = credential;
 		}
-		
+
 		public String getUsername() {
 			return username;
 		}
 
 		public String getCredential() {
 			return credential;
-		}	
+		}
 	}
 }

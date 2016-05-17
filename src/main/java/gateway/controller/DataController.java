@@ -65,24 +65,16 @@ public class DataController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("${access.host}")
-	private String ACCESS_HOST;
-	@Value("${access.port}")
-	private String ACCESS_PORT;
-	@Value("${access.protocol}")
-	private String ACCESS_PROTOCOL;
-	@Value("${ingest.host}")
-	private String INGEST_HOST;
-	@Value("${ingest.port}")
-	private String INGEST_PORT;
-	@Value("${ingest.protocol}")
-	private String INGEST_PROTOCOL;
-	@Value("${pz.search.protocol}")
-	private String SEARCH_PROTOCOL;
-	@Value("${pz.search.url}")
+	@Value("#{'${search.protocol}' + '://' + '${search.prefix}' + '.' + '${DOMAIN}' + ':' + '${search.port}'}")
 	private String SEARCH_URL;
-	@Value("${space}")
-	private String space;
+	@Value("${search.endpoint}")
+	private String SEARCH_ENDPOINT;
+	@Value("#{'${ingest.protocol}' + '://' + '${ingest.prefix}' + '.' + '${DOMAIN}' + ':' + '${ingest.port}'}")
+	private String INGEST_URL;
+	@Value("#{'${access.protocol}' + '://' + '${access.prefix}' + '.' + '${DOMAIN}' + ':' + '${access.port}'}")
+	private String ACCESS_URL;
+	@Value("${SPACE}")
+	private String SPACE;
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
@@ -108,8 +100,7 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			String url = String.format("%s://%s:%s/%s?page=%s&pageSize=%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT,
-					"data", page, pageSize);
+			String url = String.format("%s/%s?page=%s&pageSize=%s", ACCESS_URL, "data", page, pageSize);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
@@ -154,7 +145,7 @@ public class DataController extends PiazzaRestController {
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, space);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, SPACE);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
 			// Attempt to wait until the user is able to query the Job ID
@@ -221,7 +212,7 @@ public class DataController extends PiazzaRestController {
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, jobId, space);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, jobId, SPACE);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
 			// Attempt to wait until the user is able to query the Job ID
@@ -259,8 +250,7 @@ public class DataController extends PiazzaRestController {
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
 			PiazzaResponse dataResponse = restTemplate.getForObject(
-					String.format("%s://%s:%s/%s/%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, "data", dataId),
-					PiazzaResponse.class);
+					String.format("%s/%s/%s", ACCESS_URL, "data", dataId), PiazzaResponse.class);
 			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
@@ -294,8 +284,7 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Update of Metadata for %s.",
 					gatewayUtil.getPrincipalName(user), dataId), PiazzaLogger.INFO);
 			// Proxy the request to Ingest
-			PiazzaResponse response = restTemplate.postForObject(
-					String.format("%s://%s:%s/%s/%s", INGEST_PROTOCOL, INGEST_HOST, INGEST_PORT, "data", dataId),
+			PiazzaResponse response = restTemplate.postForObject(String.format("%s/%s/%s", INGEST_URL, "data", dataId),
 					metadata, PiazzaResponse.class);
 			if (response instanceof ErrorResponse) {
 				throw new Exception(((ErrorResponse) response).message);
@@ -332,7 +321,7 @@ public class DataController extends PiazzaRestController {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<SearchQueryJob> entity = new HttpEntity<SearchQueryJob>(query, headers);
 			PiazzaResponse searchResponse = restTemplate.postForObject(
-					String.format("%s://%s", SEARCH_PROTOCOL, SEARCH_URL), entity, PiazzaResponse.class);
+					String.format("%s/%s", SEARCH_URL, SEARCH_ENDPOINT), entity, PiazzaResponse.class);
 			// Not logging for now; since there's nothing useful to log.
 			HttpStatus status = searchResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
@@ -369,7 +358,7 @@ public class DataController extends PiazzaRestController {
 					dataId), PiazzaLogger.INFO);
 
 			// Get the bytes of the Data
-			String url = String.format("%s://%s:%s/file/%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, dataId);
+			String url = String.format("%s/file/%s", ACCESS_URL, dataId);
 			// Attach keywords if specified
 			if ((fileName != null) && (fileName.isEmpty() == false)) {
 				url = String.format("%s?fileName=%s", url, fileName);

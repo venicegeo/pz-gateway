@@ -56,14 +56,10 @@ public class DeploymentController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("${access.host}")
-	private String ACCESS_HOST;
-	@Value("${access.port}")
-	private String ACCESS_PORT;
-	@Value("${access.protocol}")
-	private String ACCESS_PROTOCOL;
-	@Value("${space}")
-	private String space;
+	@Value("#{'${access.protocol}' + '://' + '${access.prefix}' + '.' + '${DOMAIN}' + ':' + '${access.port}'}")
+	private String ACCESS_URL;
+	@Value("${SPACE}")
+	private String SPACE;
 
 	private RestTemplate restTemplate = new RestTemplate();
 	private static final String DEFAULT_PAGE_SIZE = "10";
@@ -95,7 +91,7 @@ public class DeploymentController extends PiazzaRestController {
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
 			jobRequest.userName = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = job;
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(jobRequest, jobId, space);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(jobRequest, jobId, SPACE);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
 			// Attempt to wait until the user is able to query the Job ID
@@ -134,8 +130,7 @@ public class DeploymentController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Deployment List query.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			String url = String.format("%s://%s:%s/%s?page=%s&pageSize=%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT,
-					"deployment", page, pageSize);
+			String url = String.format("%s/%s?page=%s&pageSize=%s", ACCESS_URL, "deployment", page, pageSize);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
@@ -177,8 +172,8 @@ public class DeploymentController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Deployment Data for %s", gatewayUtil.getPrincipalName(user),
 					deploymentId), PiazzaLogger.INFO);
 			// Broker the request to Pz-Access
-			PiazzaResponse deploymentResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
-					ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT, "deployment", deploymentId), PiazzaResponse.class);
+			PiazzaResponse deploymentResponse = restTemplate.getForObject(
+					String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), PiazzaResponse.class);
 			HttpStatus status = deploymentResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
@@ -214,8 +209,7 @@ public class DeploymentController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Deletion for Deployment %s",
 					gatewayUtil.getPrincipalName(user), deploymentId), PiazzaLogger.INFO);
 			// Broker the request to Pz-Access
-			restTemplate.delete(String.format("%s://%s:%s/%s/%s", ACCESS_PROTOCOL, ACCESS_HOST, ACCESS_PORT,
-					"deployment", deploymentId));
+			restTemplate.delete(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId));
 			return null;
 		} catch (Exception exception) {
 			exception.printStackTrace();

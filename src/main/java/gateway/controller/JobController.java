@@ -61,14 +61,10 @@ public class JobController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("${jobmanager.host}")
-	private String JOBMANAGER_HOST;
-	@Value("${jobmanager.port}")
-	private String JOBMANAGER_PORT;
-	@Value("${jobmanager.protocol}")
-	private String JOBMANAGER_PROTOCOL;
-	@Value("${space}")
-	private String space;
+	@Value("#{'${jobmanager.protocol}' + '://' + '${jobmanager.prefix}' + '.' + '${DOMAIN}' + ':' + '${jobmanager.port}'}")
+	private String JOBMANAGER_URL;
+	@Value("${SPACE}")
+	private String SPACE;
 
 	private RestTemplate restTemplate = new RestTemplate();
 
@@ -91,8 +87,8 @@ public class JobController extends PiazzaRestController {
 					String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId),
 					PiazzaLogger.INFO);
 			// Proxy the request to the Job Manager
-			PiazzaResponse jobStatusResponse = restTemplate.getForObject(String.format("%s://%s:%s/%s/%s",
-					JOBMANAGER_PROTOCOL, JOBMANAGER_HOST, JOBMANAGER_PORT, "job", jobId), PiazzaResponse.class);
+			PiazzaResponse jobStatusResponse = restTemplate.getForObject(
+					String.format("%s/%s/%s", JOBMANAGER_URL, "job", jobId), PiazzaResponse.class);
 			HttpStatus status = jobStatusResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
@@ -134,7 +130,7 @@ public class JobController extends PiazzaRestController {
 			// Send the message through Kafka to delete the Job. This message
 			// will get picked up by whatever component is running the Job.
 			ProducerRecord<String, String> abortMessage = JobMessageFactory.getAbortJobMessage(request,
-					gatewayUtil.getUuid(), space);
+					gatewayUtil.getUuid(), SPACE);
 			gatewayUtil.sendKafkaMessage(abortMessage);
 
 			// Proxy the request to the Job Manager, where the Job Table will be
@@ -143,8 +139,7 @@ public class JobController extends PiazzaRestController {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			ResponseEntity<PiazzaResponse> cancelResponse = restTemplate.postForEntity(
-					String.format("%s://%s:%s/%s", JOBMANAGER_PROTOCOL, JOBMANAGER_HOST, JOBMANAGER_PORT, "abort"),
-					entity, PiazzaResponse.class);
+					String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, PiazzaResponse.class);
 			// Check if the response was an error. If so, set the status code
 			// appropriately.
 			HttpStatus status = cancelResponse.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
@@ -188,8 +183,7 @@ public class JobController extends PiazzaRestController {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			ResponseEntity<PiazzaResponse> jobResponse = restTemplate.postForEntity(
-					String.format("%s://%s:%s/%s", JOBMANAGER_PROTOCOL, JOBMANAGER_HOST, JOBMANAGER_PORT, "repeat"),
-					entity, PiazzaResponse.class);
+					String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, PiazzaResponse.class);
 			// Check if the response was an error. If so, set the status code
 			// appropriately.
 			HttpStatus status = jobResponse.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
@@ -230,7 +224,7 @@ public class JobController extends PiazzaRestController {
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, space);
+			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, SPACE);
 			// Send the message to Kafka
 			gatewayUtil.sendKafkaMessage(message);
 			// Attempt to wait until the user is able to query the Job ID

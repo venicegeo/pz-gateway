@@ -44,14 +44,28 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController extends PiazzaRestController {
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
-	@Value("${jobmanager.host}")
-	private String JOBMANAGER_HOST;
-	@Value("${pz.search.url}")
-	private String SEARCH_URL;
-	@Value("${access.host}")
-	private String ACCESS_HOST;
-	@Value("${space}")
+	@Value("${SPACE}")
 	private String SPACE;
+	@Value("#{'${workflow.protocol}' + '://' + '${workflow.prefix}' + '.' + '${DOMAIN}' + ':' + '${workflow.port}'}")
+	private String WORKFLOW_URL;
+	@Value("#{'${search.protocol}' + '://' + '${search.prefix}' + '.' + '${DOMAIN}' + ':' + '${search.port}'}")
+	private String SEARCH_URL;
+	@Value("#{'${ingest.protocol}' + '://' + '${ingest.prefix}' + '.' + '${DOMAIN}' + ':' + '${ingest.port}'}")
+	private String INGEST_URL;
+	@Value("#{'${access.protocol}' + '://' + '${access.prefix}' + '.' + '${DOMAIN}' + ':' + '${access.port}'}")
+	private String ACCESS_URL;
+	@Value("#{'${jobmanager.protocol}' + '://' + '${jobmanager.prefix}' + '.' + '${DOMAIN}' + ':' + '${jobmanager.port}'}")
+	private String JOBMANAGER_URL;
+	@Value("#{'${dispatcher.protocol}' + '://' + '${dispatcher.prefix}' + '.' + '${DOMAIN}' + ':' + '${dispatcher.port}'}")
+	private String DISPATCHER_URL;
+	@Value("#{'${servicecontroller.protocol}' + '://' + '${servicecontroller.prefix}' + '.' + '${DOMAIN}' + ':' + '${servicecontroller.port}'}")
+	private String SERVICECONTROLLER_URL;
+	@Value("#{'${uuid.protocol}' + '://' + '${uuid.prefix}' + '.' + '${DOMAIN}' + ':' + '${uuid.port}'}")
+	private String UUIDGEN_URL;
+	@Value("#{'${logger.protocol}' + '://' + '${logger.prefix}' + '.' + '${DOMAIN}' + ':' + '${logger.port}'}")
+	private String LOGGER_URL;
+	@Value("#{'${security.protocol}' + '://' + '${security.prefix}' + '.' + '${DOMAIN}' + ':' + '${security.port}'}")
+	private String SECURITY_URL;
 
 	/**
 	 * Healthcheck required for all Piazza Core Services
@@ -62,7 +76,7 @@ public class AdminController extends PiazzaRestController {
 	public String getHealthCheck() {
 		return "Hello, Health Check here for pz-gateway.";
 	}
-	
+
 	/**
 	 * Returns administrative statistics for this Gateway component.
 	 * 
@@ -74,10 +88,17 @@ public class AdminController extends PiazzaRestController {
 		// Write the Kafka configs
 		stats.put("Kafka Address", KAFKA_ADDRESS);
 		// Write the URL configs
-		stats.put("Job Manager Host", JOBMANAGER_HOST);
-		stats.put("Access Host", ACCESS_HOST);
-		stats.put("Search Host", SEARCH_URL);
 		stats.put("Space", SPACE);
+		stats.put("Workflow", WORKFLOW_URL);
+		stats.put("Search", SEARCH_URL);
+		stats.put("Ingest", INGEST_URL);
+		stats.put("Access", ACCESS_URL);
+		stats.put("JobManager", JOBMANAGER_URL);
+		stats.put("Dispatcher", DISPATCHER_URL);
+		stats.put("ServiceController", SERVICECONTROLLER_URL);
+		stats.put("UUIDGen", UUIDGEN_URL);
+		stats.put("Logger", LOGGER_URL);
+		stats.put("Security", SECURITY_URL);
 		// Return
 		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
 	}

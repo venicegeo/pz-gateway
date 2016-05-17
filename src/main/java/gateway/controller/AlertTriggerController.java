@@ -51,10 +51,8 @@ public class AlertTriggerController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("${workflow.host}")
-	private String WORKFLOW_HOST;
-	@Value("${workflow.protocol}")
-	private String WORKFLOW_PROTOCOL;
+	@Value("#{'${workflow.protocol}' + '://' + '${workflow.prefix}' + '.' + '${DOMAIN}' + ':' + '${workflow.port}'}")
+	private String WORKFLOW_URL;
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
@@ -81,7 +79,7 @@ public class AlertTriggerController extends PiazzaRestController {
 					String.format("User %s has requested a new Trigger to be created.",
 							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s://%s/v1/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "triggers");
+			String url = String.format("%s/v1/%s", WORKFLOW_URL, "triggers");
 			String response = restTemplate.postForObject(url, trigger, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -112,8 +110,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested a list of Triggers.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s://%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_PROTOCOL,
-					WORKFLOW_HOST, "triggers", page, pageSize, order, key != null ? key : "");
+			String url = String.format("%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_URL, "triggers", page,
+					pageSize, order, key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -145,7 +143,7 @@ public class AlertTriggerController extends PiazzaRestController {
 					String.format("User %s has requested information for Trigger %s",
 							gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "triggers", triggerId);
+			String url = String.format("%s/v1/%s/%s", WORKFLOW_URL, "triggers", triggerId);
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -176,7 +174,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested deletion of Trigger %s",
 					gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "triggers", triggerId);
+			String url = String.format("%s/v1/%s/%s", WORKFLOW_URL, "triggers", triggerId);
 			restTemplate.delete(url);
 			return null;
 		} catch (Exception exception) {
@@ -207,8 +205,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested a list of Alerts.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s://%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_PROTOCOL,
-					WORKFLOW_HOST, "alerts", page, pageSize, order, key != null ? key : "");
+			String url = String.format("%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_URL, "alerts", page,
+					pageSize, order, key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -239,7 +237,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested deletion of Alert %s", gatewayUtil.getPrincipalName(user),
 					alertId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "alerts", alertId);
+			String url = String.format("%s/v1/%s/%s", WORKFLOW_URL, "alerts", alertId);
 			restTemplate.delete(url);
 			return null;
 		} catch (Exception exception) {
@@ -270,7 +268,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested information for Alert %s",
 					gatewayUtil.getPrincipalName(user), alertId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "alerts", alertId);
+			String url = String.format("%s/v1/%s/%s", WORKFLOW_URL, "alerts", alertId);
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {

@@ -56,11 +56,8 @@ public class ServiceController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-
-	@Value("${servicecontroller.protocol}")
-	private String SERVICE_CONTROLLER_PROTOCOL;
-	@Value("${servicecontroller.host}")
-	private String SERVICE_CONTROLLER_HOST;
+	@Value("#{'${servicecontroller.protocol}' + '://' + '${servicecontroller.prefix}' + '.' + '${DOMAIN}' + ':' + '${servicecontroller.port}'}")
+	private String SERVICECONTROLLER_URL;
 
 	private RestTemplate restTemplate = new RestTemplate();
 	private static final String DEFAULT_PAGE_SIZE = "10";
@@ -88,9 +85,8 @@ public class ServiceController extends PiazzaRestController {
 			jobRequest.userName = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = new RegisterServiceJob(service);
 			// Proxy the request to the Service Controller
-			PiazzaResponse response = restTemplate.postForObject(String.format("%s://%s/%s",
-					SERVICE_CONTROLLER_PROTOCOL, SERVICE_CONTROLLER_HOST, "registerService"), jobRequest,
-					PiazzaResponse.class);
+			PiazzaResponse response = restTemplate.postForObject(
+					String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest, PiazzaResponse.class);
 			HttpStatus status = response instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR : HttpStatus.OK;
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(response, status);
@@ -122,8 +118,8 @@ public class ServiceController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested Service metadata for %s",
 					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
 			// Proxy the request to the Service Controller instance
-			PiazzaResponse response = restTemplate.getForObject(String.format("%s://%s/%s/%s",
-					SERVICE_CONTROLLER_PROTOCOL, SERVICE_CONTROLLER_HOST, "service", serviceId), PiazzaResponse.class);
+			PiazzaResponse response = restTemplate.getForObject(
+					String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), PiazzaResponse.class);
 			HttpStatus status = response instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR : HttpStatus.OK;
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(response, status);
@@ -150,27 +146,28 @@ public class ServiceController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> deleteService(@PathVariable(value = "serviceId") String serviceId,
-			@RequestParam(value = "softDelete", required = false) boolean softDelete,
-			Principal user) {
+			@RequestParam(value = "softDelete", required = false) boolean softDelete, Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested Service deletion of %s", gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested Service deletion of %s",
+					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
 
 			// Proxy the request to the Service Controller instance
-			String url = String.format("%s://%s/%s/%s", SERVICE_CONTROLLER_PROTOCOL, SERVICE_CONTROLLER_HOST, "service", serviceId);
+			String url = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
 			url = (softDelete) ? (String.format("%s?softDelete=%s", url, softDelete)) : (url);
 			restTemplate.delete(url);
-			
+
 			return new ResponseEntity<PiazzaResponse>(new ServiceResponse(serviceId), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	/**
 	 * Updates an existing service with Piazza's Service Controller.
 	 * 
@@ -192,8 +189,7 @@ public class ServiceController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user),
 					serviceId), PiazzaLogger.INFO);
 			// Proxy the request to the Service Controller instance
-			restTemplate.put(String.format("%s://%s/%s/%s", SERVICE_CONTROLLER_PROTOCOL, SERVICE_CONTROLLER_HOST,
-					"service", serviceId), serviceData);
+			restTemplate.put(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), serviceData);
 			return null;
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -230,8 +226,7 @@ public class ServiceController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to the Service Controller
-			String url = String.format("%s://%s/%s?page=%s&per_page=%s", SERVICE_CONTROLLER_PROTOCOL,
-					SERVICE_CONTROLLER_HOST, "service", page, pageSize);
+			String url = String.format("%s/%s?page=%s&per_page=%s", SERVICECONTROLLER_URL, "service", page, pageSize);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
