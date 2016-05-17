@@ -65,13 +65,13 @@ public class DataController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("#{'${search.protocol}' + '://' + '${search.prefix}' + '.' + '${DOMAIN}' + ':' + '${search.port}'}")
+	@Value("${search.url}")
 	private String SEARCH_URL;
 	@Value("${search.endpoint}")
 	private String SEARCH_ENDPOINT;
-	@Value("#{'${ingest.protocol}' + '://' + '${ingest.prefix}' + '.' + '${DOMAIN}' + ':' + '${ingest.port}'}")
+	@Value("${ingest.url}")
 	private String INGEST_URL;
-	@Value("#{'${access.protocol}' + '://' + '${access.prefix}' + '.' + '${DOMAIN}' + ':' + '${access.port}'}")
+	@Value("${access.url}")
 	private String ACCESS_URL;
 	@Value("${SPACE}")
 	private String SPACE;

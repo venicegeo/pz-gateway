@@ -56,7 +56,7 @@ public class ServiceController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("#{'${servicecontroller.protocol}' + '://' + '${servicecontroller.prefix}' + '.' + '${DOMAIN}' + ':' + '${servicecontroller.port}'}")
+	@Value("${servicecontroller.url}")
 	private String SERVICECONTROLLER_URL;
 
 	private RestTemplate restTemplate = new RestTemplate();

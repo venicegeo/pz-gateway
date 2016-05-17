@@ -69,7 +69,7 @@ public class GatewayUtil {
 	private String AMAZONS3_PRIVATE_KEY;
 	@Value("${vcap.services.pz-blobstore.credentials.bucket}")
 	private String AMAZONS3_BUCKET_NAME;
-	@Value("#{'${jobmanager.protocol}' + '://' + '${jobmanager.prefix}' + '.' + '${DOMAIN}' + ':' + '${jobmanager.port}'}")
+	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
 
 	private Producer<String, String> producer;

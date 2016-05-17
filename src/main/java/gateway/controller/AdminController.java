@@ -46,25 +46,25 @@ public class AdminController extends PiazzaRestController {
 	private String KAFKA_ADDRESS;
 	@Value("${SPACE}")
 	private String SPACE;
-	@Value("#{'${workflow.protocol}' + '://' + '${workflow.prefix}' + '.' + '${DOMAIN}' + ':' + '${workflow.port}'}")
+	@Value("${workflow.url}")
 	private String WORKFLOW_URL;
-	@Value("#{'${search.protocol}' + '://' + '${search.prefix}' + '.' + '${DOMAIN}' + ':' + '${search.port}'}")
+	@Value("${search.url}")
 	private String SEARCH_URL;
-	@Value("#{'${ingest.protocol}' + '://' + '${ingest.prefix}' + '.' + '${DOMAIN}' + ':' + '${ingest.port}'}")
+	@Value("${ingest.url}")
 	private String INGEST_URL;
-	@Value("#{'${access.protocol}' + '://' + '${access.prefix}' + '.' + '${DOMAIN}' + ':' + '${access.port}'}")
+	@Value("${access.url}")
 	private String ACCESS_URL;
-	@Value("#{'${jobmanager.protocol}' + '://' + '${jobmanager.prefix}' + '.' + '${DOMAIN}' + ':' + '${jobmanager.port}'}")
+	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
-	@Value("#{'${dispatcher.protocol}' + '://' + '${dispatcher.prefix}' + '.' + '${DOMAIN}' + ':' + '${dispatcher.port}'}")
+	@Value("${dispatcher.url}")
 	private String DISPATCHER_URL;
-	@Value("#{'${servicecontroller.protocol}' + '://' + '${servicecontroller.prefix}' + '.' + '${DOMAIN}' + ':' + '${servicecontroller.port}'}")
+	@Value("${servicecontroller.url}")
 	private String SERVICECONTROLLER_URL;
-	@Value("#{'${uuid.protocol}' + '://' + '${uuid.prefix}' + '.' + '${DOMAIN}' + ':' + '${uuid.port}'}")
+	@Value("${uuid.url}")
 	private String UUIDGEN_URL;
-	@Value("#{'${logger.protocol}' + '://' + '${logger.prefix}' + '.' + '${DOMAIN}' + ':' + '${logger.port}'}")
+	@Value("${logger.url}")
 	private String LOGGER_URL;
-	@Value("#{'${security.protocol}' + '://' + '${security.prefix}' + '.' + '${DOMAIN}' + ':' + '${security.port}'}")
+	@Value("${security.url}")
 	private String SECURITY_URL;
 
 	/**

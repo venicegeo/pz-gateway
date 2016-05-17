@@ -56,7 +56,7 @@ public class DeploymentController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("#{'${access.protocol}' + '://' + '${access.prefix}' + '.' + '${DOMAIN}' + ':' + '${access.port}'}")
+	@Value("${access.url}")
 	private String ACCESS_URL;
 	@Value("${SPACE}")
 	private String SPACE;

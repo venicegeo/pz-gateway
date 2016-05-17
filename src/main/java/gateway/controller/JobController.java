@@ -61,7 +61,7 @@ public class JobController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("#{'${jobmanager.protocol}' + '://' + '${jobmanager.prefix}' + '.' + '${DOMAIN}' + ':' + '${jobmanager.port}'}")
+	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
 	@Value("${SPACE}")
 	private String SPACE;

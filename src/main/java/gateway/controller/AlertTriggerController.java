@@ -51,7 +51,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("#{'${workflow.protocol}' + '://' + '${workflow.prefix}' + '.' + '${DOMAIN}' + ':' + '${workflow.port}'}")
+	@Value("${workflow.url}")
 	private String WORKFLOW_URL;
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
