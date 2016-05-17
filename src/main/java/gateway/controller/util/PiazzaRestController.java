@@ -51,7 +51,7 @@ public class PiazzaRestController {
 	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
 	@ResponseBody
 	public ResponseEntity<PiazzaResponse> genericHandler(Exception exception) {
-		String message = String.format("Piazza Exception occurred: ", exception.getMessage());
+		String message = String.format("Piazza Exception occurred: %s", exception.getMessage());
 		return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST);
 	}
 }
