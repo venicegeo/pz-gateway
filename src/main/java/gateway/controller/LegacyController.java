@@ -345,7 +345,7 @@ public class LegacyController extends PiazzaRestController {
 					IngestJob ingestJob = (IngestJob) request.jobType;
 					if (ingestJob.getData().getDataType() instanceof FileRepresentation) {
 						// Attach the file to the FileLocation object
-						FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, fileKey, AMAZONS3_DOMAIN);
+						FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, fileKey, file.getSize(), AMAZONS3_DOMAIN);
 						((FileRepresentation) ingestJob.getData().getDataType()).setLocation(fileLocation);
 						logger.log(String.format("S3 File for Job %s Persisted to %s:%s", jobId, AMAZONS3_BUCKET_NAME,
 								fileKey), PiazzaLogger.INFO);
