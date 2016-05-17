@@ -24,6 +24,7 @@ import model.job.type.RegisterServiceJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
+import model.response.ServiceResponse;
 import model.service.metadata.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -144,15 +145,19 @@ public class ServiceController extends PiazzaRestController {
 	 * @return Service metadata, or an error.
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE)
-	public ResponseEntity<PiazzaResponse> deleteService(@PathVariable(value = "serviceId") String serviceId,
-			Principal user) {
+	public ResponseEntity<?> deleteService(@PathVariable(value = "serviceId") String serviceId,
+			@RequestParam(value = "softDelete", required = false) boolean softDelete, Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested Service deletion of %s",
 					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
+
 			// Proxy the request to the Service Controller instance
-			restTemplate.delete(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId));
-			return null;
+			String url = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
+			url = (softDelete) ? (String.format("%s?softDelete=%s", url, softDelete)) : (url);
+			restTemplate.delete(url);
+
+			return new ResponseEntity<PiazzaResponse>(new ServiceResponse(serviceId), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId,
