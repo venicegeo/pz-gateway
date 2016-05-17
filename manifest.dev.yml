@@ -11,4 +11,4 @@ applications:
     - pz-kafka
     - pz-blobstore
   env:
-    SPRING_PROFILES_ACTIVE: cloud,fade-dev
+    SPRING_PROFILES_ACTIVE: cloud
