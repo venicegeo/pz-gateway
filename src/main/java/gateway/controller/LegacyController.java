@@ -85,8 +85,6 @@ public class LegacyController extends PiazzaRestController {
 	private AmazonS3 s3Client;
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
-	@Value("${kafka.group}")
-	private String KAFKA_GROUP;
 	@Value("#{'${dispatcher.protocol}' + '://' + '${dispatcher.prefix}' + '.' + '${DOMAIN}' + ':' + '${dispatcher.port}'}")
 	private String DISPATCHER_URL;
 	@Value("${vcap.services.pz-blobstore.credentials.bucket}")
