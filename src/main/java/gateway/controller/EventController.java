@@ -52,10 +52,8 @@ public class EventController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("${workflow.host}")
-	private String WORKFLOW_HOST;
-	@Value("${workflow.protocol}")
-	private String WORKFLOW_PROTOCOL;
+	@Value("#{'${workflow.protocol}' + '://' + '${workflow.prefix}' + '.' + '${DOMAIN}' + ':' + '${workflow.port}'}")
+	private String WORKFLOW_URL;
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
@@ -83,8 +81,8 @@ public class EventController extends PiazzaRestController {
 			logger.log(String.format("User %s queried for Events.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s://%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_PROTOCOL,
-					WORKFLOW_HOST, "events", page, pageSize, order, key != null ? key : "");
+			String url = String.format("%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_URL, "events", page,
+					pageSize, order, key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -117,8 +115,7 @@ public class EventController extends PiazzaRestController {
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
 			String response = restTemplate.postForObject(
-					String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "events", eventType), event,
-					String.class);
+					String.format("%s/v1/%s/%s", WORKFLOW_URL, "events", eventType), event, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -154,8 +151,8 @@ public class EventController extends PiazzaRestController {
 					String.format("User %s has requested a list of Events for Type %s",
 							gatewayUtil.getPrincipalName(user), eventType), PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s://%s/v1/%s/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_PROTOCOL,
-					WORKFLOW_HOST, "events", eventType, page, pageSize, order, key != null ? key : "");
+			String url = String.format("%s/v1/%s/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_URL, "events",
+					eventType, page, pageSize, order, key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -190,8 +187,8 @@ public class EventController extends PiazzaRestController {
 					String.format("User %s requesting information on Event %s under Type %s",
 							gatewayUtil.getPrincipalName(user), eventId, eventType), PiazzaLogger.INFO);
 			// Broker the request to pz-workflow
-			String response = restTemplate.getForObject(String.format("%s://%s/v1/%s/%s/%s", WORKFLOW_PROTOCOL,
-					WORKFLOW_HOST, "events", eventType, eventId), String.class);
+			String response = restTemplate.getForObject(
+					String.format("%s/v1/%s/%s/%s", WORKFLOW_URL, "events", eventType, eventId), String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -225,8 +222,8 @@ public class EventController extends PiazzaRestController {
 					String.format("User %s Requesting Deletion for Event %s under Type %s",
 							gatewayUtil.getPrincipalName(user), eventId, eventType), PiazzaLogger.INFO);
 			// Broker the request to pz-workflow
-			restTemplate.delete(String.format("%s://%s/v1/%s/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "events",
-					eventType, eventId), String.class);
+			restTemplate.delete(String.format("%s/v1/%s/%s/%s", WORKFLOW_URL, "events", eventType, eventId),
+					String.class);
 			return null;
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -257,8 +254,8 @@ public class EventController extends PiazzaRestController {
 					String.format("User %s has requested a list of Event Types.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s://%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_PROTOCOL,
-					WORKFLOW_HOST, "eventtypes", page, pageSize, order, key != null ? key : "");
+			String url = String.format("%s/v1/%s?from=%s&size=%s&order=%s&key=%s", WORKFLOW_URL, "eventtypes", page,
+					pageSize, order, key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -290,7 +287,7 @@ public class EventController extends PiazzaRestController {
 					String.format("User %s has requested a new Event Type to be created.",
 							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s://%s/v1/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "eventtypes");
+			String url = String.format("%s/v1/%s", WORKFLOW_URL, "eventtypes");
 			String response = restTemplate.postForObject(url, eventType, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -322,7 +319,7 @@ public class EventController extends PiazzaRestController {
 					String.format("User %s has requested information for Event Type %s",
 							gatewayUtil.getPrincipalName(user), eventTypeId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "eventtypes", eventTypeId);
+			String url = String.format("%s/v1/%s/%s", WORKFLOW_URL, "eventtypes", eventTypeId);
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -353,7 +350,7 @@ public class EventController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested deletion of Event Type %s",
 					gatewayUtil.getPrincipalName(user), eventTypeId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s://%s/v1/%s/%s", WORKFLOW_PROTOCOL, WORKFLOW_HOST, "eventtypes", eventTypeId);
+			String url = String.format("%s/v1/%s/%s", WORKFLOW_URL, "eventtypes", eventTypeId);
 			restTemplate.delete(url);
 			return null;
 		} catch (Exception exception) {

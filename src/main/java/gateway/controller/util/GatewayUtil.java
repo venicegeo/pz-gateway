@@ -61,8 +61,6 @@ public class GatewayUtil {
 	PiazzaLogger logger;
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
-	@Value("${kafka.group}")
-	private String KAFKA_GROUP;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
 	@Value("${vcap.services.pz-blobstore.credentials.access_key_id:}")
@@ -71,12 +69,8 @@ public class GatewayUtil {
 	private String AMAZONS3_PRIVATE_KEY;
 	@Value("${vcap.services.pz-blobstore.credentials.bucket}")
 	private String AMAZONS3_BUCKET_NAME;
-	@Value("${jobmanager.host}")
-	private String JOBMANAGER_HOST;
-	@Value("${jobmanager.port}")
-	private String JOBMANAGER_PORT;
-	@Value("${jobmanager.protocol}")
-	private String JOBMANAGER_PROTOCOL;
+	@Value("#{'${jobmanager.protocol}' + '://' + '${jobmanager.prefix}' + '.' + '${DOMAIN}' + ':' + '${jobmanager.port}'}")
+	private String JOBMANAGER_URL;
 
 	private Producer<String, String> producer;
 	private AmazonS3 s3Client;
@@ -206,8 +200,8 @@ public class GatewayUtil {
 			// Check the status of the ID
 			try {
 				Thread.sleep(delay);
-				response = restTemplate.getForEntity(String.format("%s://%s:%s/%s/%s", JOBMANAGER_PROTOCOL,
-						JOBMANAGER_HOST, JOBMANAGER_PORT, "job", id), PiazzaResponse.class);
+				response = restTemplate.getForEntity(String.format("%s/%s/%s", JOBMANAGER_URL, "job", id),
+						PiazzaResponse.class);
 			} catch (Exception exception) {
 				// ID is not ready yet.
 			}
