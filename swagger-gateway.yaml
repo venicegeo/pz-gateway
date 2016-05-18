@@ -440,6 +440,31 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /service/query:
+    post:
+      summary: Query Metadata in Piazza Services
+      description: "Sends a complex query message to the Piazza Search component, that allow users to search for registered Services. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information."
+      parameters:
+        - name: search
+          in: body
+          description: "The Query string for the Search component."
+          required: true
+          schema:
+            $ref: '#/definitions/SearchJob'
+      tags:
+        - Service
+        - Search
+      responses:
+        200:
+          description: "The list of Search results that match the query string."
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Service'
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /service/me:
     get:
       summary: Returns current user Services
@@ -1160,12 +1185,8 @@ definitions:
     type: object
     description: "Defines the payload for submitting a Search Request to Piazza data."
     properties:
-      type:
-        description: "Denotes a Search Query that will be entered using ElasticSearch DSL query language."
-        type: string
-        default: "search-query"
-      data:
-        description: "The ElasticSearch DSL Query string that will be forwarded to Piazza data holdings."
+      query:
+        description: "ElasticSearch DSL Query Object."
         type: object
   DeploymentJob:
     type: object
