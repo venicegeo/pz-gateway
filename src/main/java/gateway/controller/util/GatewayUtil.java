@@ -161,7 +161,7 @@ public class GatewayUtil {
 		s3Client.putObject(AMAZONS3_BUCKET_NAME, fileKey, file.getInputStream(), metadata);
 		// Note the S3 file path in the Ingest Job.
 		// Attach the file to the FileLocation object
-		FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, fileKey, AMAZONS3_DOMAIN);
+		FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, fileKey, file.getSize(), AMAZONS3_DOMAIN);
 		((FileRepresentation) job.getData().getDataType()).setLocation(fileLocation);
 		logger.log(String.format("S3 File for Job %s Persisted to %s:%s", jobId, AMAZONS3_BUCKET_NAME, fileKey),
 				PiazzaLogger.INFO);
