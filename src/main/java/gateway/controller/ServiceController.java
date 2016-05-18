@@ -24,12 +24,16 @@ import model.job.type.RegisterServiceJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
+import model.response.ServiceListResponse;
 import model.response.ServiceResponse;
 import model.service.metadata.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,6 +62,10 @@ public class ServiceController extends PiazzaRestController {
 	private PiazzaLogger logger;
 	@Value("${servicecontroller.url}")
 	private String SERVICECONTROLLER_URL;
+	@Value("${search.url}")
+	private String SEARCH_URL;
+	@Value("${search.data.endpoint}")
+	private String SEARCH_ENDPOINT;
 
 	private RestTemplate restTemplate = new RestTemplate();
 	private static final String DEFAULT_PAGE_SIZE = "10";
@@ -245,4 +253,39 @@ public class ServiceController extends PiazzaRestController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	/**
+	 * Proxies an ElasticSearch DSL query to the Pz-Search component to return a
+	 * list of Service items.
+	 * 
+	 * @see http 
+	 *      ://pz-swagger.stage.geointservices.io/#!/Service/post_service_query
+	 * 
+	 * @return The list of Services matching the query.
+	 */
+	@RequestMapping(value = "/service/query", method = RequestMethod.POST)
+	public ResponseEntity<PiazzaResponse> searchServices(@RequestBody Object query, Principal user) {
+		try {
+			// Log the request
+			logger.log(
+					String.format("User %s sending a complex query for Search Services.",
+							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			// Send the query to the Pz-Search component
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<Object> entity = new HttpEntity<Object>(query, headers);
+			ServiceListResponse searchResponse = restTemplate.postForObject(
+					String.format("%s/%s", SEARCH_URL, SEARCH_ENDPOINT), entity, ServiceListResponse.class);
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
 }
