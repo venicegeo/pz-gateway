@@ -1185,8 +1185,8 @@ definitions:
     type: object
     description: "Defines the payload for submitting a Search Request to Piazza data."
     properties:
-      match:
-        description: "ElasticSearch DSL Match Object."
+      query:
+        description: "ElasticSearch DSL Query Object."
         type: object
   DeploymentJob:
     type: object

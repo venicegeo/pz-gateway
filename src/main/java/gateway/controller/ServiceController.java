@@ -64,7 +64,7 @@ public class ServiceController extends PiazzaRestController {
 	private String SERVICECONTROLLER_URL;
 	@Value("${search.url}")
 	private String SEARCH_URL;
-	@Value("${search.data.endpoint}")
+	@Value("${search.service.endpoint}")
 	private String SEARCH_ENDPOINT;
 
 	private RestTemplate restTemplate = new RestTemplate();
