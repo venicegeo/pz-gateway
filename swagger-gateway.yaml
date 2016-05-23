@@ -1078,6 +1078,7 @@ definitions:
         type: string
       domainName:
         description: "Optional. The S3 domain name, if this file resides in S3."
+        default: "s3.amazonaws.com"
         type: string
   DataResourceResults:
     type: object
