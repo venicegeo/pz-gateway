@@ -282,9 +282,9 @@ public class DataController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s requested Delete of Data ID %s.", gatewayUtil.getPrincipalName(user),
 					dataId), PiazzaLogger.INFO);
-			// Proxy the request to Pz-access
+			// Proxy the request to Pz-ingest
 			ResponseEntity<PiazzaResponse> response = restTemplate.exchange(
-					String.format("%s/%s/%s", ACCESS_URL, "data", dataId), HttpMethod.DELETE, null,
+					String.format("%s/%s/%s", INGEST_URL, "data", dataId), HttpMethod.DELETE, null,
 					PiazzaResponse.class);
 			HttpStatus status = response.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
