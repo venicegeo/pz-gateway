@@ -216,6 +216,24 @@ paths:
           description: "Unexpected Error"
           schema:
             $ref: '#/definitions/ErrorResponse'
+    delete:
+      summary: Delete Loaded Data
+      description: "Deletes an entry to Data that has been previously loaded into Piazza. If the file was hosted by Piazza, then that file will also be deleted."
+      parameters:
+        - name: dataId
+          in: path
+          description: "ID of the Data item to Delete."
+          required: true
+          type: string
+      tags:
+        - Data
+      responses:
+        200:
+          description: "Confirmation of delete."
+        default:
+          description: "Unexpected Error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       summary: Update Metadata for Loaded Data.
       description: "This will update the metadata for a specific data item. Non-null values will overwrite. This will only update the corresponding 'metadata' field in the Data item. Spatial metadata, and file information cannot be updated. For cases where spatial data or file data needs to change, an re-load of the data must be done."
