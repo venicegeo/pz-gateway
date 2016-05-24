@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -259,6 +260,39 @@ public class DataController extends PiazzaRestController {
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Metadata for item %s by user %s: %s", dataId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Deletes the Data Resource from Piazza.
+	 * 
+	 * @param dataId
+	 *            The ID of the data item to delte
+	 * @param user
+	 *            The user submitting the request
+	 * @return 200 OK if deleted, error response if not.
+	 */
+	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.DELETE)
+	public ResponseEntity<PiazzaResponse> deleteData(@PathVariable(value = "dataId") String dataId, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested Delete of Data ID %s.", gatewayUtil.getPrincipalName(user),
+					dataId), PiazzaLogger.INFO);
+			// Proxy the request to Pz-access
+			ResponseEntity<PiazzaResponse> response = restTemplate.exchange(
+					String.format("%s/%s/%s", ACCESS_URL, "data", dataId), HttpMethod.DELETE, null,
+					PiazzaResponse.class);
+			HttpStatus status = response.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+					: HttpStatus.OK;
+			// Response
+			return new ResponseEntity<PiazzaResponse>(response.getBody(), status);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Deleting Data for item %s by user %s: %s", dataId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),

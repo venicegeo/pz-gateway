@@ -20,9 +20,6 @@ import gateway.controller.util.PiazzaRestController;
 import java.util.HashMap;
 import java.util.Map;
 
-import model.response.ErrorResponse;
-import model.response.PiazzaResponse;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -109,11 +106,12 @@ public class AdminController extends PiazzaRestController {
 	 * @return Error describing the missing GET end point
 	 */
 	/*
-	@RequestMapping(value = "/error", method = RequestMethod.GET)
-	public ResponseEntity<?> missingEndpoint_GetRequest() {
-		String message = "Gateway GET endpoint not defined. Please verify the API for the correct call.";
-		return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST);
-	}*/
+	 * @RequestMapping(value = "/error", method = RequestMethod.GET) public
+	 * ResponseEntity<?> missingEndpoint_GetRequest() { String message =
+	 * "Gateway GET endpoint not defined. Please verify the API for the correct call."
+	 * ; return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
+	 * message, "Gateway"), HttpStatus.BAD_REQUEST); }
+	 */
 
 	/**
 	 * Error handling for missing POST request
@@ -121,9 +119,10 @@ public class AdminController extends PiazzaRestController {
 	 * @return Error describing the missing POST endpoint
 	 */
 	/*
-	@RequestMapping(value = "/error", method = RequestMethod.POST)
-	public ResponseEntity<?> missingEndpoint_PostRequest() {
-		String message = "Gateway POST endpoint not defined. Please verify the API for the correct call.";
-		return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST);
-	}*/
+	 * @RequestMapping(value = "/error", method = RequestMethod.POST) public
+	 * ResponseEntity<?> missingEndpoint_PostRequest() { String message =
+	 * "Gateway POST endpoint not defined. Please verify the API for the correct call."
+	 * ; return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
+	 * message, "Gateway"), HttpStatus.BAD_REQUEST); }
+	 */
 }
