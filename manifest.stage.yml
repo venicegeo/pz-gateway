@@ -10,4 +10,4 @@ applications:
     - pz-kafka
     - pz-blobstore
   env:
-    SPRING_PROFILES_ACTIVE: cloud
+    SPRING_PROFILES_ACTIVE: cloud,secure
