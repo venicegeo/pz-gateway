@@ -19,6 +19,11 @@ import java.security.Principal;
 
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import model.response.DataResourceListResponse;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
@@ -44,6 +49,7 @@ import util.PiazzaLogger;
  * @author Patrick.Doody
  *
  */
+@Api
 @CrossOrigin
 @RestController
 public class AlertTriggerController extends PiazzaRestController {
@@ -71,13 +77,15 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user making the request
 	 * @return The ID of the Trigger, or an error.
 	 */
-	@RequestMapping(value = "/trigger", method = RequestMethod.POST)
+	@RequestMapping(value = "/trigger", method = RequestMethod.POST, produces = "application/json")
+	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger with the Piazza Workflow component.", tags = {
+			"Trigger", "Workflow" }, response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Trigger") })
 	public ResponseEntity<?> createTrigger(@RequestBody String trigger, Principal user) {
 		try {
 			// Log the message
-			logger.log(
-					String.format("User %s has requested a new Trigger to be created.",
-							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested a new Trigger to be created.",
+					gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v1/%s", WORKFLOW_URL, "triggers");
 			String response = restTemplate.postForObject(url, trigger, String.class);
@@ -99,7 +107,10 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * 
 	 * @return The list of Triggers, or an error.
 	 */
-	@RequestMapping(value = "/trigger", method = RequestMethod.GET)
+	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = "application/json")
+	@ApiOperation(value = "List Triggers", notes = "Lists all of the defined Triggers in the Piazza Workflow component.", tags = {
+			"Trigger", "Workflow" }, response = DataResourceListResponse.class)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Triggers.") })
 	public ResponseEntity<?> getTriggers(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
@@ -135,13 +146,16 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return Trigger information, or an error
 	 */
-	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.GET)
+	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.GET, produces = "application/json")
+	@ApiOperation(value = "Gets Metadata for a Trigger", notes = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.", tags = {
+			"Trigger", "Workflow" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.") })
 	public ResponseEntity<?> getTrigger(@PathVariable(value = "triggerId") String triggerId, Principal user) {
 		try {
 			// Log the request
-			logger.log(
-					String.format("User %s has requested information for Trigger %s",
-							gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested information for Trigger %s",
+					gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v1/%s/%s", WORKFLOW_URL, "triggers", triggerId);
 			String response = restTemplate.getForObject(url, String.class);
@@ -168,11 +182,13 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
 	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.DELETE)
+	@ApiOperation(value = "Deletes a Trigger", notes = "Deletes a Trigger with the Workflow component. This Trigger will no longer listen for conditions for events to fire.", tags = {
+			"Trigger", "Workflow" })
 	public ResponseEntity<?> deleteTrigger(@PathVariable(value = "triggerId") String triggerId, Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested deletion of Trigger %s",
-					gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested deletion of Trigger %s", gatewayUtil.getPrincipalName(user),
+					triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v1/%s/%s", WORKFLOW_URL, "triggers", triggerId);
 			restTemplate.delete(url);
@@ -194,7 +210,10 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * 
 	 * @return The list of Alerts, or an error
 	 */
-	@RequestMapping(value = "/alert", method = RequestMethod.GET)
+	@RequestMapping(value = "/alert", method = RequestMethod.GET, produces = "application/json")
+	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the Alerts for the currently authenticated user. Alerts occur when a Trigger's conditions are met.", tags = {
+			"Alert", "Workflow" }, response = DataResourceListResponse.class)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Alerts owned by the current User.") })
 	public ResponseEntity<?> getAlerts(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
@@ -231,6 +250,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE)
+	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert; referenced by ID.", tags = { "Alert", "Workflow" })
 	public ResponseEntity<?> deleteAlert(@PathVariable(value = "alertId") String alertId, Principal user) {
 		try {
 			// Log the request
@@ -261,7 +281,10 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return Trigger information, or an error
 	 */
-	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET)
+	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET, produces = "application/json")
+	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a single Alert; referenced by ID.", tags = {
+			"Alert", "Workflow" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Alert metadata.") })
 	public ResponseEntity<?> getAlert(@PathVariable(value = "alertId") String alertId, Principal user) {
 		try {
 			// Log the request
@@ -280,5 +303,4 @@ public class AlertTriggerController extends PiazzaRestController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-
 }

@@ -17,6 +17,15 @@ package gateway;
 
 import gateway.auth.PiazzaBasicAuthenticationEntryPoint;
 import gateway.auth.PiazzaBasicAuthenticationProvider;
+import io.swagger.annotations.Api;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -44,6 +53,7 @@ import org.springframework.web.filter.CorsFilter;
  * 
  */
 @SpringBootApplication
+@EnableSwagger2
 @ComponentScan({ "gateway, util" })
 public class Application extends SpringBootServletInitializer {
 
@@ -61,6 +71,19 @@ public class Application extends SpringBootServletInitializer {
 		Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
 		builder.indentOutput(true);
 		return builder;
+	}
+
+	@Bean
+	public Docket newsApi() {
+		return new Docket(DocumentationType.SWAGGER_2).groupName("greetings").apiInfo(apiInfo()).select()
+				.apis(RequestHandlerSelectors.withClassAnnotation(Api.class)).paths(PathSelectors.any())
+				.build();
+	}
+
+	private ApiInfo apiInfo() {
+		Contact contact = new Contact("The VeniceGeo Project", "http://radiantblue.com", "venice@radiantblue.com");
+		return new ApiInfoBuilder().title("Gateway API").description("Piazza Core Services API").contact(contact)
+				.version("0.1.0").build();
 	}
 
 	@Configuration

@@ -25,7 +25,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
 /**
- * Custom Authentication Provider to authentication the provided username and 
+ * Custom Authentication Provider to authentication the provided username and
  * credential in the 'Authorization' request header field.
  * 
  * @author Russell.Orf
@@ -33,29 +33,28 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider {
- 
+
 	@Autowired
 	private UserDetailsBean userDetails;
-	
-    public PiazzaBasicAuthenticationProvider() {
-        super();
-    }
-	
-    @Override
-    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String name = authentication.getName();
-        Object credential = authentication.getCredentials();
-        
-        if( userDetails.getAuthenticationDecision(name, credential.toString()) ) {
-        	return new UsernamePasswordAuthenticationToken(name, credential, new ArrayList<>());
-        }
-        else {
-        	return null;
-        }
-    }
- 
-    @Override
-    public boolean supports(Class<?> authentication) {
-        return authentication.equals(UsernamePasswordAuthenticationToken.class);
-    }
+
+	public PiazzaBasicAuthenticationProvider() {
+		super();
+	}
+
+	@Override
+	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+		String name = authentication.getName();
+		Object credential = authentication.getCredentials();
+
+		if (userDetails.getAuthenticationDecision(name, credential.toString())) {
+			return new UsernamePasswordAuthenticationToken(name, credential, new ArrayList<>());
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public boolean supports(Class<?> authentication) {
+		return authentication.equals(UsernamePasswordAuthenticationToken.class);
+	}
 }

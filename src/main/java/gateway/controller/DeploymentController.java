@@ -17,6 +17,10 @@ package gateway.controller;
 
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
@@ -49,6 +53,7 @@ import util.PiazzaLogger;
  * @author Patrick.Doody
  *
  */
+@Api
 @CrossOrigin
 @RestController
 public class DeploymentController extends PiazzaRestController {
@@ -68,7 +73,7 @@ public class DeploymentController extends PiazzaRestController {
 	/**
 	 * Processes a request to create a GeoServer deployment for Piazza data.
 	 * 
-	 * @see http 
+	 * @see http
 	 *      ://pz-swagger.stage.geointservices.io/#!/Deployment/post_deployment
 	 * 
 	 * @param job
@@ -78,7 +83,11 @@ public class DeploymentController extends PiazzaRestController {
 	 * @return Job ID for the deployment; appropriate ErrorResponse if that call
 	 *         fails.
 	 */
-	@RequestMapping(value = "/deployment", method = RequestMethod.POST)
+	@RequestMapping(value = "/deployment", method = RequestMethod.POST, produces = "application/json")
+	@ApiOperation(value = "Obtain a GeoServer deployment for a Data Resource object", notes = "Data that has been loaded into Piazza can be deployed to GeoServer. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed.", tags = {
+			"Deployment", "Data" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The Job ID for the specified Deployment. This could be a long-running process to copy the data over to GeoServer, so a new Job is spawned.") })
 	public ResponseEntity<PiazzaResponse> createDeployment(@RequestBody AccessJob job, Principal user) {
 		try {
 			// Log the request
@@ -120,7 +129,10 @@ public class DeploymentController extends PiazzaRestController {
 	 * @return The list of results, with pagination information included.
 	 *         ErrorResponse if something goes wrong.
 	 */
-	@RequestMapping(value = "/deployment", method = RequestMethod.GET)
+	@RequestMapping(value = "/deployment", method = RequestMethod.GET, produces = "application/json")
+	@ApiOperation(value = "Obtain a list of all GeoServer deployments held by Piazza.", notes = "Data can be made available through the Piazza GeoServer as WMS/WCS/WFS. This must be done through POSTing to the /deployment endpoint. This endpoint will return a list of all Deployed resources.", tags = "Deployment")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> getDeployment(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
@@ -142,8 +154,8 @@ public class DeploymentController extends PiazzaRestController {
 			return new ResponseEntity<PiazzaResponse>(dataResponse, status);
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Listing Deployments by user %s: %s",
-					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			String error = String.format("Error Listing Deployments by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -164,7 +176,10 @@ public class DeploymentController extends PiazzaRestController {
 	 * @return The deployment information, or an ErrorResponse if exceptions
 	 *         occur
 	 */
-	@RequestMapping(value = "/deployment/{deploymentId}", method = RequestMethod.GET)
+	@RequestMapping(value = "/deployment/{deploymentId}", method = RequestMethod.GET, produces = "application/json")
+	@ApiOperation(value = "Get Deployment Metadata", notes = "Fetches the Metadata for a Piazza Deployment.", tags = "Deployment")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The metadata about the Deployment. Contains the unique ID of the deployment; the Data ID that it represents; and server information regarding the access of the deployed service (likely GeoServer) including the GetCapabilities document.") })
 	public ResponseEntity<PiazzaResponse> getDeployment(@PathVariable(value = "deploymentId") String deploymentId,
 			Principal user) {
 		try {
@@ -202,12 +217,14 @@ public class DeploymentController extends PiazzaRestController {
 	 *         occur
 	 */
 	@RequestMapping(value = "/deployment/{deploymentId}", method = RequestMethod.DELETE)
+	@ApiOperation(value = "Remove an active deployment", notes = "If a user wishes to delete a deployment before its lease time is up (and automatic deletion could take place) then this endpoint provides a way to do so manually.", tags = "Deployment")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation that the deployment has been deleted.") })
 	public ResponseEntity<PiazzaResponse> deleteDeployment(@PathVariable(value = "deploymentId") String deploymentId,
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Deletion for Deployment %s",
-					gatewayUtil.getPrincipalName(user), deploymentId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Deletion for Deployment %s", gatewayUtil.getPrincipalName(user),
+					deploymentId), PiazzaLogger.INFO);
 			// Broker the request to Pz-Access
 			restTemplate.delete(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId));
 			return null;
