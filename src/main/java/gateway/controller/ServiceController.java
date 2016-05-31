@@ -88,7 +88,7 @@ public class ServiceController extends PiazzaRestController {
 	 * @return The Service ID, or appropriate error.
 	 */
 	@RequestMapping(value = "/service", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service")
+	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service", response = ServiceResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Service") })
 	public ResponseEntity<PiazzaResponse> registerService(@RequestBody Service service, Principal user) {
 		try {
@@ -127,7 +127,7 @@ public class ServiceController extends PiazzaRestController {
 	 * @return Service metadata, or an error.
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Retrieve Service information", notes = "Retrieves the information and metadata for the specified Service matching the ID.", tags = "Service")
+	@ApiOperation(value = "Retrieve Service information", notes = "Retrieves the information and metadata for the specified Service matching the ID.", tags = "Service", response = Service.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Service object.") })
 	public ResponseEntity<PiazzaResponse> getService(@PathVariable(value = "serviceId") String serviceId,
 			Principal user) {
@@ -239,7 +239,7 @@ public class ServiceController extends PiazzaRestController {
 	 * @return The list of services; or an error.
 	 */
 	@RequestMapping(value = "/service", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service")
+	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service", response = ServiceListResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Services registered to Piazza.") })
 	public ResponseEntity<PiazzaResponse> getServices(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
@@ -281,7 +281,7 @@ public class ServiceController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/service/query", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Query Metadata in Piazza Services", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for registered Services. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
-			"Search", "Service" })
+			"Search", "Service" }, response = ServiceListResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> searchServices(@RequestBody Object query, Principal user) {

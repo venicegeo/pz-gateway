@@ -74,8 +74,8 @@ public class Application extends SpringBootServletInitializer {
 	}
 
 	@Bean
-	public Docket newsApi() {
-		return new Docket(DocumentationType.SWAGGER_2).groupName("greetings").apiInfo(apiInfo()).select()
+	public Docket gatewayApi() {
+		return new Docket(DocumentationType.SWAGGER_2).groupName("Piazza").apiInfo(apiInfo()).select()
 				.apis(RequestHandlerSelectors.withClassAnnotation(Api.class)).paths(PathSelectors.any())
 				.build();
 	}

@@ -182,7 +182,7 @@ public class JobController extends PiazzaRestController {
 	 *         appropriate error
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.PUT, produces = "application/json")
-	@ApiOperation(value = "Repeat Job", notes = "Repeats a previously submitted Job. This will clone the original Job, and run it again with identical parameters, using the requesting users authentication in the new Job.", tags = "Job")
+	@ApiOperation(value = "Repeat Job", notes = "Repeats a previously submitted Job. This will clone the original Job, and run it again with identical parameters, using the requesting users authentication in the new Job.", tags = "Job", response = JobStatusResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "A new Job ID that corresponds to the cloned Job in Piazza.") })
 	public ResponseEntity<PiazzaResponse> repeatJob(@PathVariable(value = "jobId") String jobId, Principal user) {
@@ -231,7 +231,7 @@ public class JobController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/v2/job", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Executes a registered Service", notes = "Creates a Piazza Job to execute a registered service in the system, with the specified parameters.", tags = {
-			"Job", "Service" }, response = ExecuteServiceJob.class)
+			"Job", "Service" }, response = JobStatusResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Job ID for the execution of the Service. This can be queried using Job Status to track progress and, when available, fetch the result object.") })
 	public ResponseEntity<PiazzaResponse> executeService(@RequestBody ExecuteServiceJob job, Principal user) {

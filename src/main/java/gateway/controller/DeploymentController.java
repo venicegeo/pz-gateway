@@ -25,9 +25,12 @@ import io.swagger.annotations.ApiResponses;
 import java.security.Principal;
 
 import messaging.job.JobMessageFactory;
+import model.data.deployment.Deployment;
 import model.job.type.AccessJob;
 import model.request.PiazzaJobRequest;
+import model.response.DeploymentListResponse;
 import model.response.ErrorResponse;
+import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -85,7 +88,7 @@ public class DeploymentController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/deployment", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Obtain a GeoServer deployment for a Data Resource object", notes = "Data that has been loaded into Piazza can be deployed to GeoServer. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed.", tags = {
-			"Deployment", "Data" })
+			"Deployment", "Data" }, response = JobStatusResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Job ID for the specified Deployment. This could be a long-running process to copy the data over to GeoServer, so a new Job is spawned.") })
 	public ResponseEntity<PiazzaResponse> createDeployment(@RequestBody AccessJob job, Principal user) {
@@ -130,7 +133,7 @@ public class DeploymentController extends PiazzaRestController {
 	 *         ErrorResponse if something goes wrong.
 	 */
 	@RequestMapping(value = "/deployment", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Obtain a list of all GeoServer deployments held by Piazza.", notes = "Data can be made available through the Piazza GeoServer as WMS/WCS/WFS. This must be done through POSTing to the /deployment endpoint. This endpoint will return a list of all Deployed resources.", tags = "Deployment")
+	@ApiOperation(value = "Obtain a list of all GeoServer deployments held by Piazza.", notes = "Data can be made available through the Piazza GeoServer as WMS/WCS/WFS. This must be done through POSTing to the /deployment endpoint. This endpoint will return a list of all Deployed resources.", tags = "Deployment", response = DeploymentListResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> getDeployment(
@@ -177,7 +180,7 @@ public class DeploymentController extends PiazzaRestController {
 	 *         occur
 	 */
 	@RequestMapping(value = "/deployment/{deploymentId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get Deployment Metadata", notes = "Fetches the Metadata for a Piazza Deployment.", tags = "Deployment")
+	@ApiOperation(value = "Get Deployment Metadata", notes = "Fetches the Metadata for a Piazza Deployment.", tags = "Deployment", response = Deployment.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The metadata about the Deployment. Contains the unique ID of the deployment; the Data ID that it represents; and server information regarding the access of the deployed service (likely GeoServer) including the GetCapabilities document.") })
 	public ResponseEntity<PiazzaResponse> getDeployment(@PathVariable(value = "deploymentId") String deploymentId,

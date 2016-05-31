@@ -25,12 +25,15 @@ import io.swagger.annotations.ApiResponses;
 import java.security.Principal;
 
 import messaging.job.JobMessageFactory;
+import model.data.DataResource;
 import model.data.FileRepresentation;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
 import model.request.PiazzaJobRequest;
 import model.response.DataResourceListResponse;
+import model.response.DataResourceResponse;
 import model.response.ErrorResponse;
+import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -97,7 +100,7 @@ public class DataController extends PiazzaRestController {
 	 *         ErrorResponse if something goes wrong.
 	 */
 	@RequestMapping(value = "/data", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data.", tags = "Data")
+	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data.", tags = "Data", response = DataResourceListResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> getData(
@@ -144,7 +147,7 @@ public class DataController extends PiazzaRestController {
 	 *         ErrorResponse
 	 */
 	@RequestMapping(value = "/data", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Load Data into Piazza", notes = "Loads data into the Piazza Core metadata holdings. Piazza can either host the data, or reflect an external location where the data is stored. Data must be loaded into Piazza before core components such as the Service Controller, or other external services, are able to consume that data.", tags = "Data")
+	@ApiOperation(value = "Load Data into Piazza", notes = "Loads data into the Piazza Core metadata holdings. Piazza can either host the data, or reflect an external location where the data is stored. Data must be loaded into Piazza before core components such as the Service Controller, or other external services, are able to consume that data.", tags = "Data", response = JobStatusResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.") })
 	public ResponseEntity<PiazzaResponse> ingestData(@RequestBody IngestJob job, Principal user) {
@@ -191,7 +194,7 @@ public class DataController extends PiazzaRestController {
 	 *         ErrorResponse
 	 */
 	@RequestMapping(value = "/data/file", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Load a Data File into Piazza", notes = "Loads a local user data file into the Piazza Core metadata holdings. This functions the same as /data endpoint, but a file is specified instead of a URI.", tags = "Data")
+	@ApiOperation(value = "Load a Data File into Piazza", notes = "Loads a local user data file into the Piazza Core metadata holdings. This functions the same as /data endpoint, but a file is specified instead of a URI.", tags = "Data", response = JobStatusResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.") })
 	public ResponseEntity<PiazzaResponse> ingestDataFile(@RequestParam(required = true) String data,
@@ -262,7 +265,7 @@ public class DataController extends PiazzaRestController {
 	 *         ErrorResponse if failed.
 	 */
 	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get Metadata for Loaded Data", notes = "Reads all metadata for a Data item that has been previously loaded into Piazza.", tags = "Data")
+	@ApiOperation(value = "Get Metadata for Loaded Data", notes = "Reads all metadata for a Data item that has been previously loaded into Piazza.", tags = "Data", response = DataResource.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Metadata describing the Data Item that matches the specified Data ID. Includes release metadata, and spatial metadata, etc.") })
 	public ResponseEntity<PiazzaResponse> getMetadata(@PathVariable(value = "dataId") String dataId, Principal user) {
@@ -370,7 +373,7 @@ public class DataController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/data/query", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Query Metadata in Piazza Data holdings", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for loaded data. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
-			"Data", "Search" })
+			"Data", "Search" }, response = DataResource.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> searchData(@RequestBody Object query, Principal user) {
