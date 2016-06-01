@@ -167,8 +167,15 @@ public class DataController extends PiazzaRestController {
 					job.getData().getDataType().getType()), PiazzaLogger.INFO);
 			// Create the Request to send to Kafka
 			String newJobId = gatewayUtil.getUuid();
+
 			// Ensure the user isn't trying to hack a dataId into their request.
 			job.getData().setDataId(null);
+			// Attach the user to the metadata container
+			if (job.getData().getMetadata() == null) {
+				job.getData().metadata = new ResourceMetadata();
+			}
+			job.getData().getMetadata().createdBy = gatewayUtil.getPrincipalName(user);
+
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
@@ -216,8 +223,15 @@ public class DataController extends PiazzaRestController {
 						"Incorrect JSON passed through the `data` parameter. Please verify input. Error: %s",
 						exception.getMessage()));
 			}
+
 			// Ensure the user isn't trying to hack a dataId into their request.
 			job.getData().setDataId(null);
+			// Attach the user to the metadata container
+			if (job.getData().getMetadata() == null) {
+				job.getData().metadata = new ResourceMetadata();
+			}
+			job.getData().getMetadata().createdBy = gatewayUtil.getPrincipalName(user);
+
 			// Ensure the file was uploaded. This is required.
 			if (file == null) {
 				throw new Exception("File not specified in request.");
