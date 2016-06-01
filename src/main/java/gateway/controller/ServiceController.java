@@ -220,6 +220,8 @@ public class ServiceController extends PiazzaRestController {
 	 *            The size per page
 	 * @param keyword
 	 *            The keywords to search on
+	 * @param userName
+	 *            Filter services created by a certain user
 	 * @param user
 	 *            The user submitting the request
 	 * @return The list of services; or an error.
@@ -228,7 +230,8 @@ public class ServiceController extends PiazzaRestController {
 	public ResponseEntity<PiazzaResponse> getServices(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "keyword", required = false) String keyword, Principal user) {
+			@RequestParam(value = "keyword", required = false) String keyword,
+			@RequestParam(value = "userName", required = false) String userName, Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
@@ -238,6 +241,10 @@ public class ServiceController extends PiazzaRestController {
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
+			}
+			// Add username if specified
+			if ((userName != null) && (userName.isEmpty() == false)) {
+				url = String.format("%s&userName=%s", url, userName);
 			}
 			PiazzaResponse servicesResponse = restTemplate.getForObject(url, PiazzaResponse.class);
 			HttpStatus status = servicesResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
@@ -252,6 +259,29 @@ public class ServiceController extends PiazzaRestController {
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	/**
+	 * Gets the services for the current user.
+	 * 
+	 * @param page
+	 *            The start page
+	 * @param pageSize
+	 *            The size per page
+	 * @param keyword
+	 *            The keywords to search on
+	 * @param userName
+	 *            Filter services created by a certain user
+	 * @param user
+	 *            The user submitting the request
+	 * @return The list of services; or an error.
+	 */
+	@RequestMapping(value = "/service/me", method = RequestMethod.GET)
+	public ResponseEntity<PiazzaResponse> getServicesForCurrentUser(
+			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@RequestParam(value = "keyword", required = false) String keyword, Principal user) {
+		return getServices(page, pageSize, keyword, gatewayUtil.getPrincipalName(user), user);
 	}
 
 	/**
