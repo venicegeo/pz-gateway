@@ -20,6 +20,7 @@ import gateway.controller.util.PiazzaRestController;
 
 import java.security.Principal;
 
+import model.job.metadata.ResourceMetadata;
 import model.job.type.RegisterServiceJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
@@ -88,6 +89,13 @@ public class ServiceController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s requested Service registration.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
+
+			// Populate the authoring field in the Service Metadata
+			if (service.getResourceMetadata() == null) {
+				service.setResourceMetadata(new ResourceMetadata());
+			}
+			service.getResourceMetadata().createdBy = gatewayUtil.getPrincipalName(user);
+
 			// Create the Service Job to forward
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
 			jobRequest.userName = gatewayUtil.getPrincipalName(user);
