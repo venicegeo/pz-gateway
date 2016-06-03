@@ -307,7 +307,7 @@
                     {
                         "name": "dataId",
                         "in": "path",
-                        "description": "ID of the Data item to Delete",
+                        "description": "ID of the Data item to Delete.",
                         "required": true,
                         "type": "string"
                     }
@@ -875,6 +875,13 @@
                         "description": "Indicates ascending or descending order. False for ascending, true for descending.",
                         "required": false,
                         "type": "boolean"
+                    },
+                    {
+                        "name": "eventType",
+                        "in": "query",
+                        "description": "The name of the event type to filter by.",
+                        "type": "string",
+                        "required": false
                     }
                 ],
                 "tags": [
@@ -895,54 +902,11 @@
                         }
                     }
                 }
-            }
-        },
-        "/event/{eventTypeId}": {
-            "get": {
-                "summary": "Get Events of a Specific Type",
-                "description": "Retrieves all Events of the Specific Type.",
-                "parameters": [
-                    {
-                        "name": "eventTypeId",
-                        "in": "path",
-                        "description": "The name of the Event Type.",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "tags": [
-                    "Workflow",
-                    "Event"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The list of Events.",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/Event"
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
             },
             "post": {
                 "summary": "Creates an Event for the Event Type",
-                "description": "Fires an Event with the Piazza Workflow component. Events must conform to the specified Event Type.",
+                "description": "Fires an Event with the Piazza Workflow component.",
                 "parameters": [
-                    {
-                        "name": "eventTypeId",
-                        "in": "path",
-                        "description": "The Event Type that the Event conforms to.",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "name": "event",
                         "in": "body",
@@ -973,18 +937,11 @@
                 }
             }
         },
-        "/event/{eventTypeId}/{eventId}": {
+        "/event/{eventId}": {
             "get": {
                 "summary": "Get a specifc Event",
-                "description": "Gets a specific Event by it's ID, that corresponds with the Event Type.",
+                "description": "Gets a specific Event by it's ID.",
                 "parameters": [
-                    {
-                        "name": "eventTypeId",
-                        "in": "path",
-                        "description": "The Event Type that the Event implements.",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "name": "eventId",
                         "in": "path",
@@ -1016,13 +973,6 @@
                 "summary": "Delete a specific Event",
                 "description": "Deletes a specific Event by it's ID, that corresponds with the Event Type.",
                 "parameters": [
-                    {
-                        "name": "eventTypeId",
-                        "in": "path",
-                        "description": "The Event Type that the Event implements.",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "name": "eventId",
                         "in": "path",

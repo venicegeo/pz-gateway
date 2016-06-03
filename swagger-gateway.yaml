@@ -667,11 +667,6 @@ paths:
       summary: Delete a specific Event
       description: "Deletes a specific Event by it's ID, that corresponds with the Event Type."
       parameters:
-        - name: eventTypeName
-          in: path
-          description: "The Event Type Name that the Event implements."
-          required: true
-          type: string
         - name: eventId
           in: path
           description: "The Event ID for the event to retrieve."
