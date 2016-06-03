@@ -103,7 +103,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	public ResponseEntity<?> getTriggers(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
+			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@RequestParam(value = "key", required = false) String key, Principal user) {
 		try {
 			// Log the request
@@ -198,7 +198,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	public ResponseEntity<?> getAlerts(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
+			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@RequestParam(value = "key", required = false) String key, Principal user) {
 		try {
 			// Log the request

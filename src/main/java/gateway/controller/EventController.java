@@ -74,7 +74,7 @@ public class EventController extends PiazzaRestController {
 	public ResponseEntity<?> getEvents(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
+			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@RequestParam(value = "key", required = false) String key,
 			@RequestParam(value = "eventType", required = false) String eventType, Principal user) {
 		try {
@@ -203,7 +203,7 @@ public class EventController extends PiazzaRestController {
 	public ResponseEntity<?> getEventTypes(
 			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
+			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@RequestParam(value = "key", required = false) String key, Principal user) {
 		try {
 			// Log the request
