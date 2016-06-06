@@ -91,7 +91,8 @@ public class JobController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Information regarding the requested Job. At bare minimum, this will contain the Job ID of the Job that has been spawned as a result of the POSTed message. If more information is available, such as Status, it will also be included.") })
 	public ResponseEntity<PiazzaResponse> getJobStatus(
-			@ApiParam(value = "ID of the Job to Fetch") @PathVariable(value = "jobId") String jobId, Principal user) {
+			@ApiParam(value = "ID of the Job to Fetch", required = true) @PathVariable(value = "jobId") String jobId,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId),
@@ -238,7 +239,7 @@ public class JobController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Job ID for the execution of the Service. This can be queried using Job Status to track progress and, when available, fetch the result object.") })
 	public ResponseEntity<PiazzaResponse> executeService(
-			@ApiParam(value = "The Payload that describes the Service to be executed, and the inputs for that service.", name = "body") @RequestBody(required = true) ExecuteServiceJob job,
+			@ApiParam(value = "The Payload that describes the Service to be executed, and the inputs for that service.", required = true, name = "body") @RequestBody ExecuteServiceJob job,
 			Principal user) {
 		try {
 			// Log the request

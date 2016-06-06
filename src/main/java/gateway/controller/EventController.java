@@ -120,7 +120,8 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Creates an Event for the Event Type", notes = "Fires an Event with the Piazza Workflow component. Events must conform to the specified Event Type.", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Event") })
-	public ResponseEntity<?> fireEvent(@RequestBody String event, Principal user) {
+	public ResponseEntity<?> fireEvent(
+			@ApiParam(value = "The Event JSON object.", required = true) @RequestBody String event, Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has fired an event.", gatewayUtil.getPrincipalName(user)),
@@ -156,7 +157,9 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Get a specifc Event", notes = "Gets a specific Event by it's ID, that corresponds with the Event Type.", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The requested Event.") })
-	public ResponseEntity<?> getEventInformation(@PathVariable(value = "eventId") String eventId, Principal user) {
+	public ResponseEntity<?> getEventInformation(
+			@ApiParam(value = "The Event ID for the event to retrieve.", required = true) @PathVariable(value = "eventId") String eventId,
+			Principal user) {
 		try {
 			// Log the message
 			logger.log(String.format("User %s requesting information on Event %s", gatewayUtil.getPrincipalName(user),
@@ -189,11 +192,13 @@ public class EventController extends PiazzaRestController {
 	 *            The user executing the request
 	 * @return 200 OK, or an error
 	 */
-	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ApiOperation(value = "Delete a specific Event", notes = "Deletes a specific Event by it's ID, that corresponds with the Event Type.", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of delete.") })
-	public ResponseEntity<?> deleteEvent(@PathVariable(value = "eventId") String eventId, Principal user) {
+	public ResponseEntity<?> deleteEvent(
+			@ApiParam(value = "The Event ID for the event to delete.", required = true) @PathVariable(value = "eventId") String eventId,
+			Principal user) {
 		try {
 			// Log the message
 			logger.log(String.format("User %s Requesting Deletion for Event %s", gatewayUtil.getPrincipalName(user),
@@ -224,10 +229,11 @@ public class EventController extends PiazzaRestController {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Event Types.") })
 	public ResponseEntity<?> getEventTypes(
-			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
-			@RequestParam(value = "key", required = false) String key, Principal user) {
+			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
+			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(
@@ -263,7 +269,9 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Register an Event Type", notes = "Defines an Event Type with the Workflow component, that defines a schema that Events can conform to and be fired for.", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Event Type") })
-	public ResponseEntity<?> createEventType(@RequestBody String eventType, Principal user) {
+	public ResponseEntity<?> createEventType(
+			@ApiParam(value = "The Event Type information. This defines the Schema for the Events that must be followed.", required = true) @RequestBody String eventType,
+			Principal user) {
 		try {
 			// Log the message
 			logger.log(String.format("User %s has requested a new Event Type to be created.",
@@ -297,7 +305,9 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Get an Event Type", notes = "Returns the metadata for a specific Event Type by its unique identifier.", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Event Type metadata.") })
-	public ResponseEntity<?> getEventType(@PathVariable(value = "eventTypeId") String eventTypeId, Principal user) {
+	public ResponseEntity<?> getEventType(
+			@ApiParam(value = "The unique identifier for the Event Type.", required = true) @PathVariable(value = "eventTypeId") String eventTypeId,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested information for Event Type %s",
@@ -327,11 +337,13 @@ public class EventController extends PiazzaRestController {
 	 *            The user executing the request
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
-	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ApiOperation(value = "Delete an Event Type", notes = "Deletes a specific Event Type, specified by its unique identifier.", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of Event Type deletion.") })
-	public ResponseEntity<?> deleteEventType(@PathVariable(value = "eventTypeId") String eventTypeId, Principal user) {
+	public ResponseEntity<?> deleteEventType(
+			@ApiParam(value = "The unique identifier for the Event Type to delete.", required = true) @PathVariable(value = "eventTypeId") String eventTypeId,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested deletion of Event Type %s",

@@ -80,9 +80,11 @@ public class AlertTriggerController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/trigger", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger with the Piazza Workflow component.", tags = {
-			"Trigger", "Workflow" }, response = String.class)
+			"Trigger", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Trigger") })
-	public ResponseEntity<?> createTrigger(@RequestBody String trigger, Principal user) {
+	public ResponseEntity<?> createTrigger(
+			@ApiParam(value = "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.", required = true) @RequestBody String trigger,
+			Principal user) {
 		try {
 			// Log the message
 			logger.log(String.format("User %s has requested a new Trigger to be created.",
@@ -110,13 +112,13 @@ public class AlertTriggerController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "List Triggers", notes = "Lists all of the defined Triggers in the Piazza Workflow component.", tags = {
-			"Trigger", "Workflow" }, response = DataResourceListResponse.class)
+			"Trigger", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Triggers.") })
 	public ResponseEntity<?> getTriggers(
+			@ApiParam(value = "A general keyword search to apply to all triggers.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@ApiParam(value = "Order Description") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
-			@ApiParam(value = "Key Description") @RequestParam(value = "key", required = false) String key,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			Principal user) {
 		try {
 			// Log the request
@@ -153,7 +155,9 @@ public class AlertTriggerController extends PiazzaRestController {
 			"Trigger", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.") })
-	public ResponseEntity<?> getTrigger(@PathVariable(value = "triggerId") String triggerId, Principal user) {
+	public ResponseEntity<?> getTrigger(
+			@ApiParam(value = "The ID of the Trigger to retrieve.", required = true) @PathVariable(value = "triggerId") String triggerId,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested information for Trigger %s",
@@ -183,10 +187,12 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
-	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ApiOperation(value = "Deletes a Trigger", notes = "Deletes a Trigger with the Workflow component. This Trigger will no longer listen for conditions for events to fire.", tags = {
 			"Trigger", "Workflow" })
-	public ResponseEntity<?> deleteTrigger(@PathVariable(value = "triggerId") String triggerId, Principal user) {
+	public ResponseEntity<?> deleteTrigger(
+			@ApiParam(value = "The ID of the Trigger to delete.", required = true) @PathVariable(value = "triggerId") String triggerId,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested deletion of Trigger %s", gatewayUtil.getPrincipalName(user),
@@ -219,8 +225,8 @@ public class AlertTriggerController extends PiazzaRestController {
 	public ResponseEntity<?> getAlerts(
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@ApiParam(value = "Order Description") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
-			@ApiParam(value = "Key Description") @RequestParam(value = "key", required = false) String key,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
+			@ApiParam(value = "A general keyword search to apply to all alerts.") @RequestParam(value = "key", required = false) String key,
 			Principal user) {
 		try {
 			// Log the request
@@ -252,7 +258,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
-	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert; referenced by ID.", tags = { "Alert", "Workflow" })
 	public ResponseEntity<?> deleteAlert(
 			@ApiParam(value = "The ID of the Alert to Delete.", required = true) @PathVariable(value = "alertId") String alertId,

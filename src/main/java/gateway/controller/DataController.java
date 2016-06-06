@@ -106,7 +106,8 @@ public class DataController extends PiazzaRestController {
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "userName", required = false) String userName, Principal user) {
+			@ApiParam(value = "Filter for the username that published the service.") @RequestParam(value = "userName", required = false) String userName,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)),
@@ -147,7 +148,10 @@ public class DataController extends PiazzaRestController {
 	 * @return The list of results, with pagination information included.
 	 *         ErrorResponse if something goes wrong.
 	 */
-	@RequestMapping(value = "/data/me", method = RequestMethod.GET)
+	@RequestMapping(value = "/data/me", method = RequestMethod.GET, produces = "application/json")
+	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data.", tags = "Data", response = DataResourceListResponse.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> getDataForCurrentUser(
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
