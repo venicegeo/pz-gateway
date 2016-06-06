@@ -18,10 +18,8 @@ package gateway.controller;
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -92,7 +90,8 @@ public class JobController extends PiazzaRestController {
 	@ApiOperation(value = "Get Job Status", notes = "Fetches the Status for a single Piazza Job.", tags = "Job", response = JobStatusResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Information regarding the requested Job. At bare minimum, this will contain the Job ID of the Job that has been spawned as a result of the POSTed message. If more information is available, such as Status, it will also be included.") })
-	public ResponseEntity<PiazzaResponse> getJobStatus(@PathVariable(value = "jobId") String jobId, Principal user) {
+	public ResponseEntity<PiazzaResponse> getJobStatus(
+			@ApiParam(value = "ID of the Job to Fetch") @PathVariable(value = "jobId") String jobId, Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId),
@@ -124,12 +123,14 @@ public class JobController extends PiazzaRestController {
 	 *            User information
 	 * @return No response body if successful, or an appropriate Error
 	 */
-	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ApiOperation(value = "Abort Job", notes = "Cancels a Running Job. If the Job is already completed in some way, then cancellation will not occur.", tags = "Job")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Job has requested to be cancelled. This may take some time, as the process may not be in an easily cancelled state at the time the request is made.") })
-	public ResponseEntity<PiazzaResponse> abortJob(@PathVariable(value = "jobId") String jobId,
-			@RequestParam(value = "reason", required = false) String reason, Principal user) {
+	public ResponseEntity<PiazzaResponse> abortJob(
+			@ApiParam(value = "ID of the Job to cancel.", required = true) @PathVariable(value = "jobId") String jobId,
+			@ApiParam(value = "Details for the cancellation of the Job.") @RequestParam(value = "reason", required = false) String reason,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Job Abort for Job ID %s with reason %s",
@@ -182,10 +183,12 @@ public class JobController extends PiazzaRestController {
 	 *         appropriate error
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.PUT, produces = "application/json")
-	@ApiOperation(value = "Repeat Job", notes = "Repeats a previously submitted Job. This will clone the original Job, and run it again with identical parameters, using the requesting users authentication in the new Job.", tags = "Job", response = JobStatusResponse.class)
+	@ApiOperation(value = "Repeat Job", notes = "Repeats a previously submitted Job. This will clone the original Job, and run it again with identical parameters, using the requesting users authentication in the new Job.", tags = "Job")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "A new Job ID that corresponds to the cloned Job in Piazza.") })
-	public ResponseEntity<PiazzaResponse> repeatJob(@PathVariable(value = "jobId") String jobId, Principal user) {
+	public ResponseEntity<PiazzaResponse> repeatJob(
+			@ApiParam(value = "ID of the Job to Repeat", required = true) @PathVariable(value = "jobId") String jobId,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested to Repeat Job %s", gatewayUtil.getPrincipalName(user), jobId),
@@ -231,10 +234,12 @@ public class JobController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/v2/job", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Executes a registered Service", notes = "Creates a Piazza Job to execute a registered service in the system, with the specified parameters.", tags = {
-			"Job", "Service" }, response = JobStatusResponse.class)
+			"Job", "Service" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Job ID for the execution of the Service. This can be queried using Job Status to track progress and, when available, fetch the result object.") })
-	public ResponseEntity<PiazzaResponse> executeService(@RequestBody ExecuteServiceJob job, Principal user) {
+	public ResponseEntity<PiazzaResponse> executeService(
+			@ApiParam(value = "The Payload that describes the Service to be executed, and the inputs for that service.", name = "body") @RequestBody(required = true) ExecuteServiceJob job,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Execute Job for Service %s.",

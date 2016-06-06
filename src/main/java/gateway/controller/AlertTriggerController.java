@@ -21,6 +21,7 @@ import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import model.response.DataResourceListResponse;
@@ -112,10 +113,11 @@ public class AlertTriggerController extends PiazzaRestController {
 			"Trigger", "Workflow" }, response = DataResourceListResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Triggers.") })
 	public ResponseEntity<?> getTriggers(
-			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
-			@RequestParam(value = "key", required = false) String key, Principal user) {
+			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "Order Description") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
+			@ApiParam(value = "Key Description") @RequestParam(value = "key", required = false) String key,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested a list of Triggers.", gatewayUtil.getPrincipalName(user)),
@@ -215,10 +217,11 @@ public class AlertTriggerController extends PiazzaRestController {
 			"Alert", "Workflow" }, response = DataResourceListResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Alerts owned by the current User.") })
 	public ResponseEntity<?> getAlerts(
-			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
-			@RequestParam(value = "key", required = false) String key, Principal user) {
+			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "Order Description") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
+			@ApiParam(value = "Key Description") @RequestParam(value = "key", required = false) String key,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested a list of Alerts.", gatewayUtil.getPrincipalName(user)),
@@ -251,7 +254,9 @@ public class AlertTriggerController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE)
 	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert; referenced by ID.", tags = { "Alert", "Workflow" })
-	public ResponseEntity<?> deleteAlert(@PathVariable(value = "alertId") String alertId, Principal user) {
+	public ResponseEntity<?> deleteAlert(
+			@ApiParam(value = "The ID of the Alert to Delete.", required = true) @PathVariable(value = "alertId") String alertId,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested deletion of Alert %s", gatewayUtil.getPrincipalName(user),
@@ -285,7 +290,9 @@ public class AlertTriggerController extends PiazzaRestController {
 	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a single Alert; referenced by ID.", tags = {
 			"Alert", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Alert metadata.") })
-	public ResponseEntity<?> getAlert(@PathVariable(value = "alertId") String alertId, Principal user) {
+	public ResponseEntity<?> getAlert(
+			@ApiParam(value = "The ID of the Alert to retrieve metadata for.", required = true) @PathVariable(value = "alertId") String alertId,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested information for Alert %s",

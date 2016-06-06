@@ -19,6 +19,7 @@ import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -90,7 +91,9 @@ public class ServiceController extends PiazzaRestController {
 	@RequestMapping(value = "/service", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service", response = ServiceResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Service") })
-	public ResponseEntity<PiazzaResponse> registerService(@RequestBody Service service, Principal user) {
+	public ResponseEntity<PiazzaResponse> registerService(
+			@ApiParam(value = "The metadata for the service. This includes the URL, parameters, inputs and outputs. It also includes other release metadata such as classification and availability.") @RequestBody(required = true) Service service,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Service registration.", gatewayUtil.getPrincipalName(user)),
@@ -129,7 +132,8 @@ public class ServiceController extends PiazzaRestController {
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Retrieve Service information", notes = "Retrieves the information and metadata for the specified Service matching the ID.", tags = "Service", response = Service.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Service object.") })
-	public ResponseEntity<PiazzaResponse> getService(@PathVariable(value = "serviceId") String serviceId,
+	public ResponseEntity<PiazzaResponse> getService(
+			@ApiParam(value = "The ID of the Service to retrieve.", required = true) @PathVariable(value = "serviceId") String serviceId,
 			Principal user) {
 		try {
 			// Log the request
@@ -162,11 +166,13 @@ public class ServiceController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return Service metadata, or an error.
 	 */
-	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ApiOperation(value = "Unregister a Service", notes = "Unregisters a service by its ID.", tags = "Service")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of Deleted.") })
-	public ResponseEntity<?> deleteService(@PathVariable(value = "serviceId") String serviceId,
-			@RequestParam(value = "softDelete", required = false) boolean softDelete, Principal user) {
+	public ResponseEntity<?> deleteService(
+			@ApiParam(value = "The ID of the Service to unregister.", required = true) @PathVariable(value = "serviceId") String serviceId,
+			@ApiParam(hidden = true) @RequestParam(value = "softDelete", required = false) boolean softDelete,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested Service deletion of %s", gatewayUtil.getPrincipalName(user),
@@ -204,8 +210,10 @@ public class ServiceController extends PiazzaRestController {
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.PUT, produces = "application/json")
 	@ApiOperation(value = "Update Service Information", notes = "Updates a Service Metadata, with the Service to updated specified by its ID.", tags = "Service")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of Update.") })
-	public ResponseEntity<PiazzaResponse> updateService(@PathVariable(value = "serviceId") String serviceId,
-			@RequestBody Service serviceData, Principal user) {
+	public ResponseEntity<PiazzaResponse> updateService(
+			@ApiParam(value = "The ID of the Service to Update.", required = true) @PathVariable(value = "serviceId") String serviceId,
+			@ApiParam(value = "The Service Metadata. All properties specified in the Service data here will overwrite the existing properties of the Service.", required = true) @RequestBody Service serviceData,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user),
@@ -242,9 +250,10 @@ public class ServiceController extends PiazzaRestController {
 	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service", response = ServiceListResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Services registered to Piazza.") })
 	public ResponseEntity<PiazzaResponse> getServices(
-			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "keyword", required = false) String keyword, Principal user) {
+			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
+			@ApiParam(value = "Paginating large results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
@@ -284,7 +293,9 @@ public class ServiceController extends PiazzaRestController {
 			"Search", "Service" }, response = ServiceListResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
-	public ResponseEntity<PiazzaResponse> searchServices(@RequestBody Object query, Principal user) {
+	public ResponseEntity<PiazzaResponse> searchServices(
+			@ApiParam(value = "The Query string for the Search component.", name = "search", required = true) @RequestBody Object query,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s sending a complex query for Search Services.",

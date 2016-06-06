@@ -19,6 +19,7 @@ import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -79,10 +80,11 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Get all Events", notes = "Retrieves a list of all Events.", tags = { "Event", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Events.") })
 	public ResponseEntity<?> getEvents(
-			@RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			@RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
-			@RequestParam(value = "key", required = false) String key, Principal user) {
+			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
+			@ApiParam(value = "Indicates ascending or descending order. False for ascending, true for descending.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) Boolean order,
+			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s queried for Events.", gatewayUtil.getPrincipalName(user)),
