@@ -26,7 +26,10 @@ import io.swagger.annotations.ApiResponses;
 import java.security.Principal;
 
 import model.response.ErrorResponse;
+import model.response.EventListResponse;
+import model.response.EventTypeListResponse;
 import model.response.PiazzaResponse;
+import model.workflow.EventType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +43,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.events.Event;
 
 import util.PiazzaLogger;
 
@@ -77,7 +82,7 @@ public class EventController extends PiazzaRestController {
 	 * @return The list of events, or the appropriate error.
 	 */
 	@RequestMapping(value = "/event", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get all Events", notes = "Retrieves a list of all Events.", tags = { "Event", "Workflow" })
+	@ApiOperation(value = "Get all Events", notes = "Retrieves a list of all Events.", tags = { "Event", "Workflow" }, response=EventListResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Events.") })
 	public ResponseEntity<?> getEvents(
 			@ApiParam(value = "The name of the event type to filter by.") @RequestParam(value = "eventType", required = false) String eventType,
@@ -155,7 +160,7 @@ public class EventController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Get a specifc Event", notes = "Gets a specific Event by it's ID, that corresponds with the Event Type.", tags = {
-			"Event", "Workflow" })
+			"Event", "Workflow" }, response = Event.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The requested Event.") })
 	public ResponseEntity<?> getEventInformation(
 			@ApiParam(value = "The Event ID for the event to retrieve.", required = true) @PathVariable(value = "eventId") String eventId,
@@ -226,7 +231,7 @@ public class EventController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/eventType", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "List Event Types", notes = "Lists all Event Types that have been registered with the Piazza Workflow service.", tags = {
-			"Event Type", "Workflow" })
+			"Event Type", "Workflow" }, response=EventTypeListResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Event Types.") })
 	public ResponseEntity<?> getEventTypes(
 			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
@@ -303,7 +308,7 @@ public class EventController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Get an Event Type", notes = "Returns the metadata for a specific Event Type by its unique identifier.", tags = {
-			"Event Type", "Workflow" })
+			"Event Type", "Workflow" }, response = EventType.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Event Type metadata.") })
 	public ResponseEntity<?> getEventType(
 			@ApiParam(value = "The unique identifier for the Event Type.", required = true) @PathVariable(value = "eventTypeId") String eventTypeId,

@@ -24,9 +24,12 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import model.response.DataResourceListResponse;
+import model.response.AlertListResponse;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
+import model.response.TriggerListResponse;
+import model.workflow.Alert;
+import model.workflow.Trigger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -112,7 +115,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "List Triggers", notes = "Lists all of the defined Triggers in the Piazza Workflow component.", tags = {
-			"Trigger", "Workflow" })
+			"Trigger", "Workflow" }, response=TriggerListResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Triggers.") })
 	public ResponseEntity<?> getTriggers(
 			@ApiParam(value = "A general keyword search to apply to all triggers.") @RequestParam(value = "key", required = false) String key,
@@ -152,7 +155,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Gets Metadata for a Trigger", notes = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.", tags = {
-			"Trigger", "Workflow" })
+			"Trigger", "Workflow" }, response = Trigger.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.") })
 	public ResponseEntity<?> getTrigger(
@@ -220,7 +223,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/alert", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the Alerts for the currently authenticated user. Alerts occur when a Trigger's conditions are met.", tags = {
-			"Alert", "Workflow" }, response = DataResourceListResponse.class)
+			"Alert", "Workflow" }, response = AlertListResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Alerts owned by the current User.") })
 	public ResponseEntity<?> getAlerts(
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
@@ -294,7 +297,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a single Alert; referenced by ID.", tags = {
-			"Alert", "Workflow" })
+			"Alert", "Workflow" }, response = Alert.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Alert metadata.") })
 	public ResponseEntity<?> getAlert(
 			@ApiParam(value = "The ID of the Alert to retrieve metadata for.", required = true) @PathVariable(value = "alertId") String alertId,
