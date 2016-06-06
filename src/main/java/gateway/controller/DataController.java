@@ -106,7 +106,7 @@ public class DataController extends PiazzaRestController {
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
-			Principal user) {
+			@RequestParam(value = "userName", required = false) String userName, Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)),
@@ -116,6 +116,10 @@ public class DataController extends PiazzaRestController {
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
+			}
+			// Add username if specified
+			if ((userName != null) && (userName.isEmpty() == false)) {
+				url = String.format("%s&userName=%s", url, userName);
 			}
 			PiazzaResponse dataResponse = restTemplate.getForObject(url, PiazzaResponse.class);
 			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
@@ -130,6 +134,26 @@ public class DataController extends PiazzaRestController {
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	/**
+	 * Returns a queried list of Data Resources previously loaded into Piazza
+	 * that have been loaded by the current user.
+	 * 
+	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_data
+	 * 
+	 * @param user
+	 *            The user making the request
+	 * @return The list of results, with pagination information included.
+	 *         ErrorResponse if something goes wrong.
+	 */
+	@RequestMapping(value = "/data/me", method = RequestMethod.GET)
+	public ResponseEntity<PiazzaResponse> getDataForCurrentUser(
+			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
+			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			Principal user) {
+		return getData(keyword, page, pageSize, gatewayUtil.getPrincipalName(user), user);
 	}
 
 	/**

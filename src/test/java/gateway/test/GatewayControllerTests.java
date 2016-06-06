@@ -25,9 +25,12 @@ import gateway.controller.LegacyController;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Principal;
 import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+
+import javax.management.remote.JMXPrincipal;
 
 import model.data.DataResource;
 import model.data.type.RasterDataType;
@@ -85,6 +88,7 @@ public class GatewayControllerTests {
 
 	private Job mockIngestJob;
 	private PiazzaJobRequest mockRequest;
+	private Principal user;
 
 	/**
 	 * Initialize mock objects.
@@ -100,6 +104,9 @@ public class GatewayControllerTests {
 		mockIngestJob.status = StatusUpdate.STATUS_RUNNING;
 		mockIngestJob.progress = new JobProgress(50);
 		mockIngestJob.jobType = ingestJob;
+
+		// Mock a user
+		user = new JMXPrincipal("Test");
 
 		// Mock an Ingest Job Request
 		RasterDataType raster = new RasterDataType();
@@ -143,14 +150,15 @@ public class GatewayControllerTests {
 		// response here.
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
 
-//		// Testing the Job Status Response to Ensure equality with our Mock Data
-//		ResponseEntity<PiazzaResponse> entity = gatewayController.job(request, null);
-//		PiazzaResponse response = entity.getBody();
-//		assertTrue(response.getType().equals(mockResponse.getType()));
-//		JobStatusResponse jobResponse = (JobStatusResponse) response;
-//		assertTrue(jobResponse.jobId.equals(mockIngestJob.jobId));
-//		assertTrue(jobResponse.progress.getPercentComplete().equals(mockIngestJob.progress.getPercentComplete()));
-//		assertTrue(jobResponse.status.equals(mockIngestJob.status));
+		// // Testing the Job Status Response to Ensure equality with our Mock
+		// Data
+		ResponseEntity<PiazzaResponse> entity = gatewayController.job(request, null, user);
+		PiazzaResponse response = entity.getBody();
+		assertTrue(response.getType().equals(mockResponse.getType()));
+		JobStatusResponse jobResponse = (JobStatusResponse) response;
+		assertTrue(jobResponse.jobId.equals(mockIngestJob.jobId));
+		assertTrue(jobResponse.progress.getPercentComplete().equals(mockIngestJob.progress.getPercentComplete()));
+		assertTrue(jobResponse.status.equals(mockIngestJob.status));
 	}
 
 	/**
@@ -168,11 +176,11 @@ public class GatewayControllerTests {
 		String guid = UUID.randomUUID().toString();
 		when(uuidFactory.getUUID()).thenReturn(guid);
 
-//		// Ensure a new Job was created with the matching Job ID
-//		ResponseEntity<PiazzaResponse> entity = gatewayController.job(request, null);
-//		PiazzaResponse response = entity.getBody();
-//		assertTrue(response.getType().equals("job"));
-//		assertTrue(response.jobId.equals(guid));
+		// // Ensure a new Job was created with the matching Job ID
+		ResponseEntity<PiazzaResponse> entity = gatewayController.job(request, null, user);
+		PiazzaResponse response = entity.getBody();
+		assertTrue(response.getType().equals("job"));
+		assertTrue(response.jobId.equals(guid));
 	}
 
 	/**
@@ -199,10 +207,10 @@ public class GatewayControllerTests {
 		String guid = UUID.randomUUID().toString();
 		when(uuidFactory.getUUID()).thenReturn(guid);
 
-//		// Create a request with the File
-//		ResponseEntity<PiazzaResponse> entity = gatewayController.job(request, file);
-//		PiazzaResponse response = entity.getBody();
-//		assertTrue(response.getType().equals("job"));
-//		assertTrue(response.jobId.equals(guid));
+		// // Create a request with the File
+		ResponseEntity<PiazzaResponse> entity = gatewayController.job(request, file, user);
+		PiazzaResponse response = entity.getBody();
+		assertTrue(response.getType().equals("job"));
+		assertTrue(response.jobId.equals(guid));
 	}
 }
