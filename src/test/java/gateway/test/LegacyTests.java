@@ -72,7 +72,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Patrick.Doody
  * 
  */
-public class GatewayControllerTests {
+public class LegacyTests {
 	@Mock
 	private PiazzaLogger logger;
 	@Mock
