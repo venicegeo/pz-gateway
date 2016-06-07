@@ -180,7 +180,7 @@ public class EventController extends PiazzaRestController {
 			logger.log(String.format("User %s Requesting Deletion for Event %s under",
 					gatewayUtil.getPrincipalName(user), eventId), PiazzaLogger.INFO);
 			// Broker the request to pz-workflow
-			restTemplate.delete(String.format("%s/v2/%s/%s", WORKFLOW_URL, "events", eventId), String.class);
+			restTemplate.delete(String.format("%s/v2/%s/%s", WORKFLOW_URL, "event", eventId), String.class);
 			return null;
 		} catch (Exception exception) {
 			exception.printStackTrace();
