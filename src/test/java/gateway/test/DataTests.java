@@ -18,35 +18,47 @@ package gateway.test;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import gateway.controller.DataController;
 import gateway.controller.util.GatewayUtil;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import javax.management.remote.JMXPrincipal;
 
 import model.data.DataResource;
+import model.data.type.GeoJsonDataType;
 import model.data.type.TextDataType;
 import model.job.metadata.ResourceMetadata;
+import model.job.type.IngestJob;
 import model.response.DataResourceListResponse;
 import model.response.ErrorResponse;
 import model.response.Pagination;
 import model.response.PiazzaResponse;
 
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.RestTemplate;
 
 import util.PiazzaLogger;
 import util.UUIDFactory;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Tests the Data Controller, and various Data Access/Load Jobs.
@@ -67,9 +79,12 @@ public class DataTests {
 	private AmazonS3 s3Client;
 	@InjectMocks
 	private DataController dataController;
+	@Mock
+	private Producer<String, String> producer;
 
 	private Principal user;
 	private DataResource mockData;
+	private ErrorResponse mockError;
 
 	/**
 	 * Initialize mock objects.
@@ -77,6 +92,10 @@ public class DataTests {
 	@Before
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.initMocks(gatewayUtil);
+
+		// Mock a common error we can use to test
+		mockError = new ErrorResponse("JobID", "Error!", "Test");
 
 		// Mock some Data that we can use in our test cases.
 		mockData = new DataResource();
@@ -88,8 +107,23 @@ public class DataTests {
 
 		// Mock a user
 		user = new JMXPrincipal("Test User");
+
+		// Mock the Kafka response that Producers will send. This will always
+		// return a Future that completes immediately and simply returns true.
+		when(producer.send(isA(ProducerRecord.class))).thenAnswer(new Answer<Future<Boolean>>() {
+			@Override
+			public Future<Boolean> answer(InvocationOnMock invocation) throws Throwable {
+				Future<Boolean> future = mock(FutureTask.class);
+				when(future.isDone()).thenReturn(true);
+				when(future.get()).thenReturn(true);
+				return future;
+			}
+		});
 	}
 
+	/**
+	 * Test GET /data endpoint
+	 */
 	@Test
 	public void testGetData() {
 		// When the Gateway asks the Dispatcher for a List of Data, Mock that
@@ -111,7 +145,6 @@ public class DataTests {
 		assertTrue(dataList.getPagination().getCount() == 1);
 
 		// Mock an Exception being thrown and handled.
-		ErrorResponse mockError = new ErrorResponse("JobID", "Error!", "Test");
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockError);
 
 		// Get the data
@@ -120,5 +153,76 @@ public class DataTests {
 
 		// Verify that a proper exception was thrown.
 		assertTrue(response instanceof ErrorResponse);
+	}
+
+	/**
+	 * Test POST /data endpoint
+	 */
+	@Test
+	public void testAddData() throws Exception {
+		// Mock an Ingest Job request, containing some sample data we want to
+		// ingest.
+		IngestJob mockJob = new IngestJob();
+		mockJob.data = mockData;
+		mockJob.host = false;
+
+		// Generate a UUID that we can reproduce.
+		when(gatewayUtil.getUuid()).thenReturn("123456");
+
+		// Submit a mock request
+		ResponseEntity<PiazzaResponse> entity = dataController.ingestData(mockJob, user);
+		PiazzaResponse response = entity.getBody();
+
+		// Verify the results. If the mock Kafka message is sent, then this is
+		// considered a success.
+		assertTrue(response instanceof PiazzaResponse == true);
+		assertTrue(response instanceof ErrorResponse == false);
+		assertTrue(response.jobId.equalsIgnoreCase("123456"));
+	}
+
+	/**
+	 * Test POST /data/file endpoint
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testAddFile() throws Exception {
+		// Mock an Ingest Job request, containing some sample data we want to
+		// ingest. Also mock a file.
+		IngestJob mockJob = new IngestJob();
+		mockJob.data = mockData;
+		mockJob.host = false; // This will cause a failure initially
+		MockMultipartFile file = new MockMultipartFile("test.tif", "Content".getBytes());
+
+		// Generate a UUID that we can reproduce.
+		when(gatewayUtil.getUuid()).thenReturn("123456");
+
+		// Test the request
+		ResponseEntity<PiazzaResponse> entity = dataController.ingestDataFile(
+				new ObjectMapper().writeValueAsString(mockJob), file, user);
+		PiazzaResponse response = entity.getBody();
+
+		// Verify the results. This request should fail since the host flag is
+		// set to false.
+		assertTrue(response instanceof ErrorResponse == true);
+
+		mockJob.host = true;
+		// Resubmit the Job. Now it should fail because it is a TextResource.
+		entity = dataController.ingestDataFile(new ObjectMapper().writeValueAsString(mockJob), file, user);
+		response = entity.getBody();
+
+		assertTrue(response instanceof ErrorResponse == true);
+
+		// Change to a File that should succeed.
+		mockJob.data = new DataResource();
+		mockJob.data.dataType = new GeoJsonDataType();
+
+		// Resubmit the Job. It should now succeed with the message successfully
+		// being sent to Kafka.
+		entity = dataController.ingestDataFile(new ObjectMapper().writeValueAsString(mockJob), file, user);
+		response = entity.getBody();
+
+		assertTrue(response instanceof ErrorResponse == false);
+		assertTrue(response.jobId.equalsIgnoreCase("123456"));
 	}
 }
