@@ -16,6 +16,7 @@
 package gateway.test;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -37,6 +38,7 @@ import model.data.type.TextDataType;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
 import model.response.DataResourceListResponse;
+import model.response.DataResourceResponse;
 import model.response.ErrorResponse;
 import model.response.Pagination;
 import model.response.PiazzaResponse;
@@ -50,8 +52,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import util.PiazzaLogger;
@@ -143,6 +147,7 @@ public class DataTests {
 		DataResourceListResponse dataList = (DataResourceListResponse) response;
 		assertTrue(dataList.getData().size() == 1);
 		assertTrue(dataList.getPagination().getCount() == 1);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Mock an Exception being thrown and handled.
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockError);
@@ -153,6 +158,7 @@ public class DataTests {
 
 		// Verify that a proper exception was thrown.
 		assertTrue(response instanceof ErrorResponse);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 	}
 
 	/**
@@ -178,6 +184,12 @@ public class DataTests {
 		assertTrue(response instanceof PiazzaResponse == true);
 		assertTrue(response instanceof ErrorResponse == false);
 		assertTrue(response.jobId.equalsIgnoreCase("123456"));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+
+		// Test an Exception
+		when(gatewayUtil.getUuid()).thenThrow(new Exception());
+		entity = dataController.ingestData(mockJob, user);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 	}
 
 	/**
@@ -224,5 +236,137 @@ public class DataTests {
 
 		assertTrue(response instanceof ErrorResponse == false);
 		assertTrue(response.jobId.equalsIgnoreCase("123456"));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+	}
+
+	/**
+	 * Test GET /data/{dataId}
+	 */
+	@Test
+	public void testGetDataItem() {
+		// Mock the Response
+		DataResourceResponse mockResponse = new DataResourceResponse(mockData);
+		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
+
+		// Test
+		ResponseEntity<PiazzaResponse> entity = dataController.getMetadata("123456", user);
+		PiazzaResponse response = entity.getBody();
+
+		// Verify
+		assertTrue(response instanceof ErrorResponse == false);
+		assertTrue(((DataResourceResponse) response).data.getDataId().equalsIgnoreCase(mockData.getDataId()));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+
+		// Test an Exception
+		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockError);
+		entity = dataController.getMetadata("123456", user);
+		response = entity.getBody();
+		assertTrue(response instanceof ErrorResponse);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+	}
+
+	/**
+	 * Test DELETE /data/{dataId}
+	 */
+	@Test
+	public void testDeleteData() {
+		// Mock the Response
+		PiazzaResponse mockResponse = new PiazzaResponse();
+		ResponseEntity<PiazzaResponse> mockEntity = new ResponseEntity<PiazzaResponse>(mockResponse, HttpStatus.OK);
+		when(restTemplate.exchange(anyString(), any(), any(), eq(PiazzaResponse.class))).thenReturn(mockEntity);
+
+		// Test
+		ResponseEntity<PiazzaResponse> entity = dataController.deleteData("123456", user);
+		PiazzaResponse response = entity.getBody();
+
+		// Verify
+		assertTrue(response instanceof ErrorResponse == false);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+
+		// Test an Exception
+		mockEntity = new ResponseEntity<PiazzaResponse>(mockError, HttpStatus.INTERNAL_SERVER_ERROR);
+		when(restTemplate.exchange(anyString(), any(), any(), eq(PiazzaResponse.class))).thenReturn(mockEntity);
+		entity = dataController.deleteData("123456", user);
+		response = entity.getBody();
+		assertTrue(response instanceof ErrorResponse);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+	}
+
+	/**
+	 * Test POST /data/{dataId}
+	 */
+	@Test
+	public void testUpdateData() {
+		// Mock
+		PiazzaResponse mockResponse = new PiazzaResponse();
+		when(restTemplate.postForObject(anyString(), any(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
+
+		// Test
+		ResponseEntity<PiazzaResponse> entity = dataController.updateMetadata("123456", mockData.getMetadata(), user);
+
+		// Verify
+		assertTrue(entity == null);
+
+		// Test an Exception
+		when(restTemplate.postForObject(anyString(), any(), eq(PiazzaResponse.class))).thenReturn(mockError);
+		entity = dataController.updateMetadata("123456", mockData.getMetadata(), user);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getBody() instanceof ErrorResponse);
+	}
+
+	/**
+	 * Test POST /data/query
+	 */
+	@Test
+	public void testQueryData() {
+		// Mock
+		DataResourceListResponse mockResponse = new DataResourceListResponse();
+		mockResponse.data = new ArrayList<DataResource>();
+		mockResponse.getData().add(mockData);
+		mockResponse.pagination = new Pagination(1, 0, 10);
+		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class))).thenReturn(
+				mockResponse);
+
+		// Test
+		ResponseEntity<PiazzaResponse> entity = dataController.searchData(null, user);
+		DataResourceListResponse response = (DataResourceListResponse) entity.getBody();
+
+		// Verify
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(response.getData().get(0).getDataId().equalsIgnoreCase(mockData.getDataId()));
+		assertTrue(response.getPagination().getCount().equals(1));
+
+		// Test an Exception
+		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class))).thenThrow(
+				new RestClientException(""));
+		entity = dataController.searchData(null, user);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getBody() instanceof ErrorResponse);
+	}
+
+	/**
+	 * Test GET /file/{dataId}
+	 */
+	@Test
+	public void testDownload() throws Exception {
+		// Mock
+		ResponseEntity<byte[]> mockResponse = new ResponseEntity<byte[]>("Content".getBytes(), HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(byte[].class))).thenReturn(mockResponse);
+
+		// Test
+		ResponseEntity<byte[]> entity = dataController.getFile("123456", "test.txt", user);
+
+		// Verify
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		System.out.println(entity.getBody().toString());
+
+		// Test an Exception
+		when(restTemplate.getForEntity(anyString(), eq(byte[].class))).thenThrow(new RestClientException(""));
+		try {
+			entity = dataController.getFile("123456", "test.txt", user);
+		} catch (Exception exception) {
+			assertTrue(exception.getMessage().contains("Error downloading file"));
+		}
+
 	}
 }
