@@ -33,9 +33,7 @@ import java.util.concurrent.FutureTask;
 
 import javax.management.remote.JMXPrincipal;
 
-import model.data.DataResource;
 import model.job.metadata.ResourceMetadata;
-import model.response.DataResourceListResponse;
 import model.response.ErrorResponse;
 import model.response.Pagination;
 import model.response.PiazzaResponse;

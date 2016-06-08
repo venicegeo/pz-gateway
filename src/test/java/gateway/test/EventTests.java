@@ -63,7 +63,6 @@ public class EventTests {
 	private EventController eventController;
 
 	private Principal user;
-	private ErrorResponse mockError;
 
 	/**
 	 * Initialize mock objects.
@@ -72,9 +71,6 @@ public class EventTests {
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
 		MockitoAnnotations.initMocks(gatewayUtil);
-
-		// Mock a common error we can use to test
-		mockError = new ErrorResponse("JobID", "Error!", "Test");
 
 		// Mock a user
 		user = new JMXPrincipal("Test User");
