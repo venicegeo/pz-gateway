@@ -152,8 +152,8 @@ public class EventController extends PiazzaRestController {
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Querying Event %s by user %: %s", eventId,
-					gatewayUtil.getPrincipalName(user));
+			String error = String.format("Error Querying Event %s by user %s: %s", eventId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -184,8 +184,8 @@ public class EventController extends PiazzaRestController {
 			return null;
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Deleting Event %s by user %: %s", eventId,
-					gatewayUtil.getPrincipalName(user));
+			String error = String.format("Error Deleting Event %s by user %s: %s", eventId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);

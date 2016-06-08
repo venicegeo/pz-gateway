@@ -53,8 +53,6 @@ public class AdminController extends PiazzaRestController {
 	private String ACCESS_URL;
 	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
-	@Value("${dispatcher.url}")
-	private String DISPATCHER_URL;
 	@Value("${servicecontroller.url}")
 	private String SERVICECONTROLLER_URL;
 	@Value("${uuid.url}")
@@ -91,7 +89,6 @@ public class AdminController extends PiazzaRestController {
 		stats.put("Ingest", INGEST_URL);
 		stats.put("Access", ACCESS_URL);
 		stats.put("JobManager", JOBMANAGER_URL);
-		stats.put("Dispatcher", DISPATCHER_URL);
 		stats.put("ServiceController", SERVICECONTROLLER_URL);
 		stats.put("UUIDGen", UUIDGEN_URL);
 		stats.put("Logger", LOGGER_URL);
