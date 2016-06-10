@@ -176,8 +176,8 @@ public class EventController extends PiazzaRestController {
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Querying Event %s by user %: %s", eventId,
-					gatewayUtil.getPrincipalName(user));
+			String error = String.format("Error Querying Event %s by user %s: %s", eventId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -210,12 +210,12 @@ public class EventController extends PiazzaRestController {
 					eventId), PiazzaLogger.INFO);
 
 			// Broker the request to pz-workflow
-			restTemplate.delete(String.format("%s/v2/%s/%s", WORKFLOW_URL, "events", eventId), String.class);
+			restTemplate.delete(String.format("%s/v2/%s/%s", WORKFLOW_URL, "event", eventId), String.class);
 			return null;
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Deleting Event %s by user %: %s", eventId,
-					gatewayUtil.getPrincipalName(user));
+			String error = String.format("Error Deleting Event %s by user %s: %s", eventId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);

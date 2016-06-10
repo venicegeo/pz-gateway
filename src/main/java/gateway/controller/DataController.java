@@ -248,9 +248,11 @@ public class DataController extends PiazzaRestController {
 				throw new Exception("File not specified in request.");
 			}
 			// Log the request
-			logger.log(String.format("User %s requested Data Load Job of type %s with file",
-					gatewayUtil.getPrincipalName(user), job.getData().getDataType().getType(),
-					file.getOriginalFilename()), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s requested Data Load Job of type %s with file: %s",
+							gatewayUtil.getPrincipalName(user), job.getData().getDataType().getType(),
+							file.getOriginalFilename()), PiazzaLogger.INFO);
+			
 			// Validate the Job inputs to ensure we are able to process the file
 			// and attach it to the job metadata.
 			if (job.getHost() == false) {
