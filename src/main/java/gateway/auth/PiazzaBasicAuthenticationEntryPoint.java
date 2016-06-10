@@ -27,7 +27,8 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationEn
 import org.springframework.stereotype.Component;
 
 /**
- * Custom Sprint 'Entry Point' that issues an appropriate response when authentication fails.
+ * Custom Sprint 'Entry Point' that issues an appropriate response when
+ * authentication fails.
  * 
  * @author Russell.Orf
  * 
