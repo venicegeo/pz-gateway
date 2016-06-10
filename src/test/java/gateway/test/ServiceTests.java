@@ -231,7 +231,7 @@ public class ServiceTests {
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
 
 		// Test
-		ResponseEntity<PiazzaResponse> entity = serviceController.getServices(0, 10, null, null, user);
+		ResponseEntity<PiazzaResponse> entity = serviceController.getServices(null, 0, 10, null, user);
 		PiazzaResponse response = entity.getBody();
 
 		// Verify
@@ -243,7 +243,7 @@ public class ServiceTests {
 
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockError);
-		entity = serviceController.getServices(0, 10, null, null, user);
+		entity = serviceController.getServices(null, 0, 10, null, user);
 		response = entity.getBody();
 		assertTrue(response instanceof ErrorResponse);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));

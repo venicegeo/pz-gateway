@@ -156,7 +156,7 @@ public class DeploymentTests {
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
 
 		// Test
-		ResponseEntity<PiazzaResponse> entity = deploymentController.getDeployment(0, 10, null, user);
+		ResponseEntity<PiazzaResponse> entity = deploymentController.getDeployment(null, 0, 10, user);
 		PiazzaResponse response = entity.getBody();
 
 		// Verify
@@ -168,7 +168,7 @@ public class DeploymentTests {
 
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockError);
-		entity = deploymentController.getDeployment(0, 10, null, user);
+		entity = deploymentController.getDeployment(null, 0, 10, user);
 		response = entity.getBody();
 		assertTrue(response instanceof ErrorResponse);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));

@@ -139,7 +139,7 @@ public class DataTests {
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
 
 		// Get the data
-		ResponseEntity<PiazzaResponse> entity = dataController.getData(0, 10, null, null, user);
+		ResponseEntity<PiazzaResponse> entity = dataController.getData(null, 0, 10, null, user);
 		PiazzaResponse response = entity.getBody();
 
 		// Verify the results
@@ -153,7 +153,7 @@ public class DataTests {
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockError);
 
 		// Get the data
-		entity = dataController.getData(0, 10, null, null, user);
+		entity = dataController.getData(null, 0, 10, null, user);
 		response = entity.getBody();
 
 		// Verify that a proper exception was thrown.
