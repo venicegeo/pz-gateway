@@ -120,7 +120,7 @@ public class EventController extends PiazzaRestController {
 	 *            The user submitting the event
 	 * @return The event ID, or an error.
 	 */
-	@RequestMapping(value = "/event/", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/event", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Creates an Event for the Event Type", notes = "Fires an Event with the Piazza Workflow component. Events must conform to the specified Event Type.", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Event") })
