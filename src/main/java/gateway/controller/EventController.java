@@ -29,6 +29,7 @@ import model.response.ErrorResponse;
 import model.response.EventListResponse;
 import model.response.EventTypeListResponse;
 import model.response.PiazzaResponse;
+import model.workflow.Event;
 import model.workflow.EventType;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +44,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.events.Event;
 
 import util.PiazzaLogger;
 
