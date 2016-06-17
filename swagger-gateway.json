@@ -352,7 +352,7 @@
 					"description": "The Query string for the Search component.",
 					"required": true,
 					"schema": {
-						"type": "object"
+						"$ref": "#/definitions/SearchRequest"
 					}
 				}],
 				"responses": {
@@ -712,14 +712,14 @@
 					"description": "The Event JSON object.",
 					"required": true,
 					"schema": {
-						"type": "string"
+						"$ref": "#/definitions/Event"
 					}
 				}],
 				"responses": {
 					"200": {
 						"description": "The ID of the newly created Event",
 						"schema": {
-							"type": "object"
+							"$ref": "#/definitions/WorkflowResponse"
 						}
 					},
 					"201": {
@@ -871,14 +871,14 @@
 					"description": "The Event Type information. This defines the Schema for the Events that must be followed.",
 					"required": true,
 					"schema": {
-						"type": "string"
+						"$ref": "#/definitions/EventType"
 					}
 				}],
 				"responses": {
 					"200": {
 						"description": "The ID of the newly created Event Type",
 						"schema": {
-							"type": "object"
+							"$ref": "#/definitions/WorkflowResponse"
 						}
 					},
 					"201": {
@@ -1268,7 +1268,7 @@
 					"description": "The Query string for the Search component.",
 					"required": true,
 					"schema": {
-						"type": "object"
+						"$ref": "#/definitions/SearchRequest"
 					}
 				}],
 				"responses": {
@@ -1476,14 +1476,14 @@
 					"description": "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.",
 					"required": true,
 					"schema": {
-						"type": "string"
+						"$ref": "#/definitions/Trigger"
 					}
 				}],
 				"responses": {
 					"200": {
 						"description": "The ID of the newly created Trigger",
 						"schema": {
-							"type": "object"
+							"$ref": "#/definitions/WorkflowResponse"
 						}
 					},
 					"201": {
@@ -1635,6 +1635,16 @@
 				},
 				"type": {
 					"type": "string"
+				}
+			}
+		},
+		"SearchRequest": {
+			"type": "object",
+			"required": ["query"],
+			"properties": {
+				"query": {
+					"type": "object",
+					"description": "ElasticSearch DSL Query Object."
 				}
 			}
 		},
@@ -2042,7 +2052,7 @@
 				},
 				"job": {
 					"description": "The Template of the Job to be executed when the conditions are met.",
-					"$ref": "#/definitions/Job"
+					"$ref": "#/definitions/PiazzaJobRequest"
 				},
 				"percolationId": {
 					"type": "string"
@@ -2097,14 +2107,6 @@
 				}
 			}
 		},
-		"Job": {
-			"type": "object",
-			"properties": {
-				"task": {
-					"type": "string"
-				}
-			}
-		},
 		"LoadJob": {
 			"type": "object",
 			"required": ["data", "host", "type"],
@@ -2145,7 +2147,7 @@
 		"Condition": {
 			"type": "object",
 			"properties": {
-				"eventTypeIds": {
+				"eventtype_ids": {
 					"type": "array",
 					"description": "The array of Event Type IDs.",
 					"items": {
@@ -2302,6 +2304,17 @@
 				}
 			}
 		},
+		"PiazzaJobRequest": {
+			"type": "object",
+			"properties": {
+				"jobType": {
+					"$ref": "#/definitions/PiazzaJobType"
+				},
+				"userName": {
+					"type": "string"
+				}
+			}
+		},
 		"DataResource": {
 			"type": "object",
 			"required": ["dataType"],
@@ -2414,6 +2427,14 @@
 				}
 			}
 		},
+		"PiazzaJobType": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"type": "string"
+				}
+			}
+		},
 		"FileLocation": {
 			"type": "object",
 			"properties": {
@@ -2447,6 +2468,16 @@
 				}
 			}
 		},
+		"WorkflowResponse": {
+			"type": "object",
+			"required": ["id"],
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "The ID of the item that has been created from the request."
+				}
+			}
+		},
 		"AccessJob": {
 			"type": "object",
 			"properties": {
@@ -2463,18 +2494,16 @@
 		},
 		"Event": {
 			"type": "object",
-			"required": ["id"],
+			"required": ["eventtype_id", "id"],
 			"properties": {
 				"data": {
 					"type": "object",
 					"description": "The populated values for the Key-value pairs defined by the Event Type's 'mapping' dictionary. Each value in this dictionary must be populated here under this 'data' property."
 				},
 				"date": {
-					"type": "string",
-					"format": "date-time",
-					"description": "The date and time that the Event has generated."
+					"type": "string"
 				},
-				"eventTypeId": {
+				"eventtype_id": {
 					"type": "string",
 					"description": "The unique identifier of the Event Type whose schema this Event conforms to."
 				},
