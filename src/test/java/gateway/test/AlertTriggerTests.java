@@ -28,6 +28,7 @@ import java.security.Principal;
 import javax.management.remote.JMXPrincipal;
 
 import model.response.ErrorResponse;
+import model.response.WorkflowResponse;
 import model.workflow.Trigger;
 
 import org.junit.Before;
@@ -41,6 +42,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import util.PiazzaLogger;
 import util.UUIDFactory;
 
@@ -51,6 +55,8 @@ import util.UUIDFactory;
  *
  */
 public class AlertTriggerTests {
+	@Mock
+	private ObjectMapper om;
 	@Mock
 	private PiazzaLogger logger;
 	@Mock
@@ -78,21 +84,21 @@ public class AlertTriggerTests {
 
 	/**
 	 * Test POST /trigger
+	 * @throws JsonProcessingException
 	 */
 	@Test
-	public void testCreateTrigger() {
+	public void testCreateTrigger() throws JsonProcessingException {
 		// Mock Response
-		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn("OK");
+		when(restTemplate.postForObject(anyString(), any(), eq(WorkflowResponse.class))).thenReturn(any(WorkflowResponse.class));
 
 		// Test
 		ResponseEntity<?> response = alertTriggerController.createTrigger(new Trigger(), user);
 
 		// Verify
-		assertTrue(response.getBody().toString().equals("OK"));
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
+		when(restTemplate.postForObject(anyString(), any(), eq(WorkflowResponse.class))).thenThrow(
 				new RestClientException("Trigger Error"));
 		response = alertTriggerController.createTrigger(new Trigger(), user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));

@@ -28,6 +28,7 @@ import java.security.Principal;
 import javax.management.remote.JMXPrincipal;
 
 import model.response.ErrorResponse;
+import model.response.WorkflowResponse;
 import model.workflow.Event;
 import model.workflow.EventType;
 
@@ -42,6 +43,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import util.PiazzaLogger;
 import util.UUIDFactory;
 
@@ -53,6 +56,8 @@ import util.UUIDFactory;
  *
  */
 public class EventTests {
+	@Mock
+	private ObjectMapper om;
 	@Mock
 	private PiazzaLogger logger;
 	@Mock
@@ -108,17 +113,16 @@ public class EventTests {
 	@Test
 	public void testFireEvent() {
 		// Mock Response
-		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn("OK");
+		when(restTemplate.postForObject(anyString(), any(), eq(WorkflowResponse.class))).thenReturn(any(WorkflowResponse.class));
 
 		// Test
 		ResponseEntity<?> response = eventController.fireEvent(new Event(), user);
 
 		// Verify
-		assertTrue(response.getBody().toString().equals("OK"));
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
+		when(restTemplate.postForObject(anyString(), any(), eq(WorkflowResponse.class))).thenThrow(
 				new RestClientException("event error"));
 		response = eventController.fireEvent(new Event(), user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
