@@ -29,6 +29,7 @@ import model.response.ErrorResponse;
 import model.response.EventListResponse;
 import model.response.EventTypeListResponse;
 import model.response.PiazzaResponse;
+import model.response.WorkflowResponse;
 import model.workflow.Event;
 import model.workflow.EventType;
 
@@ -45,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import util.PiazzaLogger;
 
 /**
@@ -58,6 +60,8 @@ import util.PiazzaLogger;
 @CrossOrigin
 @RestController
 public class EventController extends PiazzaRestController {
+	@Autowired
+	private ObjectMapper om;
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
@@ -123,17 +127,17 @@ public class EventController extends PiazzaRestController {
 	@RequestMapping(value = "/event", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Creates an Event for the Event Type", notes = "Fires an Event with the Piazza Workflow component. Events must conform to the specified Event Type.", tags = {
 			"Event", "Workflow" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Event") })
+	@ApiResponses(value = {	@ApiResponse(code = 200, message = "The ID of the newly created Event", response = WorkflowResponse.class) })
 	public ResponseEntity<?> fireEvent(
-			@ApiParam(value = "The Event JSON object.", required = true) @RequestBody String event, Principal user) {
+			@ApiParam(value = "The Event JSON object.", required = true) @RequestBody Event event, Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has fired an event.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String response = restTemplate.postForObject(String.format("%s/v2/%s", WORKFLOW_URL, "event"), event,
-					String.class);
-			return new ResponseEntity<String>(response, HttpStatus.OK);
+			WorkflowResponse response = restTemplate.postForObject(String.format("%s/v2/%s", WORKFLOW_URL, "event"), om.writeValueAsString(event),
+					WorkflowResponse.class);
+			return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Submitting Event by user %s: %s", gatewayUtil.getPrincipalName(user),
@@ -272,9 +276,9 @@ public class EventController extends PiazzaRestController {
 	@RequestMapping(value = "/eventType", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Register an Event Type", notes = "Defines an Event Type with the Workflow component, that defines a schema that Events can conform to and be fired for.", tags = {
 			"Event Type", "Workflow" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Event Type") })
+	@ApiResponses(value = {	@ApiResponse(code = 200, message = "The ID of the newly created Event Type", response = WorkflowResponse.class) })
 	public ResponseEntity<?> createEventType(
-			@ApiParam(value = "The Event Type information. This defines the Schema for the Events that must be followed.", required = true) @RequestBody String eventType,
+			@ApiParam(value = "The Event Type information. This defines the Schema for the Events that must be followed.", required = true) @RequestBody EventType eventType,
 			Principal user) {
 		try {
 			// Log the message
@@ -282,8 +286,9 @@ public class EventController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s", WORKFLOW_URL, "eventType");
-			String response = restTemplate.postForObject(url, eventType, String.class);
-			return new ResponseEntity<String>(response, HttpStatus.OK);
+			WorkflowResponse response = restTemplate.postForObject(url, om.writeValueAsString(eventType),
+					WorkflowResponse.class);
+			return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Creating Event Type by user %s: %s", gatewayUtil.getPrincipalName(user),

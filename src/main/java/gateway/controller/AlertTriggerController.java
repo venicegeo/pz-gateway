@@ -28,6 +28,7 @@ import model.response.AlertListResponse;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 import model.response.TriggerListResponse;
+import model.response.WorkflowResponse;
 import model.workflow.Alert;
 import model.workflow.Trigger;
 
@@ -44,6 +45,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import util.PiazzaLogger;
 
 /**
@@ -57,6 +60,8 @@ import util.PiazzaLogger;
 @CrossOrigin
 @RestController
 public class AlertTriggerController extends PiazzaRestController {
+	@Autowired
+	private ObjectMapper om;
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
@@ -84,9 +89,9 @@ public class AlertTriggerController extends PiazzaRestController {
 	@RequestMapping(value = "/trigger", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger with the Piazza Workflow component.", tags = {
 			"Trigger", "Workflow" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Trigger") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Trigger", response = WorkflowResponse.class) })
 	public ResponseEntity<?> createTrigger(
-			@ApiParam(value = "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.", required = true) @RequestBody String trigger,
+			@ApiParam(value = "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.", required = true) @RequestBody Trigger trigger,
 			Principal user) {
 		try {
 			// Log the message
@@ -94,8 +99,8 @@ public class AlertTriggerController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s", WORKFLOW_URL, "trigger");
-			String response = restTemplate.postForObject(url, trigger, String.class);
-			return new ResponseEntity<String>(response, HttpStatus.OK);
+			WorkflowResponse response = restTemplate.postForObject(url, om.writeValueAsString(trigger), WorkflowResponse.class);
+			return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Creating Trigger by user %s: %s", gatewayUtil.getPrincipalName(user),

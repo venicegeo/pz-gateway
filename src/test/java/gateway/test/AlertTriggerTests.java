@@ -28,6 +28,7 @@ import java.security.Principal;
 import javax.management.remote.JMXPrincipal;
 
 import model.response.ErrorResponse;
+import model.workflow.Trigger;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -84,7 +85,7 @@ public class AlertTriggerTests {
 		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn("OK");
 
 		// Test
-		ResponseEntity<?> response = alertTriggerController.createTrigger("trigger", user);
+		ResponseEntity<?> response = alertTriggerController.createTrigger(new Trigger(), user);
 
 		// Verify
 		assertTrue(response.getBody().toString().equals("OK"));
@@ -93,7 +94,7 @@ public class AlertTriggerTests {
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
 				new RestClientException("Trigger Error"));
-		response = alertTriggerController.createTrigger("trigger", user);
+		response = alertTriggerController.createTrigger(new Trigger(), user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("Trigger Error"));
