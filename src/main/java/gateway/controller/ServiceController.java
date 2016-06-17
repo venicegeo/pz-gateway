@@ -28,6 +28,7 @@ import java.security.Principal;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.RegisterServiceJob;
 import model.request.PiazzaJobRequest;
+import model.request.SearchRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 import model.response.ServiceListResponse;
@@ -335,7 +336,7 @@ public class ServiceController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> searchServices(
-			@ApiParam(value = "The Query string for the Search component.", name = "search", required = true) @RequestBody Object query,
+			@ApiParam(value = "The Query string for the Search component.", name = "search", required = true) @RequestBody SearchRequest query,
 			Principal user) {
 		try {
 			// Log the request

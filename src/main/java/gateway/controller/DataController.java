@@ -30,6 +30,7 @@ import model.data.FileRepresentation;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
 import model.request.PiazzaJobRequest;
+import model.request.SearchRequest;
 import model.response.DataResourceListResponse;
 import model.response.DataResourceResponse;
 import model.response.ErrorResponse;
@@ -417,7 +418,7 @@ public class DataController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> searchData(
-			@ApiParam(value = "The Query string for the Search component.", required = true) @RequestBody Object query,
+			@ApiParam(value = "The Query string for the Search component.", required = true) @RequestBody SearchRequest query,
 			Principal user) {
 		try {
 			// Log the request
