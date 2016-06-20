@@ -31,8 +31,8 @@ import model.request.PiazzaJobRequest;
 import model.request.SearchRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
+import model.response.ServiceIdResponse;
 import model.response.ServiceListResponse;
-import model.response.ServiceResponse;
 import model.service.metadata.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +91,7 @@ public class ServiceController extends PiazzaRestController {
 	 * @return The Service ID, or appropriate error.
 	 */
 	@RequestMapping(value = "/service", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service", response = ServiceResponse.class)
+	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service", response = ServiceIdResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Service") })
 	public ResponseEntity<PiazzaResponse> registerService(
 			@ApiParam(value = "The metadata for the service. This includes the URL, parameters, inputs and outputs. It also includes other release metadata such as classification and availability.", required = true) @RequestBody Service service,
@@ -192,7 +192,7 @@ public class ServiceController extends PiazzaRestController {
 			url = (softDelete) ? (String.format("%s?softDelete=%s", url, softDelete)) : (url);
 			restTemplate.delete(url);
 
-			return new ResponseEntity<PiazzaResponse>(new ServiceResponse(serviceId), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new ServiceIdResponse(serviceId), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId,

@@ -37,6 +37,7 @@ import model.job.metadata.ResourceMetadata;
 import model.response.ErrorResponse;
 import model.response.Pagination;
 import model.response.PiazzaResponse;
+import model.response.ServiceIdResponse;
 import model.response.ServiceListResponse;
 import model.response.ServiceResponse;
 import model.service.metadata.Service;
@@ -125,16 +126,16 @@ public class ServiceTests {
 		// Mock
 		Service service = new Service();
 		service.setServiceId("123456");
-		ServiceResponse mockResponse = new ServiceResponse(service);
+		ServiceIdResponse mockResponse = new ServiceIdResponse(service.getServiceId());
 		when(restTemplate.postForObject(anyString(), any(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = serviceController.registerService(service, user);
-		ServiceResponse response = (ServiceResponse) entity.getBody();
+		ServiceIdResponse response = (ServiceIdResponse) entity.getBody();
 
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
-		assertTrue(response.service.getResourceMetadata() != null);
+		assertTrue(response.serviceId.equals("123456"));
 
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(PiazzaResponse.class))).thenThrow(
@@ -182,7 +183,7 @@ public class ServiceTests {
 
 		// Test
 		ResponseEntity<?> entity = serviceController.deleteService("123456", false, user);
-		ServiceResponse response = (ServiceResponse) entity.getBody();
+		ServiceIdResponse response = (ServiceIdResponse) entity.getBody();
 
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
