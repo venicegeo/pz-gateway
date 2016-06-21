@@ -25,6 +25,7 @@ import model.data.FileRepresentation;
 import model.data.location.FileLocation;
 import model.data.location.S3FileStore;
 import model.job.type.IngestJob;
+import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
@@ -95,6 +96,29 @@ public class GatewayUtil {
 	@PreDestroy
 	public void cleanup() {
 		producer.close();
+	}
+
+	/**
+	 * Sends a Job Request to the Job Manager. This will generate a Job ID and
+	 * return it once the Job Manager has indexed the Job into its database.
+	 * 
+	 * @param request
+	 *            The Job Request
+	 * @return The Job ID
+	 */
+	public String sendJobRequest(PiazzaJobRequest request) throws Exception {
+		try {
+			// Generate a Job ID
+
+			// Send the message to Job Manager
+
+			// Verify the Response is a success
+
+			// Return the Job ID
+		} catch (Exception exception) {
+			throw new Exception(String.format("Error with Job Manager when Requesting New Piazza Job: %s",
+					exception.getMessage()));
+		}
 	}
 
 	/**
