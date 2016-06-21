@@ -25,7 +25,6 @@ import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
-import messaging.job.JobMessageFactory;
 import model.data.FileRepresentation;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
@@ -36,7 +35,6 @@ import model.response.DataResourceResponse;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
