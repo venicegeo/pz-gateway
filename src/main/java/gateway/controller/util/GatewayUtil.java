@@ -33,7 +33,10 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -109,12 +112,19 @@ public class GatewayUtil {
 	public String sendJobRequest(PiazzaJobRequest request) throws Exception {
 		try {
 			// Generate a Job ID
-
+			String jobId = getUuid();
 			// Send the message to Job Manager
-
-			// Verify the Response is a success
-
-			// Return the Job ID
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
+			ResponseEntity<PiazzaResponse> jobResponse = restTemplate.postForEntity(
+					String.format("%s/%s?jobId=%s", JOBMANAGER_URL, "requestJob", jobId), entity, PiazzaResponse.class);
+			// Check if the response was an error.
+			if (jobResponse.getBody() instanceof ErrorResponse) {
+				throw new Exception(((ErrorResponse) jobResponse.getBody()).message);
+			}
+			// Return the Job ID from the response.
+			return jobResponse.getBody().jobId;
 		} catch (Exception exception) {
 			throw new Exception(String.format("Error with Job Manager when Requesting New Piazza Job: %s",
 					exception.getMessage()));
