@@ -100,17 +100,10 @@ public class DeploymentController extends PiazzaRestController {
 					String.format("User %s requested Deployment of type %s for Data %s",
 							gatewayUtil.getPrincipalName(user), job.getDeploymentType(), job.getDataId()),
 					PiazzaLogger.INFO);
-			// Create the Job that Kafka will broker
-			String jobId = gatewayUtil.getUuid();
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
 			jobRequest.userName = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = job;
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(jobRequest, jobId, SPACE);
-			// Send the message to Kafka
-			gatewayUtil.sendKafkaMessage(message);
-			// Attempt to wait until the user is able to query the Job ID
-			// immediately.
-			gatewayUtil.verifyDatabaseInsertion(jobId);
+			String jobId = gatewayUtil.sendJobRequest(jobRequest, null);
 			// Send the response back to the user
 			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(jobId), HttpStatus.OK);
 		} catch (Exception exception) {

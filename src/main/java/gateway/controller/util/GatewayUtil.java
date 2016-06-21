@@ -109,10 +109,12 @@ public class GatewayUtil {
 	 *            The Job Request
 	 * @return The Job ID
 	 */
-	public String sendJobRequest(PiazzaJobRequest request) throws Exception {
+	public String sendJobRequest(PiazzaJobRequest request, String jobId) throws Exception {
 		try {
 			// Generate a Job ID
-			String jobId = getUuid();
+			if (jobId == null) {
+				jobId = getUuid();
+			}
 			// Send the message to Job Manager
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
@@ -200,60 +202,5 @@ public class GatewayUtil {
 		logger.log(String.format("S3 File for Job %s Persisted to %s:%s", jobId, AMAZONS3_BUCKET_NAME, fileKey),
 				PiazzaLogger.INFO);
 		return job;
-	}
-
-	/**
-	 * <p>
-	 * Verifies that the Job has been inserted into the Job Manager's jobs
-	 * table. This is intended to be used in cases where the Gateway request
-	 * intends to "busily wait" until a newly created Job ID is queryable by the
-	 * user. This is to prevent cases where a Job ID is returned to the user
-	 * before that ID can actually be queried by the database.
-	 * </p>
-	 * 
-	 * <p>
-	 * This will time out after 3 attempts, in which case it will cease
-	 * blocking.
-	 * </p>
-	 * 
-	 * <p>
-	 * This is now deprecated. With the removal of the Dispatcher component, the
-	 * Job Manager handles both the writing to the Jobs table and the forwarding
-	 * of the Job. Thus, the Job will never be forwarded until it is in the Jobs
-	 * table. This method will linger until the old legacy API is removed - at
-	 * which point, this method should be removed.
-	 * </p>
-	 * 
-	 * @param jobId
-	 *            The Job ID to ensure exists.
-	 */
-	public void verifyDatabaseInsertion(String id) {
-		ResponseEntity<PiazzaResponse> response = null;
-		int iteration = 0, delay = 250;
-		do {
-			// Check the status of the ID
-			try {
-				Thread.sleep(delay);
-				response = restTemplate.getForEntity(String.format("%s/%s/%s", JOBMANAGER_URL, "job", id),
-						PiazzaResponse.class);
-			} catch (Exception exception) {
-				// ID is not ready yet.
-			}
-			// If OK, then return. If not OK, then the database has not yet
-			// indexed. Wait and try again.
-			if (response != null) {
-				if ((response.getStatusCode() == HttpStatus.OK)
-						&& (response.getBody() instanceof ErrorResponse == false)) {
-					return;
-				}
-			}
-			iteration++;
-		} while (iteration < 4);
-		// If we have reached the maximum number of iterations, then at least
-		// log that the ID has not been inserted into the database yet.
-		logger.log(
-				String.format(
-						"Gateway processed an Job ID %s that was returned to a user before it was detected as committed to the database. The user may not be able to query this ID immediately.",
-						id), PiazzaLogger.WARNING);
 	}
 }
