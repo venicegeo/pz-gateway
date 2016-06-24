@@ -95,11 +95,22 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the message
-			logger.log(String.format("User %s has requested a new Trigger to be created.",
-					gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s has requested a new Trigger to be created.",
+							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			try {
+				// Attempt to set the username of the Job in the Trigger to the
+				// submitting username
+				trigger.job.userName = gatewayUtil.getPrincipalName(user);
+			} catch (Exception exception) {
+				logger.log(
+						String.format("Failed to set the username field in Trigger created by User %s: ",
+								gatewayUtil.getPrincipalName(user), exception.getMessage()), PiazzaLogger.WARNING);
+			}
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s", WORKFLOW_URL, "trigger");
-			WorkflowResponse response = restTemplate.postForObject(url, om.writeValueAsString(trigger), WorkflowResponse.class);
+			WorkflowResponse response = restTemplate.postForObject(url, om.writeValueAsString(trigger),
+					WorkflowResponse.class);
 			return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -120,7 +131,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "List Triggers", notes = "Lists all of the defined Triggers in the Piazza Workflow component.", tags = {
-			"Trigger", "Workflow" }, response=TriggerListResponse.class)
+			"Trigger", "Workflow" }, response = TriggerListResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Triggers.") })
 	public ResponseEntity<?> getTriggers(
 			@ApiParam(value = "A general keyword search to apply to all triggers.") @RequestParam(value = "key", required = false) String key,
@@ -161,15 +172,15 @@ public class AlertTriggerController extends PiazzaRestController {
 	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Gets Metadata for a Trigger", notes = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.", tags = {
 			"Trigger", "Workflow" }, response = Trigger.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.") })
 	public ResponseEntity<?> getTrigger(
 			@ApiParam(value = "The ID of the Trigger to retrieve.", required = true) @PathVariable(value = "triggerId") String triggerId,
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested information for Trigger %s",
-					gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s has requested information for Trigger %s",
+							gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "trigger", triggerId);
 			String response = restTemplate.getForObject(url, String.class);
@@ -203,8 +214,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested deletion of Trigger %s", gatewayUtil.getPrincipalName(user),
-					triggerId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested deletion of Trigger %s",
+					gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "trigger", triggerId);
 			restTemplate.delete(url);
