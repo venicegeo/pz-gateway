@@ -25,7 +25,6 @@ import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
-import messaging.job.JobMessageFactory;
 import model.data.FileRepresentation;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
@@ -36,7 +35,6 @@ import model.response.DataResourceResponse;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -101,8 +99,7 @@ public class DataController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/data", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data.", tags = "Data", response = DataResourceListResponse.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> getData(
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
@@ -151,8 +148,7 @@ public class DataController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/data/me", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data.", tags = "Data", response = DataResourceListResponse.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> getDataForCurrentUser(
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
@@ -177,8 +173,7 @@ public class DataController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/data", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Load Data into Piazza", notes = "Loads data into the Piazza Core metadata holdings. Piazza can either host the data, or reflect an external location where the data is stored. Data must be loaded into Piazza before core components such as the Service Controller, or other external services, are able to consume that data.", tags = "Data")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.") })
 	public ResponseEntity<PiazzaResponse> ingestData(
 			@ApiParam(name = "data", value = "The description, location, and metadata for the Data to be loaded into Piazza.", required = true) @RequestBody IngestJob job,
 			Principal user) {
@@ -186,21 +181,14 @@ public class DataController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s requested Data Load Job of type %s.", gatewayUtil.getPrincipalName(user),
 					job.getData().getDataType().getType()), PiazzaLogger.INFO);
-			// Create the Request to send to Kafka
-			String newJobId = gatewayUtil.getUuid();
 			// Ensure the user isn't trying to hack a dataId into their request.
 			job.getData().setDataId(null);
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, SPACE);
-			// Send the message to Kafka
-			gatewayUtil.sendKafkaMessage(message);
-			// Attempt to wait until the user is able to query the Job ID
-			// immediately.
-			gatewayUtil.verifyDatabaseInsertion(newJobId);
+			String jobId = gatewayUtil.sendJobRequest(request, null);
 			// Return the Job ID of the newly created Job
-			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(newJobId), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(jobId), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data for user %s of type %s:  %s",
@@ -226,8 +214,7 @@ public class DataController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/data/file", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Load a Data File into Piazza", notes = "Loads a local user data file into the Piazza Core metadata holdings. This functions the same as /data endpoint, but a file is specified instead of a URI.", tags = "Data")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.") })
 	public ResponseEntity<PiazzaResponse> ingestDataFile(
 			@ApiParam(value = "The Load Job metadata. This is the identical model to the LoadJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency.", required = true) @RequestParam String data,
 			@ApiParam(value = "The file to be uploaded.", required = true) @RequestParam final MultipartFile file,
@@ -253,7 +240,7 @@ public class DataController extends PiazzaRestController {
 					String.format("User %s requested Data Load Job of type %s with file: %s",
 							gatewayUtil.getPrincipalName(user), job.getData().getDataType().getType(),
 							file.getOriginalFilename()), PiazzaLogger.INFO);
-			
+
 			// Validate the Job inputs to ensure we are able to process the file
 			// and attach it to the job metadata.
 			if (job.getHost() == false) {
@@ -269,12 +256,7 @@ public class DataController extends PiazzaRestController {
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, jobId, SPACE);
-			// Send the message to Kafka
-			gatewayUtil.sendKafkaMessage(message);
-			// Attempt to wait until the user is able to query the Job ID
-			// immediately.
-			gatewayUtil.verifyDatabaseInsertion(jobId);
+			jobId = gatewayUtil.sendJobRequest(request, jobId);
 			// Return the Job ID of the newly created Job
 			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(jobId), HttpStatus.OK);
 		} catch (Exception exception) {
@@ -301,8 +283,7 @@ public class DataController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Get Metadata for Loaded Data", notes = "Reads all metadata for a Data item that has been previously loaded into Piazza.", tags = "Data", response = DataResourceResponse.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Metadata describing the Data Item that matches the specified Data ID. Includes release metadata, and spatial metadata, etc.") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Metadata describing the Data Item that matches the specified Data ID. Includes release metadata, and spatial metadata, etc.") })
 	public ResponseEntity<PiazzaResponse> getMetadata(
 			@ApiParam(value = "ID of the Data item to pull Metadata for.", required = true) @PathVariable(value = "dataId") String dataId,
 			Principal user) {
@@ -311,8 +292,8 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Resource Metadata for %s.", gatewayUtil.getPrincipalName(user),
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			PiazzaResponse dataResponse = restTemplate
-					.getForObject(String.format("%s/%s/%s", ACCESS_URL, "data", dataId), PiazzaResponse.class);
+			PiazzaResponse dataResponse = restTemplate.getForObject(
+					String.format("%s/%s/%s", ACCESS_URL, "data", dataId), PiazzaResponse.class);
 			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
@@ -384,8 +365,8 @@ public class DataController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Update of Metadata for %s.", gatewayUtil.getPrincipalName(user),
-					dataId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Update of Metadata for %s.",
+					gatewayUtil.getPrincipalName(user), dataId), PiazzaLogger.INFO);
 			// Proxy the request to Ingest
 			PiazzaResponse response = restTemplate.postForObject(String.format("%s/%s/%s", INGEST_URL, "data", dataId),
 					metadata, PiazzaResponse.class);
@@ -415,14 +396,14 @@ public class DataController extends PiazzaRestController {
 	@RequestMapping(value = "/data/query", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Query Metadata in Piazza Data holdings", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for loaded data. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
 			"Data", "Search" }, response = DataResourceListResponse.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
 	public ResponseEntity<PiazzaResponse> searchData(
 			@ApiParam(value = "The Query string for the Search component.", required = true) @RequestBody SearchRequest query,
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)),
+			logger.log(
+					String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();

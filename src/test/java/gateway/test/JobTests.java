@@ -35,6 +35,7 @@ import model.job.Job;
 import model.job.JobProgress;
 import model.job.type.ExecuteServiceJob;
 import model.job.type.RepeatJob;
+import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
@@ -216,11 +217,12 @@ public class JobTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		Mockito.doThrow(new Exception("Kafka Broke")).when(gatewayUtil).sendKafkaMessage(any());
+		Mockito.doThrow(new Exception("REST Broke")).when(gatewayUtil)
+				.sendJobRequest(any(PiazzaJobRequest.class), anyString());
 		entity = jobController.executeService(executeJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
 		ErrorResponse error = (ErrorResponse) entity.getBody();
-		assertTrue(error.message.contains("Kafka Broke"));
+		assertTrue(error.message.contains("REST Broke"));
 	}
 }
