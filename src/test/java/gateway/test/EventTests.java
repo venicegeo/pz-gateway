@@ -28,6 +28,7 @@ import java.security.Principal;
 import javax.management.remote.JMXPrincipal;
 
 import model.response.ErrorResponse;
+import model.response.SuccessResponse;
 import model.response.WorkflowResponse;
 import model.workflow.Event;
 import model.workflow.EventType;
@@ -166,7 +167,7 @@ public class EventTests {
 		ResponseEntity<?> response = eventController.deleteEvent("eventId", user);
 
 		// Verify
-		assertTrue(response == null);
+		assertTrue(response.getBody() instanceof SuccessResponse);
 
 		// Test Exception
 		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString(), eq(String.class));
@@ -259,7 +260,7 @@ public class EventTests {
 		ResponseEntity<?> response = eventController.deleteEventType("eventTypeId", user);
 
 		// Verify
-		assertTrue(response == null);
+		assertTrue(response.getBody() instanceof SuccessResponse);
 
 		// Test Exception
 		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString());

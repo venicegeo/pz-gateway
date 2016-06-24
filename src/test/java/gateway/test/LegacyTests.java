@@ -39,6 +39,7 @@ import model.job.JobProgress;
 import model.job.type.GetJob;
 import model.job.type.IngestJob;
 import model.request.PiazzaJobRequest;
+import model.response.JobResponse;
 import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
 import model.status.StatusUpdate;
@@ -154,8 +155,8 @@ public class LegacyTests {
 		// Data
 		ResponseEntity<PiazzaResponse> entity = gatewayController.job(request, null, user);
 		PiazzaResponse response = entity.getBody();
-		assertTrue(response.getType().equals(mockResponse.getType()));
 		JobStatusResponse jobResponse = (JobStatusResponse) response;
+		assertTrue(jobResponse.getType().equals(mockResponse.getType()));
 		assertTrue(jobResponse.jobId.equals(mockIngestJob.jobId));
 		assertTrue(jobResponse.progress.getPercentComplete().equals(mockIngestJob.progress.getPercentComplete()));
 		assertTrue(jobResponse.status.equals(mockIngestJob.status));
@@ -179,8 +180,9 @@ public class LegacyTests {
 		// // Ensure a new Job was created with the matching Job ID
 		ResponseEntity<PiazzaResponse> entity = gatewayController.job(request, null, user);
 		PiazzaResponse response = entity.getBody();
-		assertTrue(response.getType().equals("job"));
-		assertTrue(response.jobId.equals(guid));
+		JobResponse jobResponse = (JobResponse) response;		
+		assertTrue(jobResponse.getType().equals("job"));
+		assertTrue(jobResponse.jobId.equals(guid));
 	}
 
 	/**
@@ -209,7 +211,7 @@ public class LegacyTests {
 
 		// // Create a request with the File
 		ResponseEntity<PiazzaResponse> entity = gatewayController.job(request, file, user);
-		PiazzaResponse response = entity.getBody();
+		JobResponse response = (JobResponse) entity.getBody();
 		assertTrue(response.getType().equals("job"));
 		assertTrue(response.jobId.equals(guid));
 	}

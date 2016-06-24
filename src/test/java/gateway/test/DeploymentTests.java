@@ -37,8 +37,10 @@ import model.job.type.AccessJob;
 import model.response.DeploymentListResponse;
 import model.response.DeploymentResponse;
 import model.response.ErrorResponse;
+import model.response.JobResponse;
 import model.response.Pagination;
 import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
 
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -95,7 +97,7 @@ public class DeploymentTests {
 		MockitoAnnotations.initMocks(gatewayUtil);
 
 		// Mock a common error we can use to test
-		mockError = new ErrorResponse("JobID", "Error!", "Test");
+		mockError = new ErrorResponse("Error!", "Test");
 
 		// Mock a user
 		user = new JMXPrincipal("Test User");
@@ -130,9 +132,9 @@ public class DeploymentTests {
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = deploymentController.createDeployment(accessJob, user);
-
+		
 		// Verify
-		assertTrue(entity.getBody().jobId.equals("654321"));
+		assertTrue(((JobResponse) entity.getBody()).jobId.equals("654321"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
@@ -212,7 +214,7 @@ public class DeploymentTests {
 		ResponseEntity<PiazzaResponse> entity = deploymentController.deleteDeployment("123456", user);
 
 		// Verify
-		assertTrue(entity == null);
+		assertTrue(entity.getBody() instanceof SuccessResponse);
 
 		// Test an Exception
 		Mockito.doThrow(new RestClientException("Could Not Delete")).when(restTemplate).delete(anyString());

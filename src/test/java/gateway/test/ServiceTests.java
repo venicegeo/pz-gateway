@@ -40,6 +40,7 @@ import model.response.PiazzaResponse;
 import model.response.ServiceIdResponse;
 import model.response.ServiceListResponse;
 import model.response.ServiceResponse;
+import model.response.SuccessResponse;
 import model.service.metadata.Service;
 
 import org.apache.kafka.clients.producer.Producer;
@@ -93,7 +94,7 @@ public class ServiceTests {
 		MockitoAnnotations.initMocks(gatewayUtil);
 
 		// Mock a common error we can use to test
-		mockError = new ErrorResponse("Service", "Error!", "Test");
+		mockError = new ErrorResponse("Error!", "Test");
 
 		// Mock a Service to use
 		mockService = new Service();
@@ -209,7 +210,7 @@ public class ServiceTests {
 		ResponseEntity<PiazzaResponse> entity = serviceController.updateService("123456", mockService, user);
 
 		// Verify
-		assertTrue(entity == null);
+		assertTrue(entity.getBody() instanceof SuccessResponse);
 
 		// Test Exception
 		Mockito.doThrow(new RestClientException("Update Error")).when(restTemplate).put(anyString(), anyObject());
