@@ -34,6 +34,7 @@ import javax.management.remote.JMXPrincipal;
 
 import model.data.deployment.Deployment;
 import model.job.type.AccessJob;
+import model.request.PiazzaJobRequest;
 import model.response.DeploymentListResponse;
 import model.response.DeploymentResponse;
 import model.response.ErrorResponse;
@@ -126,7 +127,7 @@ public class DeploymentTests {
 		AccessJob accessJob = new AccessJob("123456");
 		accessJob.setDeploymentType("geoserver");
 		// Generate a UUID that we can reproduce.
-		when(gatewayUtil.getUuid()).thenReturn("654321");
+		when(gatewayUtil.sendJobRequest(any(PiazzaJobRequest.class), anyString())).thenReturn("654321");
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = deploymentController.createDeployment(accessJob, user);
@@ -136,7 +137,7 @@ public class DeploymentTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		Mockito.doThrow(new Exception("Kafka Blows Up")).when(gatewayUtil).sendKafkaMessage(any());
+		Mockito.doThrow(new Exception("Kafka Blows Up")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class), anyString());
 		entity = deploymentController.createDeployment(accessJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
