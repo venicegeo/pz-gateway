@@ -99,11 +99,12 @@ public class JobController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId),
+			logger.log(
+					String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId),
 					PiazzaLogger.INFO);
 			// Proxy the request to the Job Manager
-			PiazzaResponse jobStatusResponse = restTemplate
-					.getForObject(String.format("%s/%s/%s", JOBMANAGER_URL, "job", jobId), PiazzaResponse.class);
+			PiazzaResponse jobStatusResponse = restTemplate.getForObject(
+					String.format("%s/%s/%s", JOBMANAGER_URL, "job", jobId), PiazzaResponse.class);
 			HttpStatus status = jobStatusResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
@@ -139,8 +140,9 @@ public class JobController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Job Abort for Job ID %s with reason %s",
-					gatewayUtil.getPrincipalName(user), jobId, reason), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s requested Job Abort for Job ID %s with reason %s",
+							gatewayUtil.getPrincipalName(user), jobId, reason), PiazzaLogger.INFO);
 
 			// Create the Request object.
 			PiazzaJobRequest request = new PiazzaJobRequest();
@@ -158,8 +160,8 @@ public class JobController extends PiazzaRestController {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
-			ResponseEntity<PiazzaResponse> cancelResponse = restTemplate
-					.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, PiazzaResponse.class);
+			ResponseEntity<PiazzaResponse> cancelResponse = restTemplate.postForEntity(
+					String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, PiazzaResponse.class);
 			// Check if the response was an error. If so, set the status code
 			// appropriately.
 			if (cancelResponse.getBody() instanceof ErrorResponse) {
@@ -210,8 +212,8 @@ public class JobController extends PiazzaRestController {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
-			ResponseEntity<PiazzaResponse> jobResponse = restTemplate
-					.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, PiazzaResponse.class);
+			ResponseEntity<PiazzaResponse> jobResponse = restTemplate.postForEntity(
+					String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, PiazzaResponse.class);
 			// Check if the response was an error. If so, set the status code
 			// appropriately.
 			if (jobResponse.getBody() instanceof ErrorResponse) {
@@ -256,19 +258,13 @@ public class JobController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s requested Execute Job for Service %s.",
 					gatewayUtil.getPrincipalName(user), job.data.getServiceId()), PiazzaLogger.INFO);
-			// Create the Request to send to Kafka
-			String newJobId = gatewayUtil.getUuid();
+			// Create the Request to send to the Job Manager.
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, SPACE);
-			// Send the message to Kafka
-			gatewayUtil.sendKafkaMessage(message);
-			// Attempt to wait until the user is able to query the Job ID
-			// immediately.
-			gatewayUtil.verifyDatabaseInsertion(newJobId);
-			// Return the Job ID of the newly created Job
-			return new ResponseEntity<PiazzaResponse>(new JobResponse(newJobId), HttpStatus.OK);
+
+			String jobId = gatewayUtil.sendJobRequest(request, null);
+			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Executing for user %s for Service %s: %s",

@@ -98,8 +98,18 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the message
-			logger.log(String.format("User %s has requested a new Trigger to be created.",
-					gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s has requested a new Trigger to be created.",
+							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			try {
+				// Attempt to set the username of the Job in the Trigger to the
+				// submitting username
+				trigger.job.userName = gatewayUtil.getPrincipalName(user);
+			} catch (Exception exception) {
+				logger.log(
+						String.format("Failed to set the username field in Trigger created by User %s: ",
+								gatewayUtil.getPrincipalName(user), exception.getMessage()), PiazzaLogger.WARNING);
+			}
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s", WORKFLOW_URL, "trigger");
 			WorkflowResponse response = restTemplate.postForObject(url, om.writeValueAsString(trigger),
@@ -175,8 +185,9 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested information for Trigger %s",
-					gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s has requested information for Trigger %s",
+							gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "trigger", triggerId);
 			String response = restTemplate.getForObject(url, String.class);
@@ -213,8 +224,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested deletion of Trigger %s", gatewayUtil.getPrincipalName(user),
-					triggerId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested deletion of Trigger %s",
+					gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "trigger", triggerId);
 			restTemplate.delete(url);

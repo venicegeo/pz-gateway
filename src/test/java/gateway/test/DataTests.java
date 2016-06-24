@@ -37,6 +37,7 @@ import model.data.type.GeoJsonDataType;
 import model.data.type.TextDataType;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
+import model.request.PiazzaJobRequest;
 import model.response.DataResourceListResponse;
 import model.response.DataResourceResponse;
 import model.response.ErrorResponse;
@@ -175,7 +176,7 @@ public class DataTests {
 		mockJob.host = false;
 
 		// Generate a UUID that we can reproduce.
-		when(gatewayUtil.getUuid()).thenReturn("123456");
+		when(gatewayUtil.sendJobRequest(any(PiazzaJobRequest.class), anyString())).thenReturn("123456");
 
 		// Submit a mock request
 		ResponseEntity<PiazzaResponse> entity = dataController.ingestData(mockJob, user);
@@ -189,7 +190,7 @@ public class DataTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test an Exception
-		when(gatewayUtil.getUuid()).thenThrow(new Exception());
+		when(gatewayUtil.sendJobRequest(any(PiazzaJobRequest.class), anyString())).thenThrow(new Exception());
 		entity = dataController.ingestData(mockJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 	}
@@ -209,7 +210,7 @@ public class DataTests {
 		MockMultipartFile file = new MockMultipartFile("test.tif", "Content".getBytes());
 
 		// Generate a UUID that we can reproduce.
-		when(gatewayUtil.getUuid()).thenReturn("123456");
+		when(gatewayUtil.sendJobRequest(any(PiazzaJobRequest.class), anyString())).thenReturn("123456");
 
 		// Test the request
 		ResponseEntity<PiazzaResponse> entity = dataController.ingestDataFile(

@@ -25,7 +25,6 @@ import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
-import messaging.job.JobMessageFactory;
 import model.data.FileRepresentation;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
@@ -38,7 +37,6 @@ import model.response.JobResponse;
 import model.response.PiazzaResponse;
 import model.response.SuccessResponse;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -191,21 +189,15 @@ public class DataController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s requested Data Load Job of type %s.", gatewayUtil.getPrincipalName(user),
 					job.getData().getDataType().getType()), PiazzaLogger.INFO);
-			// Create the Request to send to Kafka
-			String newJobId = gatewayUtil.getUuid();
 			// Ensure the user isn't trying to hack a dataId into their request.
 			job.getData().setDataId(null);
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, newJobId, SPACE);
-			// Send the message to Kafka
-			gatewayUtil.sendKafkaMessage(message);
-			// Attempt to wait until the user is able to query the Job ID
-			// immediately.
-			gatewayUtil.verifyDatabaseInsertion(newJobId);
+			String jobId = gatewayUtil.sendJobRequest(request, null);
 			// Return the Job ID of the newly created Job
-			return new ResponseEntity<PiazzaResponse>(new JobResponse(newJobId), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
+
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data for user %s of type %s:  %s",
@@ -255,9 +247,10 @@ public class DataController extends PiazzaRestController {
 				throw new Exception("File not specified in request.");
 			}
 			// Log the request
-			logger.log(String.format("User %s requested Data Load Job of type %s with file: %s",
-					gatewayUtil.getPrincipalName(user), job.getData().getDataType().getType(),
-					file.getOriginalFilename()), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s requested Data Load Job of type %s with file: %s",
+							gatewayUtil.getPrincipalName(user), job.getData().getDataType().getType(),
+							file.getOriginalFilename()), PiazzaLogger.INFO);
 
 			// Validate the Job inputs to ensure we are able to process the file
 			// and attach it to the job metadata.
@@ -274,12 +267,7 @@ public class DataController extends PiazzaRestController {
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(request, jobId, SPACE);
-			// Send the message to Kafka
-			gatewayUtil.sendKafkaMessage(message);
-			// Attempt to wait until the user is able to query the Job ID
-			// immediately.
-			gatewayUtil.verifyDatabaseInsertion(jobId);
+			jobId = gatewayUtil.sendJobRequest(request, jobId);
 			// Return the Job ID of the newly created Job
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
 		} catch (Exception exception) {
@@ -317,8 +305,8 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Resource Metadata for %s.", gatewayUtil.getPrincipalName(user),
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			PiazzaResponse dataResponse = restTemplate
-					.getForObject(String.format("%s/%s/%s", ACCESS_URL, "data", dataId), PiazzaResponse.class);
+			PiazzaResponse dataResponse = restTemplate.getForObject(
+					String.format("%s/%s/%s", ACCESS_URL, "data", dataId), PiazzaResponse.class);
 			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
@@ -397,8 +385,8 @@ public class DataController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Update of Metadata for %s.", gatewayUtil.getPrincipalName(user),
-					dataId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Update of Metadata for %s.",
+					gatewayUtil.getPrincipalName(user), dataId), PiazzaLogger.INFO);
 			// Proxy the request to Ingest
 			PiazzaResponse response = restTemplate.postForObject(String.format("%s/%s/%s", INGEST_URL, "data", dataId),
 					metadata, PiazzaResponse.class);
@@ -437,7 +425,8 @@ public class DataController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)),
+			logger.log(
+					String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();

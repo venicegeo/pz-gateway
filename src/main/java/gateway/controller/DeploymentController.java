@@ -25,7 +25,6 @@ import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
-import messaging.job.JobMessageFactory;
 import model.job.type.AccessJob;
 import model.request.PiazzaJobRequest;
 import model.response.DeploymentListResponse;
@@ -35,7 +34,6 @@ import model.response.JobResponse;
 import model.response.PiazzaResponse;
 import model.response.SuccessResponse;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -78,7 +76,7 @@ public class DeploymentController extends PiazzaRestController {
 	/**
 	 * Processes a request to create a GeoServer deployment for Piazza data.
 	 * 
-	 * @see http
+	 * @see http 
 	 *      ://pz-swagger.stage.geointservices.io/#!/Deployment/post_deployment
 	 * 
 	 * @param job
@@ -103,17 +101,10 @@ public class DeploymentController extends PiazzaRestController {
 					String.format("User %s requested Deployment of type %s for Data %s",
 							gatewayUtil.getPrincipalName(user), job.getDeploymentType(), job.getDataId()),
 					PiazzaLogger.INFO);
-			// Create the Job that Kafka will broker
-			String jobId = gatewayUtil.getUuid();
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
 			jobRequest.userName = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = job;
-			ProducerRecord<String, String> message = JobMessageFactory.getRequestJobMessage(jobRequest, jobId, SPACE);
-			// Send the message to Kafka
-			gatewayUtil.sendKafkaMessage(message);
-			// Attempt to wait until the user is able to query the Job ID
-			// immediately.
-			gatewayUtil.verifyDatabaseInsertion(jobId);
+			String jobId = gatewayUtil.sendJobRequest(jobRequest, null);
 			// Send the response back to the user
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
 		} catch (Exception exception) {
@@ -164,8 +155,8 @@ public class DeploymentController extends PiazzaRestController {
 			return new ResponseEntity<PiazzaResponse>(dataResponse, status);
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Listing Deployments by user %s: %s", gatewayUtil.getPrincipalName(user),
-					exception.getMessage());
+			String error = String.format("Error Listing Deployments by user %s: %s",
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -238,8 +229,8 @@ public class DeploymentController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Deletion for Deployment %s", gatewayUtil.getPrincipalName(user),
-					deploymentId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Deletion for Deployment %s",
+					gatewayUtil.getPrincipalName(user), deploymentId), PiazzaLogger.INFO);
 			// Broker the request to Pz-Access
 			restTemplate.delete(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId));
 			return new ResponseEntity<PiazzaResponse>(
