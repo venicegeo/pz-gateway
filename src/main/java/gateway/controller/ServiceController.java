@@ -33,6 +33,7 @@ import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 import model.response.ServiceIdResponse;
 import model.response.ServiceListResponse;
+import model.response.SuccessResponse;
 import model.service.metadata.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -228,8 +229,12 @@ public class ServiceController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user),
 					serviceId), PiazzaLogger.INFO);
 			// Proxy the request to the Service Controller instance
-			restTemplate.put(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), serviceData);
-			return null;
+			ResponseEntity<PiazzaResponse> response = restTemplate.postForEntity(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), serviceData, PiazzaResponse.class);
+			if (response.getBody() instanceof ErrorResponse) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, ((ErrorResponse)(response.getBody())).message, "Gateway"), HttpStatus.OK);
+			} else {
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse(null, "Update service successful", "Gateway"), HttpStatus.OK);
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId,
