@@ -33,12 +33,14 @@ import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 import model.response.ServiceIdResponse;
 import model.response.ServiceListResponse;
+import model.response.SuccessResponse;
 import model.service.metadata.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -225,18 +227,29 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user),
-					serviceId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user), serviceId),
+					PiazzaLogger.INFO);
+
 			// Proxy the request to the Service Controller instance
-			restTemplate.put(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), serviceData);
-			return null;
+			HttpHeaders theHeaders = new HttpHeaders();
+			// headers.add("Authorization", "Basic " + credentials);
+			theHeaders.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<Service> request = new HttpEntity<Service>(serviceData, theHeaders);
+			String serviceControllerUrl = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
+			ResponseEntity<PiazzaResponse> response = restTemplate.exchange(serviceControllerUrl, HttpMethod.PUT, request, PiazzaResponse.class);
+
+			if (response.getBody() instanceof ErrorResponse) {
+				return new ResponseEntity<PiazzaResponse>(
+						new ErrorResponse(null, ((ErrorResponse) (response.getBody())).message, "Gateway"), HttpStatus.OK);
+			} else {
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse(null, "Update service successful", "Gateway"), HttpStatus.OK);
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId,
-					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId, gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
