@@ -86,7 +86,7 @@ public class EventController extends PiazzaRestController {
 	 * @return The list of events, or the appropriate error.
 	 */
 	@RequestMapping(value = "/event", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get all Events", notes = "Retrieves a list of all Events.", tags = { "Event", "Workflow" })
+	@ApiOperation(value = "Get all Events", notes = "Retrieves a list of all Events", tags = { "Event", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Events.", response = EventListResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -128,7 +128,7 @@ public class EventController extends PiazzaRestController {
 	 * @return The event ID, or an error.
 	 */
 	@RequestMapping(value = "/event", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Creates an Event for the Event Type", notes = "Fires an Event with the Piazza Workflow component. Events must conform to the specified Event Type.", tags = {
+	@ApiOperation(value = "Creates an Event for the Event Type", notes = "Sends an event to the Piazza workflow component", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The ID of the newly created Event", response = WorkflowResponse.class),
@@ -167,7 +167,7 @@ public class EventController extends PiazzaRestController {
 	 * @return The event metadata, or an error
 	 */
 	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get a specifc Event", notes = "Gets a specific Event by it's ID, that corresponds with the Event Type.", tags = {
+	@ApiOperation(value = "Get a specifc Event", notes = "Gets a specific Event by it's ID, that corresponds with the Event Type", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The requested Event.", response = Event.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -207,7 +207,7 @@ public class EventController extends PiazzaRestController {
 	 * @return 200 OK, or an error
 	 */
 	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.DELETE, produces = "application/json")
-	@ApiOperation(value = "Delete a specific Event", notes = "Deletes a specific Event by it's ID, that corresponds with the Event Type.", tags = {
+	@ApiOperation(value = "Delete a specific Event", notes = "Deletes the event with the given id", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of delete", response = SuccessResponse.class),
@@ -242,7 +242,7 @@ public class EventController extends PiazzaRestController {
 	 * @return The list of event types, or an error.
 	 */
 	@RequestMapping(value = "/eventType", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "List Event Types", notes = "Lists all Event Types that have been registered with the Piazza Workflow service.", tags = {
+	@ApiOperation(value = "List Event Types", notes = "Returns all event types that have been registered with the Piazza Workflow service", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Event Types.", response = EventTypeListResponse.class),
@@ -285,7 +285,7 @@ public class EventController extends PiazzaRestController {
 	 * @return The ID of the event type, or an error.
 	 */
 	@RequestMapping(value = "/eventType", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Register an Event Type", notes = "Defines an Event Type with the Workflow component, that defines a schema that Events can conform to and be fired for.", tags = {
+	@ApiOperation(value = "Register an Event Type", notes = "Defines an Event Type with the Workflow component", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The ID of the newly created Event Type", response = WorkflowResponse.class),
@@ -324,7 +324,7 @@ public class EventController extends PiazzaRestController {
 	 * @return Event type information, or an error
 	 */
 	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get an Event Type", notes = "Returns the metadata for a specific Event Type by its unique identifier.", tags = {
+	@ApiOperation(value = "Get an Event Type", notes = "Returns the metadata for a specific Event Type", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Event Type metadata.", response = EventType.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -361,7 +361,7 @@ public class EventController extends PiazzaRestController {
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
 	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.DELETE, produces = "application/json")
-	@ApiOperation(value = "Delete an Event Type", notes = "Deletes a specific Event Type, specified by its unique identifier.", tags = {
+	@ApiOperation(value = "Delete an Event Type", notes = "Deletes a specific Event Type using the specified by the Id", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of Event Type deletion.", response = SuccessResponse.class),

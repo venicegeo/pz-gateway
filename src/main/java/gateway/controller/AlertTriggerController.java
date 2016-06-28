@@ -88,7 +88,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return The ID of the Trigger, or an error.
 	 */
 	@RequestMapping(value = "/trigger", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger with the Piazza Workflow component.", tags = {
+	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger with the Piazza Workflow component", tags = {
 			"Trigger", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The ID of the newly created Trigger", response = WorkflowResponse.class),
@@ -133,7 +133,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return The list of Triggers, or an error.
 	 */
 	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "List Triggers", notes = "Lists all of the defined Triggers in the Piazza Workflow component.", tags = {
+	@ApiOperation(value = "List Triggers", notes = "Returns an array of triggers", tags = {
 			"Trigger", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Triggers.", response = TriggerListResponse.class),
@@ -250,7 +250,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return The list of Alerts, or an error
 	 */
 	@RequestMapping(value = "/alert", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the Alerts for the currently authenticated user. Alerts occur when a Trigger's conditions are met.", tags = {
+	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the alerts", tags = {
 			"Alert", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Alerts owned by the current User.", response = AlertListResponse.class),
@@ -292,7 +292,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE)
-	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert; referenced by ID.", tags = { "Alert",
+	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert using the given Id", tags = { "Alert",
 			"Workflow" }, produces = "application/json")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Message indicating Alert was deleted successfully", response = SuccessResponse.class),
@@ -331,7 +331,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return Trigger information, or an error
 	 */
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a single Alert; referenced by ID.", tags = {
+	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a given Alert", tags = {
 			"Alert", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Alert metadata.", response = Alert.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
