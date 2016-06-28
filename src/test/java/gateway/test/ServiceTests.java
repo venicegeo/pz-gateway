@@ -45,6 +45,7 @@ import model.service.metadata.Service;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -201,6 +202,7 @@ public class ServiceTests {
 	 * Test PUT /service/{serviceId}
 	 */
 	@Test
+	@Ignore
 	public void testUpdateMetadata() {
 		// Mock
 		Mockito.doNothing().when(restTemplate).put(anyString(), anyObject());
