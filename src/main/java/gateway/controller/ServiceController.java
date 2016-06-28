@@ -236,8 +236,7 @@ public class ServiceController extends PiazzaRestController {
 			theHeaders.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<Service> request = new HttpEntity<Service>(serviceData, theHeaders);
 			String serviceControllerUrl = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
-			ResponseEntity<PiazzaResponse> response = restTemplate.exchange(serviceControllerUrl, HttpMethod.PUT, request,
-					PiazzaResponse.class);
+			ResponseEntity<PiazzaResponse> response = restTemplate.exchange(serviceControllerUrl, HttpMethod.PUT, request, PiazzaResponse.class);
 
 			if (response.getBody() instanceof ErrorResponse) {
 				return new ResponseEntity<PiazzaResponse>(
