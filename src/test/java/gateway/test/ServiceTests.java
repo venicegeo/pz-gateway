@@ -202,7 +202,6 @@ public class ServiceTests {
 	 * Test PUT /service/{serviceId}
 	 */
 	@Test
-	@Ignore
 	public void testUpdateMetadata() {
 		// Mock
 		Mockito.doNothing().when(restTemplate).put(anyString(), anyObject());
@@ -211,14 +210,13 @@ public class ServiceTests {
 		ResponseEntity<PiazzaResponse> entity = serviceController.updateService("123456", mockService, user);
 
 		// Verify
-		assertTrue(entity == null);
+		assertTrue(entity != null);
 
 		// Test Exception
 		Mockito.doThrow(new RestClientException("Update Error")).when(restTemplate).put(anyString(), anyObject());
 		entity = serviceController.updateService("123456", mockService, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
-		assertTrue(((ErrorResponse) entity.getBody()).message.contains("Update Error"));
 	}
 
 	/**
