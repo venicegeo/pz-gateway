@@ -240,7 +240,7 @@ public class ServiceController extends PiazzaRestController {
 
 			if (response.getBody() instanceof ErrorResponse) {
 				return new ResponseEntity<PiazzaResponse>(
-						new ErrorResponse(null, ((ErrorResponse) (response.getBody())).message, "Gateway"), HttpStatus.OK);
+						new ErrorResponse(null, ((ErrorResponse) (response.getBody())).message, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 			} else {
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse(null, "Update service successful", "Gateway"), HttpStatus.OK);
 			}
