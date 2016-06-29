@@ -246,7 +246,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "A general keyword search to apply to all alerts.") @RequestParam(value = "key", required = false) String key,
-			@ApiParam(value = "The TriggerID by which to filter results.") @RequestParam(value = "triggerid", required = false) String triggerid,
+			@ApiParam(value = "The TriggerID by which to filter results.") @RequestParam(value = "triggerId", required = false) String triggerId,
 			Principal user) {
 		try {
 			// Log the request
@@ -255,8 +255,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Broker the request to Workflow
 			String url = String.format("%s/v2/%s?page=%s&per_page=%s&order=%s&sort_by=%s", WORKFLOW_URL, "alert", page,
 					pageSize, order, key != null ? key : "");
-			if (triggerid != null) {
-				url.concat(String.format("&triggerid=%s", triggerid));
+			if (triggerId != null) {
+				url.concat(String.format("&triggerid=%s", triggerId));
 			}
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
