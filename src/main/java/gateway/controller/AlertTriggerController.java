@@ -267,11 +267,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested a list of Alerts.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s/v2/%s?page=%s&per_page=%s&order=%s&sort_by=%s", WORKFLOW_URL, "alert", page,
-					pageSize, order, key != null ? key : "");
-			if (triggerId != null) {
-				url.concat(String.format("&triggerid=%s", triggerId));
-			}
+			String url = String.format("%s/v2/%s?page=%s&per_page=%s&order=%s&sort_by=%s&triggerId=%s", WORKFLOW_URL, "alert", page,
+					pageSize, order, key != null ? key : "", triggerId != null ? triggerId : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
