@@ -37,6 +37,7 @@ import model.job.type.ExecuteServiceJob;
 import model.job.type.RepeatJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
+import model.response.JobErrorResponse;
 import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
 import model.service.metadata.ExecuteServiceData;
@@ -93,7 +94,7 @@ public class JobTests {
 		MockitoAnnotations.initMocks(gatewayUtil);
 
 		// Mock a common error we can use to test
-		mockError = new ErrorResponse("123456", "Job Not Found", "Gateway");
+		mockError = new ErrorResponse("Job Not Found", "Gateway");
 
 		// Mock a Job
 		mockJob = new Job();
@@ -169,8 +170,8 @@ public class JobTests {
 				new RestClientException("Could Not Abort"));
 		entity = jobController.abortJob("123456", "Not Needed", user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(entity.getBody() instanceof ErrorResponse);
-		ErrorResponse error = (ErrorResponse) entity.getBody();
+		assertTrue(entity.getBody() instanceof JobErrorResponse);
+		JobErrorResponse error = (JobErrorResponse) entity.getBody();
 		assertTrue(error.message.contains("Could Not Abort"));
 	}
 
@@ -195,8 +196,8 @@ public class JobTests {
 				new RestClientException("Could Not Repeat"));
 		entity = jobController.repeatJob("123456", user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(entity.getBody() instanceof ErrorResponse);
-		ErrorResponse error = (ErrorResponse) entity.getBody();
+		assertTrue(entity.getBody() instanceof JobErrorResponse);
+		JobErrorResponse error = (JobErrorResponse) entity.getBody();
 		assertTrue(error.message.contains("Could Not Repeat"));
 	}
 

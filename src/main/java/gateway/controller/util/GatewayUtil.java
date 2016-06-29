@@ -27,6 +27,7 @@ import model.data.location.S3FileStore;
 import model.job.type.IngestJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
+import model.response.JobResponse;
 import model.response.PiazzaResponse;
 
 import org.apache.kafka.clients.producer.Producer;
@@ -125,7 +126,7 @@ public class GatewayUtil {
 				throw new Exception(((ErrorResponse) jobResponse.getBody()).message);
 			}
 			// Return the Job ID from the response.
-			return jobResponse.getBody().jobId;
+			return ((JobResponse)jobResponse.getBody()).jobId;
 		} catch (Exception exception) {
 			throw new Exception(String.format("Error with Job Manager when Requesting New Piazza Job: %s",
 					exception.getMessage()));

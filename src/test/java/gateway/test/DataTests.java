@@ -41,8 +41,10 @@ import model.request.PiazzaJobRequest;
 import model.response.DataResourceListResponse;
 import model.response.DataResourceResponse;
 import model.response.ErrorResponse;
+import model.response.JobResponse;
 import model.response.Pagination;
 import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
 
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -100,7 +102,7 @@ public class DataTests {
 		MockitoAnnotations.initMocks(gatewayUtil);
 
 		// Mock a common error we can use to test
-		mockError = new ErrorResponse("JobID", "Error!", "Test");
+		mockError = new ErrorResponse("Error!", "Test");
 
 		// Mock some Data that we can use in our test cases.
 		mockData = new DataResource();
@@ -182,9 +184,9 @@ public class DataTests {
 
 		// Verify the results. If the mock Kafka message is sent, then this is
 		// considered a success.
-		assertTrue(response instanceof PiazzaResponse == true);
+		assertTrue(response instanceof JobResponse == true);
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(response.jobId.equalsIgnoreCase("123456"));
+		assertTrue(((JobResponse)response).jobId.equalsIgnoreCase("123456"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test an Exception
@@ -236,7 +238,7 @@ public class DataTests {
 		response = entity.getBody();
 
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(response.jobId.equalsIgnoreCase("123456"));
+		assertTrue(((JobResponse)response).jobId.equalsIgnoreCase("123456"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 	}
 
@@ -306,7 +308,7 @@ public class DataTests {
 		ResponseEntity<PiazzaResponse> entity = dataController.updateMetadata("123456", mockData.getMetadata(), user);
 
 		// Verify
-		assertTrue(entity == null);
+		assertTrue(entity.getBody() instanceof SuccessResponse);
 
 		// Test an Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(PiazzaResponse.class))).thenReturn(mockError);

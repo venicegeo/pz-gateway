@@ -33,12 +33,15 @@ import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 import model.response.ServiceIdResponse;
 import model.response.ServiceListResponse;
+import model.response.ServiceResponse;
+import model.response.SuccessResponse;
 import model.service.metadata.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -91,8 +94,10 @@ public class ServiceController extends PiazzaRestController {
 	 * @return The Service ID, or appropriate error.
 	 */
 	@RequestMapping(value = "/service", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service", response = ServiceIdResponse.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Service") })
+	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The ID of the newly created Service", response = ServiceIdResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> registerService(
 			@ApiParam(value = "The metadata for the service. This includes the URL, parameters, inputs and outputs. It also includes other release metadata such as classification and availability.", required = true) @RequestBody Service service,
 			Principal user) {
@@ -122,7 +127,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Registering Service by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -139,8 +144,9 @@ public class ServiceController extends PiazzaRestController {
 	 * @return Service metadata, or an error.
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Retrieve Service information", notes = "Retrieves the information and metadata for the specified Service matching the ID.", tags = "Service", response = Service.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Service object.") })
+	@ApiOperation(value = "Retrieve Service information", notes = "Retrieves the information and metadata for the specified Service matching the ID.", tags = "Service")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Service object.", response = ServiceResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getService(
 			@ApiParam(value = "The ID of the Service to retrieve.", required = true) @PathVariable(value = "serviceId") String serviceId,
 			Principal user) {
@@ -159,7 +165,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Getting Service %s Info for user %s: %s", serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -177,7 +183,9 @@ public class ServiceController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ApiOperation(value = "Unregister a Service", notes = "Unregisters a service by its ID.", tags = "Service")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of Deleted.") })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Confirmation of Deleted.", response = ServiceIdResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> deleteService(
 			@ApiParam(value = "The ID of the Service to unregister.", required = true) @PathVariable(value = "serviceId") String serviceId,
 			@ApiParam(hidden = true) @RequestParam(value = "softDelete", required = false) boolean softDelete,
@@ -198,7 +206,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -218,25 +226,39 @@ public class ServiceController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.PUT, produces = "application/json")
 	@ApiOperation(value = "Update Service Information", notes = "Updates a Service Metadata, with the Service to updated specified by its ID.", tags = "Service")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of Update.") })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Confirmation of Update.", response = SuccessResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> updateService(
 			@ApiParam(value = "The ID of the Service to Update.", required = true) @PathVariable(value = "serviceId") String serviceId,
 			@ApiParam(value = "The Service Metadata. All properties specified in the Service data here will overwrite the existing properties of the Service.", required = true, name = "service") @RequestBody Service serviceData,
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user),
-					serviceId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user), serviceId),
+					PiazzaLogger.INFO);
+
 			// Proxy the request to the Service Controller instance
-			restTemplate.put(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), serviceData);
-			return null;
+			HttpHeaders theHeaders = new HttpHeaders();
+			// headers.add("Authorization", "Basic " + credentials);
+			theHeaders.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<Service> request = new HttpEntity<Service>(serviceData, theHeaders);
+			String serviceControllerUrl = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
+			ResponseEntity<PiazzaResponse> response = restTemplate.exchange(serviceControllerUrl, HttpMethod.PUT, request, PiazzaResponse.class);
+
+			if (response.getBody() instanceof ErrorResponse) {
+				return new ResponseEntity<PiazzaResponse>(
+						new ErrorResponse(((ErrorResponse) (response.getBody())).message, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Update service successful", "Gateway"), HttpStatus.OK);
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId,
-					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId, gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+
 		}
 	}
 
@@ -258,8 +280,10 @@ public class ServiceController extends PiazzaRestController {
 	 * @return The list of services; or an error.
 	 */
 	@RequestMapping(value = "/service", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service", response = ServiceListResponse.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Services registered to Piazza.") })
+	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Services registered to Piazza.", response = ServiceListResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getServices(
 			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
@@ -290,7 +314,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -311,8 +335,10 @@ public class ServiceController extends PiazzaRestController {
 	 * @return The list of services; or an error.
 	 */
 	@RequestMapping(value = "/service/me", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service", response = ServiceListResponse.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Services registered to Piazza.") })
+	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Services registered to Piazza.", response = ServiceListResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getServicesForCurrentUser(
 			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
@@ -332,9 +358,10 @@ public class ServiceController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/service/query", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Query Metadata in Piazza Services", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for registered Services. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
-			"Search", "Service" }, response = ServiceListResponse.class)
+			"Search", "Service" })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The list of Search results that match the query string.") })
+			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = ServiceListResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> searchServices(
 			@ApiParam(value = "The Query string for the Search component.", name = "search", required = true) @RequestBody SearchRequest query,
 			Principal user) {
@@ -355,7 +382,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

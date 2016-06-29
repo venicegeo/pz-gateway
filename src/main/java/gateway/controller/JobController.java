@@ -31,8 +31,11 @@ import model.job.type.ExecuteServiceJob;
 import model.job.type.RepeatJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
+import model.response.JobErrorResponse;
+import model.response.JobResponse;
 import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,8 +90,10 @@ public class JobController extends PiazzaRestController {
 	 * @return Contains Job Status, or an appropriate Error.
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get Job Status", notes = "Fetches the Status for a single Piazza Job.", tags = "Job", response = JobStatusResponse.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Information regarding the requested Job. At bare minimum, this will contain the Job ID of the Job that has been spawned as a result of the POSTed message. If more information is available, such as Status, it will also be included.") })
+	@ApiOperation(value = "Get Job Status", notes = "Fetches the Status for a single Piazza Job.", tags = "Job")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Information regarding the requested Job. At bare minimum, this will contain the Job ID of the Job that has been spawned as a result of the POSTed message. If more information is available, such as Status, it will also be included.", response = JobStatusResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = JobErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getJobStatus(
 			@ApiParam(value = "ID of the Job to Fetch", required = true) @PathVariable(value = "jobId") String jobId,
 			Principal user) {
@@ -108,7 +113,7 @@ public class JobController extends PiazzaRestController {
 			exception.printStackTrace();
 			String error = String.format("Error requesting Job Status for ID %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(jobId, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -126,7 +131,9 @@ public class JobController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ApiOperation(value = "Abort Job", notes = "Cancels a Running Job. If the Job is already completed in some way, then cancellation will not occur.", tags = "Job")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Job has requested to be cancelled. This may take some time, as the process may not be in an easily cancelled state at the time the request is made.") })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The Job has requested to be cancelled. This may take some time, as the process may not be in an easily cancelled state at the time the request is made.", response = SuccessResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = JobErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> abortJob(
 			@ApiParam(value = "ID of the Job to cancel.", required = true) @PathVariable(value = "jobId") String jobId,
 			@ApiParam(value = "Details for the cancellation of the Job.") @RequestParam(value = "reason", required = false) String reason,
@@ -157,15 +164,17 @@ public class JobController extends PiazzaRestController {
 					String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, PiazzaResponse.class);
 			// Check if the response was an error. If so, set the status code
 			// appropriately.
-			HttpStatus status = cancelResponse.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
-					: HttpStatus.OK;
-			// Send back the proxied response to the client
-			return new ResponseEntity<PiazzaResponse>(cancelResponse.getBody(), status);
+			if (cancelResponse.getBody() instanceof ErrorResponse) {
+				return new ResponseEntity<PiazzaResponse>(cancelResponse.getBody(), HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<PiazzaResponse>(
+						new SuccessResponse("Job " + jobId + " was deleted successfully", "Gateway"), HttpStatus.OK);
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error requesting Job Abort for ID %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -183,9 +192,11 @@ public class JobController extends PiazzaRestController {
 	 * @return Response containing the ID of the newly created Job, or
 	 *         appropriate error
 	 */
-	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.PUT, produces = "application/json")
+	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Repeat Job", notes = "Repeats a previously submitted Job. This will clone the original Job, and run it again with identical parameters, using the requesting users authentication in the new Job.", tags = "Job")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "A new Job ID that corresponds to the cloned Job in Piazza.") })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "A new Job ID that corresponds to the cloned Job in Piazza.", response = JobResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = JobErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> repeatJob(
 			@ApiParam(value = "ID of the Job to Repeat", required = true) @PathVariable(value = "jobId") String jobId,
 			Principal user) {
@@ -205,15 +216,17 @@ public class JobController extends PiazzaRestController {
 					String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, PiazzaResponse.class);
 			// Check if the response was an error. If so, set the status code
 			// appropriately.
-			HttpStatus status = jobResponse.getBody() instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
-					: HttpStatus.OK;
-			// Send back the proxied response to the client
-			return new ResponseEntity<PiazzaResponse>(jobResponse.getBody(), status);
+			if (jobResponse.getBody() instanceof ErrorResponse) {
+				return new ResponseEntity<PiazzaResponse>(jobResponse.getBody(), HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<PiazzaResponse>(
+						new SuccessResponse("Job " + jobId + " was cloned successfully", "Gateway"), HttpStatus.OK);
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Repeating Job ID %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -235,7 +248,9 @@ public class JobController extends PiazzaRestController {
 	@RequestMapping(value = "/v2/job", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Executes a registered Service", notes = "Creates a Piazza Job to execute a registered service in the system, with the specified parameters.", tags = {
 			"Job", "Service" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Job ID for the execution of the Service. This can be queried using Job Status to track progress and, when available, fetch the result object.") })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The Job ID for the execution of the Service. This can be queried using Job Status to track progress and, when available, fetch the result object.", response = JobResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> executeService(
 			@ApiParam(value = "The Payload that describes the Service to be executed, and the inputs for that service.", required = true, name = "body") @RequestBody ExecuteServiceJob job,
 			Principal user) {
@@ -247,14 +262,15 @@ public class JobController extends PiazzaRestController {
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.userName = gatewayUtil.getPrincipalName(user);
+
 			String jobId = gatewayUtil.sendJobRequest(request, null);
-			return new ResponseEntity<PiazzaResponse>(new PiazzaResponse(jobId), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Executing for user %s for Service %s: %s",
 					gatewayUtil.getPrincipalName(user), job.data.getServiceId(), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
