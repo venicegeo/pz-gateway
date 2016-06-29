@@ -29,6 +29,7 @@ import model.response.ErrorResponse;
 import model.response.EventListResponse;
 import model.response.EventTypeListResponse;
 import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
 import model.response.WorkflowResponse;
 import model.workflow.Event;
 import model.workflow.EventType;
@@ -85,8 +86,10 @@ public class EventController extends PiazzaRestController {
 	 * @return The list of events, or the appropriate error.
 	 */
 	@RequestMapping(value = "/event", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get all Events", notes = "Retrieves a list of all Events.", tags = { "Event", "Workflow" }, response=EventListResponse.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Events.") })
+	@ApiOperation(value = "Get all Events", notes = "Retrieves a list of all Events", tags = { "Event", "Workflow" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Events.", response = EventListResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEvents(
 			@ApiParam(value = "The name of the event type to filter by.") @RequestParam(value = "eventType", required = false) String eventType,
 			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
@@ -108,7 +111,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Querying Events by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -125,9 +128,11 @@ public class EventController extends PiazzaRestController {
 	 * @return The event ID, or an error.
 	 */
 	@RequestMapping(value = "/event", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Creates an Event for the Event Type", notes = "Fires an Event with the Piazza Workflow component. Events must conform to the specified Event Type.", tags = {
+	@ApiOperation(value = "Creates an Event for the Event Type", notes = "Sends an event to the Piazza workflow component", tags = {
 			"Event", "Workflow" })
-	@ApiResponses(value = {	@ApiResponse(code = 200, message = "The ID of the newly created Event", response = WorkflowResponse.class) })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The ID of the newly created Event", response = WorkflowResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> fireEvent(
 			@ApiParam(value = "The Event JSON object.", required = true) @RequestBody Event event, Principal user) {
 		try {
@@ -135,15 +140,15 @@ public class EventController extends PiazzaRestController {
 			logger.log(String.format("User %s has fired an event.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			WorkflowResponse response = restTemplate.postForObject(String.format("%s/v2/%s", WORKFLOW_URL, "event"), om.writeValueAsString(event),
-					WorkflowResponse.class);
+			WorkflowResponse response = restTemplate.postForObject(String.format("%s/v2/%s", WORKFLOW_URL, "event"),
+					om.writeValueAsString(event), WorkflowResponse.class);
 			return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Submitting Event by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -162,9 +167,10 @@ public class EventController extends PiazzaRestController {
 	 * @return The event metadata, or an error
 	 */
 	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get a specifc Event", notes = "Gets a specific Event by it's ID, that corresponds with the Event Type.", tags = {
-			"Event", "Workflow" }, response = Event.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The requested Event.") })
+	@ApiOperation(value = "Get a specifc Event", notes = "Gets a specific Event by it's ID, that corresponds with the Event Type", tags = {
+			"Event", "Workflow" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The requested Event.", response = Event.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEventInformation(
 			@ApiParam(value = "The Event ID for the event to retrieve.", required = true) @PathVariable(value = "eventId") String eventId,
 			Principal user) {
@@ -182,7 +188,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Querying Event %s by user %s: %s", eventId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -201,9 +207,11 @@ public class EventController extends PiazzaRestController {
 	 * @return 200 OK, or an error
 	 */
 	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.DELETE, produces = "application/json")
-	@ApiOperation(value = "Delete a specific Event", notes = "Deletes a specific Event by it's ID, that corresponds with the Event Type.", tags = {
+	@ApiOperation(value = "Delete a specific Event", notes = "Deletes the event with the given id", tags = {
 			"Event", "Workflow" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of delete.") })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Confirmation of delete", response = SuccessResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> deleteEvent(
 			@ApiParam(value = "The Event ID for the event to delete.", required = true) @PathVariable(value = "eventId") String eventId,
 			Principal user) {
@@ -214,13 +222,14 @@ public class EventController extends PiazzaRestController {
 
 			// Broker the request to pz-workflow
 			restTemplate.delete(String.format("%s/v2/%s/%s", WORKFLOW_URL, "event", eventId), String.class);
-			return null;
+			return new ResponseEntity<PiazzaResponse>(
+					new SuccessResponse("Event " + eventId + " was deleted successfully", "Gateway"), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Event %s by user %s: %s", eventId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -233,9 +242,11 @@ public class EventController extends PiazzaRestController {
 	 * @return The list of event types, or an error.
 	 */
 	@RequestMapping(value = "/eventType", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "List Event Types", notes = "Lists all Event Types that have been registered with the Piazza Workflow service.", tags = {
-			"Event Type", "Workflow" }, response=EventTypeListResponse.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Event Types.") })
+	@ApiOperation(value = "List Event Types", notes = "Returns all event types that have been registered with the Piazza Workflow service", tags = {
+			"Event Type", "Workflow" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Event Types.", response = EventTypeListResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEventTypes(
 			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
@@ -257,7 +268,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Querying Event Types by user %s: %s",
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -274,9 +285,11 @@ public class EventController extends PiazzaRestController {
 	 * @return The ID of the event type, or an error.
 	 */
 	@RequestMapping(value = "/eventType", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Register an Event Type", notes = "Defines an Event Type with the Workflow component, that defines a schema that Events can conform to and be fired for.", tags = {
+	@ApiOperation(value = "Register an Event Type", notes = "Defines an Event Type with the Workflow component", tags = {
 			"Event Type", "Workflow" })
-	@ApiResponses(value = {	@ApiResponse(code = 200, message = "The ID of the newly created Event Type", response = WorkflowResponse.class) })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The ID of the newly created Event Type", response = WorkflowResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> createEventType(
 			@ApiParam(value = "The Event Type information. This defines the Schema for the Events that must be followed.", required = true) @RequestBody EventType eventType,
 			Principal user) {
@@ -294,7 +307,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Creating Event Type by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -311,9 +324,10 @@ public class EventController extends PiazzaRestController {
 	 * @return Event type information, or an error
 	 */
 	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get an Event Type", notes = "Returns the metadata for a specific Event Type by its unique identifier.", tags = {
-			"Event Type", "Workflow" }, response = EventType.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Event Type metadata.") })
+	@ApiOperation(value = "Get an Event Type", notes = "Returns the metadata for a specific Event Type", tags = {
+			"Event Type", "Workflow" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Event Type metadata.", response = EventType.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEventType(
 			@ApiParam(value = "The unique identifier for the Event Type.", required = true) @PathVariable(value = "eventTypeId") String eventTypeId,
 			Principal user) {
@@ -330,7 +344,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Getting Event Type ID %s by user %s: %s", eventTypeId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -347,9 +361,11 @@ public class EventController extends PiazzaRestController {
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
 	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.DELETE, produces = "application/json")
-	@ApiOperation(value = "Delete an Event Type", notes = "Deletes a specific Event Type, specified by its unique identifier.", tags = {
+	@ApiOperation(value = "Delete an Event Type", notes = "Deletes a specific Event Type using the specified by the Id", tags = {
 			"Event Type", "Workflow" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of Event Type deletion.") })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Confirmation of Event Type deletion.", response = SuccessResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> deleteEventType(
 			@ApiParam(value = "The unique identifier for the Event Type to delete.", required = true) @PathVariable(value = "eventTypeId") String eventTypeId,
 			Principal user) {
@@ -360,13 +376,15 @@ public class EventController extends PiazzaRestController {
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "eventType", eventTypeId);
 			restTemplate.delete(url);
-			return null;
+			return new ResponseEntity<PiazzaResponse>(
+					new SuccessResponse("EventType " + eventTypeId + " was deleted successfully", "Gateway"),
+					HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Event Type ID %s by user %s: %s", eventTypeId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

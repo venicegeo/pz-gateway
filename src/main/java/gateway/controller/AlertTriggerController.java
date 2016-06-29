@@ -27,6 +27,7 @@ import io.swagger.annotations.ApiResponses;
 import model.response.AlertListResponse;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
 import model.response.TriggerListResponse;
 import model.response.WorkflowResponse;
 import model.workflow.Alert;
@@ -87,9 +88,11 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return The ID of the Trigger, or an error.
 	 */
 	@RequestMapping(value = "/trigger", method = RequestMethod.POST, produces = "application/json")
-	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger with the Piazza Workflow component.", tags = {
+	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger with the Piazza Workflow component", tags = {
 			"Trigger", "Workflow" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The ID of the newly created Trigger", response = WorkflowResponse.class) })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The ID of the newly created Trigger", response = WorkflowResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> createTrigger(
 			@ApiParam(value = "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.", required = true) @RequestBody Trigger trigger,
 			Principal user) {
@@ -117,7 +120,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Creating Trigger by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -130,9 +133,11 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return The list of Triggers, or an error.
 	 */
 	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "List Triggers", notes = "Lists all of the defined Triggers in the Piazza Workflow component.", tags = {
-			"Trigger", "Workflow" }, response = TriggerListResponse.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Triggers.") })
+	@ApiOperation(value = "List Triggers", notes = "Returns an array of triggers", tags = {
+			"Trigger", "Workflow" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Triggers.", response = TriggerListResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getTriggers(
 			@ApiParam(value = "A general keyword search to apply to all triggers.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
@@ -153,7 +158,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Querying Triggers by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -171,8 +176,10 @@ public class AlertTriggerController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Gets Metadata for a Trigger", notes = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.", tags = {
-			"Trigger", "Workflow" }, response = Trigger.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.") })
+			"Trigger", "Workflow" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The Trigger definition matching the specified Trigger ID.", response = Trigger.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getTrigger(
 			@ApiParam(value = "The ID of the Trigger to retrieve.", required = true) @PathVariable(value = "triggerId") String triggerId,
 			Principal user) {
@@ -190,7 +197,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Getting Trigger ID %s by user %s: %s", triggerId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -209,7 +216,10 @@ public class AlertTriggerController extends PiazzaRestController {
 	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ApiOperation(value = "Deletes a Trigger", notes = "Deletes a Trigger with the Workflow component. This Trigger will no longer listen for conditions for events to fire.", tags = {
 			"Trigger", "Workflow" })
-	public ResponseEntity<?> deleteTrigger(
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Message indicating Trigger was deleted successfully", response = SuccessResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<PiazzaResponse> deleteTrigger(
 			@ApiParam(value = "The ID of the Trigger to delete.", required = true) @PathVariable(value = "triggerId") String triggerId,
 			Principal user) {
 		try {
@@ -219,13 +229,15 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "trigger", triggerId);
 			restTemplate.delete(url);
-			return null;
+			return new ResponseEntity<PiazzaResponse>(
+					new SuccessResponse("Trigger " + triggerId + " was deleted successfully", "Gateway"),
+					HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Trigger ID %s by user %s: %s", triggerId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -238,9 +250,11 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return The list of Alerts, or an error
 	 */
 	@RequestMapping(value = "/alert", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the Alerts for the currently authenticated user. Alerts occur when a Trigger's conditions are met.", tags = {
-			"Alert", "Workflow" }, response = AlertListResponse.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Alerts owned by the current User.") })
+	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the alerts", tags = {
+			"Alert", "Workflow" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Alerts owned by the current User.", response = AlertListResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getAlerts(
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
@@ -261,7 +275,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Querying Alerts by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -277,9 +291,13 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
-	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE, produces = "application/json")
-	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert; referenced by ID.", tags = { "Alert", "Workflow" })
-	public ResponseEntity<?> deleteAlert(
+	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE)
+	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert using the given Id", tags = { "Alert",
+			"Workflow" }, produces = "application/json")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Message indicating Alert was deleted successfully", response = SuccessResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<PiazzaResponse> deleteAlert(
 			@ApiParam(value = "The ID of the Alert to Delete.", required = true) @PathVariable(value = "alertId") String alertId,
 			Principal user) {
 		try {
@@ -289,13 +307,14 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "alert", alertId);
 			restTemplate.delete(url);
-			return null;
+			return new ResponseEntity<PiazzaResponse>(
+					new SuccessResponse("Alert " + alertId + " was deleted successfully", "Gateway"), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Alert ID %s by user %s: %s", alertId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -312,9 +331,10 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return Trigger information, or an error
 	 */
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a single Alert; referenced by ID.", tags = {
-			"Alert", "Workflow" }, response = Alert.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Alert metadata.") })
+	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a given Alert", tags = {
+			"Alert", "Workflow" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Alert metadata.", response = Alert.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getAlert(
 			@ApiParam(value = "The ID of the Alert to retrieve metadata for.", required = true) @PathVariable(value = "alertId") String alertId,
 			Principal user) {
@@ -331,7 +351,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Getting Alert ID %s by user %s: %s", alertId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
