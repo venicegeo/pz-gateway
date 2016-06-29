@@ -192,7 +192,7 @@ public class JobController extends PiazzaRestController {
 	 * @return Response containing the ID of the newly created Job, or
 	 *         appropriate error
 	 */
-	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.PUT, produces = "application/json")
+	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Repeat Job", notes = "Repeats a previously submitted Job. This will clone the original Job, and run it again with identical parameters, using the requesting users authentication in the new Job.", tags = "Job")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "A new Job ID that corresponds to the cloned Job in Piazza.", response = JobResponse.class),
