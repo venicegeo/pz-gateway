@@ -118,7 +118,7 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			String url = String.format("%s/%s?page=%s&pageSize=%s", ACCESS_URL, "data", page, perPage);
+			String url = String.format("%s/%s?page=%s&perPage=%s", ACCESS_URL, "data", page, perPage);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
