@@ -145,7 +145,7 @@ public class DeploymentController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Deployment List query.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			String url = String.format("%s/%s?page=%s&pageSize=%s", ACCESS_URL, "deployment", page, perPage);
+			String url = String.format("%s/%s?page=%s&perPage=%s", ACCESS_URL, "deployment", page, perPage);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
