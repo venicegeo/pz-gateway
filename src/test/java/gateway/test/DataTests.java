@@ -138,11 +138,11 @@ public class DataTests {
 		DataResourceListResponse mockResponse = new DataResourceListResponse();
 		mockResponse.data = new ArrayList<DataResource>();
 		mockResponse.getData().add(mockData);
-		mockResponse.pagination = new Pagination(1, 0, 10);
+		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
 
 		// Get the data
-		ResponseEntity<PiazzaResponse> entity = dataController.getData(null, 0, 10, null, user);
+		ResponseEntity<PiazzaResponse> entity = dataController.getData(null, 0, 10, null, "asc", null, user);
 		PiazzaResponse response = entity.getBody();
 
 		// Verify the results
@@ -156,7 +156,7 @@ public class DataTests {
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockError);
 
 		// Get the data
-		entity = dataController.getData(null, 0, 10, null, user);
+		entity = dataController.getData(null, 0, 10, null, "asc", null, user);
 		response = entity.getBody();
 
 		// Verify that a proper exception was thrown.
@@ -186,7 +186,7 @@ public class DataTests {
 		// considered a success.
 		assertTrue(response instanceof JobResponse == true);
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(((JobResponse)response).jobId.equalsIgnoreCase("123456"));
+		assertTrue(((JobResponse) response).jobId.equalsIgnoreCase("123456"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test an Exception
@@ -238,7 +238,7 @@ public class DataTests {
 		response = entity.getBody();
 
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(((JobResponse)response).jobId.equalsIgnoreCase("123456"));
+		assertTrue(((JobResponse) response).jobId.equalsIgnoreCase("123456"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 	}
 
@@ -326,7 +326,7 @@ public class DataTests {
 		DataResourceListResponse mockResponse = new DataResourceListResponse();
 		mockResponse.data = new ArrayList<DataResource>();
 		mockResponse.getData().add(mockData);
-		mockResponse.pagination = new Pagination(1, 0, 10);
+		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
 		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class))).thenReturn(
 				mockResponse);
 

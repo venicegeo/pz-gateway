@@ -136,17 +136,25 @@ public class DeploymentController extends PiazzaRestController {
 	public ResponseEntity<PiazzaResponse> getDeployment(
 			@ApiParam(value = "A general keyword search to apply to all Deployments.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = "asc") String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Deployment List query.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			String url = String.format("%s/%s?page=%s&pageSize=%s", ACCESS_URL, "deployment", page, pageSize);
+			String url = String.format("%s/%s?page=%s&pageSize=%s", ACCESS_URL, "deployment", page, perPage);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
+			}
+			if ((order != null) && (order.isEmpty() == false)) {
+				url = String.format("%s&order=%s", url, order);
+			}
+			if ((sortBy != null) && (sortBy.isEmpty() == false)) {
+				url = String.format("%s&sortBy=%s", url, sortBy);
 			}
 			PiazzaResponse dataResponse = restTemplate.getForObject(url, PiazzaResponse.class);
 			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
@@ -233,9 +241,8 @@ public class DeploymentController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), deploymentId), PiazzaLogger.INFO);
 			// Broker the request to Pz-Access
 			restTemplate.delete(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId));
-			return new ResponseEntity<PiazzaResponse>(
-					new SuccessResponse("Deployment " + deploymentId + " was deleted successfully", "Gateway"),
-					HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Deployment " + deploymentId
+					+ " was deleted successfully", "Gateway"), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Deployment by ID %s by user %s: %s", deploymentId,

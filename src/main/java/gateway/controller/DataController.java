@@ -87,6 +87,7 @@ public class DataController extends PiazzaRestController {
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
+	private static final String DEFAULT_ORDER = "asc";
 	private RestTemplate restTemplate = new RestTemplate();
 
 	/**
@@ -107,7 +108,9 @@ public class DataController extends PiazzaRestController {
 	public ResponseEntity<PiazzaResponse> getData(
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			@ApiParam(value = "Filter for the username that published the service.") @RequestParam(value = "userName", required = false) String userName,
 			Principal user) {
 		try {
@@ -115,7 +118,7 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			String url = String.format("%s/%s?page=%s&pageSize=%s", ACCESS_URL, "data", page, pageSize);
+			String url = String.format("%s/%s?page=%s&pageSize=%s", ACCESS_URL, "data", page, perPage);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
@@ -123,6 +126,13 @@ public class DataController extends PiazzaRestController {
 			// Add username if specified
 			if ((userName != null) && (userName.isEmpty() == false)) {
 				url = String.format("%s&userName=%s", url, userName);
+			}
+			// Add optional pagination
+			if ((order != null) && (order.isEmpty() == false)) {
+				url = String.format("%s&order=%s", url, order);
+			}
+			if ((sortBy != null) && (sortBy.isEmpty() == false)) {
+				url = String.format("%s&sortBy=%s", url, sortBy);
 			}
 			PiazzaResponse dataResponse = restTemplate.getForObject(url, PiazzaResponse.class);
 			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
@@ -158,9 +168,11 @@ public class DataController extends PiazzaRestController {
 	public ResponseEntity<PiazzaResponse> getDataForCurrentUser(
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			Principal user) {
-		return getData(keyword, page, pageSize, gatewayUtil.getPrincipalName(user), user);
+		return getData(keyword, page, perPage, order, sortBy, gatewayUtil.getPrincipalName(user), user);
 	}
 
 	/**
@@ -350,8 +362,8 @@ public class DataController extends PiazzaRestController {
 			if (response.getBody() instanceof ErrorResponse) {
 				return new ResponseEntity<PiazzaResponse>(response.getBody(), HttpStatus.INTERNAL_SERVER_ERROR);
 			} else {
-				return new ResponseEntity<PiazzaResponse>(
-						new SuccessResponse("Data " + dataId + " was deleted successfully", "Gateway"), HttpStatus.OK);
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Data " + dataId
+						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -394,8 +406,8 @@ public class DataController extends PiazzaRestController {
 				throw new Exception(((ErrorResponse) response).message);
 			}
 			// Response
-			return new ResponseEntity<PiazzaResponse>(
-					new SuccessResponse("Metadata " + dataId + " was successfully updated.", "Gateway"), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Metadata " + dataId
+					+ " was successfully updated.", "Gateway"), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Updating Metadata for item %s by user %s: %s", dataId,
