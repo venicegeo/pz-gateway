@@ -104,7 +104,7 @@ public class EventController extends PiazzaRestController {
 			logger.log(String.format("User %s queried for Events.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s/v2/%s?page=%s&per_page=%s&order=%s&sort_by=%s&eventType=%s", WORKFLOW_URL,
+			String url = String.format("%s/v2/%s?page=%s&perPage=%s&order=%s&sortBy=%s&eventType=%s", WORKFLOW_URL,
 					"event", page, perPage, order, sortBy != null ? sortBy : "", eventType != null ? eventType : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
@@ -262,7 +262,7 @@ public class EventController extends PiazzaRestController {
 					String.format("User %s has requested a list of Event Types.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s/v2/%s?page=%s&per_page=%s&order=%s&sort_by=%s", WORKFLOW_URL, "eventType",
+			String url = String.format("%s/v2/%s?page=%s&perPage=%s&order=%s&sortBy=%s", WORKFLOW_URL, "eventType",
 					page, perPage, order, sortBy != null ? sortBy : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
