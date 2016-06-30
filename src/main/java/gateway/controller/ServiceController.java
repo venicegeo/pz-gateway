@@ -301,7 +301,7 @@ public class ServiceController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to the Service Controller
-			String url = String.format("%s/%s?page=%s&per_page=%s", SERVICECONTROLLER_URL, "service", page, perPage);
+			String url = String.format("%s/%s?page=%s&perPage=%s", SERVICECONTROLLER_URL, "service", page, perPage);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
