@@ -200,7 +200,7 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Data Load Job of type %s.", gatewayUtil.getPrincipalName(user),
-					job.getData().getDataType().getType()), PiazzaLogger.INFO);
+					job.getData().getDataType().getClass().getName()), PiazzaLogger.INFO);
 			// Ensure the user isn't trying to hack a dataId into their request.
 			job.getData().setDataId(null);
 			PiazzaJobRequest request = new PiazzaJobRequest();
@@ -261,7 +261,7 @@ public class DataController extends PiazzaRestController {
 			// Log the request
 			logger.log(
 					String.format("User %s requested Data Load Job of type %s with file: %s",
-							gatewayUtil.getPrincipalName(user), job.getData().getDataType().getType(),
+							gatewayUtil.getPrincipalName(user), job.getData().getDataType().getClass().getName(),
 							file.getOriginalFilename()), PiazzaLogger.INFO);
 
 			// Validate the Job inputs to ensure we are able to process the file
@@ -270,7 +270,7 @@ public class DataController extends PiazzaRestController {
 				throw new Exception("Host parameter must be set to true when loading a file.");
 			} else if (job.getData().getDataType() instanceof FileRepresentation == false) {
 				throw new Exception("The uploaded file cannot be attached to the specified Data Type: "
-						+ job.getData().getDataType().getType());
+						+ job.getData().getDataType().getClass().getName());
 			}
 			// Send the file to S3.
 			String jobId = gatewayUtil.getUuid();
