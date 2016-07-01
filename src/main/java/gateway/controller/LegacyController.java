@@ -354,7 +354,7 @@ public class LegacyController extends PiazzaRestController {
 						// and an error needs to be thrown.
 						return new ResponseEntity<PiazzaResponse>(
 								new ErrorResponse("The uploaded file cannot be attached to the specified Data Type: "
-										+ ingestJob.getData().getDataType().getType(), "Gateway"),
+										+ ingestJob.getData().getDataType().getClass().getName(), "Gateway"),
 								HttpStatus.BAD_REQUEST);
 					}
 				} else {
