@@ -167,8 +167,8 @@ public class JobController extends PiazzaRestController {
 			if (cancelResponse.getBody() instanceof ErrorResponse) {
 				return new ResponseEntity<PiazzaResponse>(cancelResponse.getBody(), HttpStatus.INTERNAL_SERVER_ERROR);
 			} else {
-				return new ResponseEntity<PiazzaResponse>(
-						new SuccessResponse("Job " + jobId + " was deleted successfully", "Gateway"), HttpStatus.OK);
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Job " + jobId
+						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -219,8 +219,8 @@ public class JobController extends PiazzaRestController {
 			if (jobResponse.getBody() instanceof ErrorResponse) {
 				return new ResponseEntity<PiazzaResponse>(jobResponse.getBody(), HttpStatus.INTERNAL_SERVER_ERROR);
 			} else {
-				return new ResponseEntity<PiazzaResponse>(
-						new SuccessResponse("Job " + jobId + " was cloned successfully", "Gateway"), HttpStatus.OK);
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Job " + jobId
+						+ " was cloned successfully", "Gateway"), HttpStatus.OK);
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -245,7 +245,7 @@ public class JobController extends PiazzaRestController {
 	 *            The user executing the Job
 	 * @return The job ID, or the error if encountered
 	 */
-	@RequestMapping(value = "/v2/job", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = { "/v2/job", "/job" }, method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Executes a registered Service", notes = "Creates a Piazza Job to execute a registered service in the system, with the specified parameters.", tags = {
 			"Job", "Service" })
 	@ApiResponses(value = {

@@ -12,7 +12,6 @@ cd /vagrant/gateway
 mvn clean package
 
 # Updating hosts
-echo "192.168.23.22	dispatcher.dev" >> /etc/hosts
 echo "192.168.33.12  kafka.dev" >> /etc/hosts
 
 # Add an Upstart job to run our script upon machine boot

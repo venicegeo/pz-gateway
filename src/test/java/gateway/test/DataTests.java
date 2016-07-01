@@ -133,7 +133,7 @@ public class DataTests {
 	 */
 	@Test
 	public void testGetData() {
-		// When the Gateway asks the Dispatcher for a List of Data, Mock that
+		// When the Gateway asks Access for a List of Data, Mock that
 		// response here.
 		DataResourceListResponse mockResponse = new DataResourceListResponse();
 		mockResponse.data = new ArrayList<DataResource>();
