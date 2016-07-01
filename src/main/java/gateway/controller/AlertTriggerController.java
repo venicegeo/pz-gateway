@@ -133,24 +133,24 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return The list of Triggers, or an error.
 	 */
 	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "List Triggers", notes = "Returns an array of triggers", tags = {
-			"Trigger", "Workflow" })
+	@ApiOperation(value = "List Triggers", notes = "Returns an array of triggers", tags = { "Trigger", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Triggers.", response = TriggerListResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getTriggers(
 			@ApiParam(value = "A general keyword search to apply to all triggers.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested a list of Triggers.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s/v2/%s?page=%s&per_page=%s&order=%s&sort_by=%s", WORKFLOW_URL, "trigger",
-					page, pageSize, order, key != null ? key : "");
+			String url = String.format("%s/v2/%s?page=%s&perPage=%s&order=%s&sortBy=%s&key=%s", WORKFLOW_URL,
+					"trigger", page, perPage, order, sortBy != null ? sortBy : "", key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -229,9 +229,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "trigger", triggerId);
 			restTemplate.delete(url);
-			return new ResponseEntity<PiazzaResponse>(
-					new SuccessResponse("Trigger " + triggerId + " was deleted successfully", "Gateway"),
-					HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Trigger " + triggerId
+					+ " was deleted successfully", "Gateway"), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Trigger ID %s by user %s: %s", triggerId,
@@ -250,16 +249,16 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return The list of Alerts, or an error
 	 */
 	@RequestMapping(value = "/alert", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the alerts", tags = {
-			"Alert", "Workflow" })
+	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the alerts", tags = { "Alert", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Alerts owned by the current User.", response = AlertListResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getAlerts(
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "A general keyword search to apply to all alerts.") @RequestParam(value = "key", required = false) String key,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			@ApiParam(value = "The TriggerID by which to filter results.") @RequestParam(value = "triggerId", required = false) String triggerId,
 			Principal user) {
 		try {
@@ -267,11 +266,9 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested a list of Alerts.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s/v2/%s?page=%s&per_page=%s&order=%s&sort_by=%s", WORKFLOW_URL, "alert", page,
-					pageSize, order, key != null ? key : "");
-			if (triggerId != null) {
-				url.concat(String.format("&triggerid=%s", triggerId));
-			}
+			String url = String.format("%s/v2/%s?page=%s&perPage=%s&order=%s&sortBy=%s&triggerId=%s&key=%s",
+					WORKFLOW_URL, "alert", page, perPage, order, sortBy != null ? sortBy : "",
+					triggerId != null ? triggerId : "", key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -296,8 +293,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE)
-	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert using the given Id", tags = { "Alert",
-			"Workflow" }, produces = "application/json")
+	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert using the given Id", tags = { "Alert", "Workflow" }, produces = "application/json")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Message indicating Alert was deleted successfully", response = SuccessResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -311,8 +307,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "alert", alertId);
 			restTemplate.delete(url);
-			return new ResponseEntity<PiazzaResponse>(
-					new SuccessResponse("Alert " + alertId + " was deleted successfully", "Gateway"), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Alert " + alertId
+					+ " was deleted successfully", "Gateway"), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Alert ID %s by user %s: %s", alertId,
@@ -335,8 +331,8 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return Trigger information, or an error
 	 */
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a given Alert", tags = {
-			"Alert", "Workflow" })
+	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a given Alert", tags = { "Alert",
+			"Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Alert metadata.", response = Alert.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getAlert(

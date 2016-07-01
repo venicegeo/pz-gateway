@@ -48,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import util.PiazzaLogger;
 
 /**
@@ -94,16 +95,17 @@ public class EventController extends PiazzaRestController {
 			@ApiParam(value = "The name of the event type to filter by.") @RequestParam(value = "eventType", required = false) String eventType,
 			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s queried for Events.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s/v2/%s?page=%s&per_page=%s&order=%s&sort_by=%s&eventType=%s", WORKFLOW_URL,
-					"event", page, pageSize, order, key != null ? key : "", eventType != null ? eventType : "");
+			String url = String.format("%s/v2/%s?page=%s&perPage=%s&order=%s&sortBy=%s&eventType=%s", WORKFLOW_URL,
+					"event", page, perPage, order, sortBy != null ? sortBy : "", eventType != null ? eventType : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -207,8 +209,8 @@ public class EventController extends PiazzaRestController {
 	 * @return 200 OK, or an error
 	 */
 	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.DELETE, produces = "application/json")
-	@ApiOperation(value = "Delete a specific Event", notes = "Deletes the event with the given id", tags = {
-			"Event", "Workflow" })
+	@ApiOperation(value = "Delete a specific Event", notes = "Deletes the event with the given id", tags = { "Event",
+			"Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of delete", response = SuccessResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -222,8 +224,8 @@ public class EventController extends PiazzaRestController {
 
 			// Broker the request to pz-workflow
 			restTemplate.delete(String.format("%s/v2/%s/%s", WORKFLOW_URL, "event", eventId), String.class);
-			return new ResponseEntity<PiazzaResponse>(
-					new SuccessResponse("Event " + eventId + " was deleted successfully", "Gateway"), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Event " + eventId
+					+ " was deleted successfully", "Gateway"), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Event %s by user %s: %s", eventId,
@@ -250,8 +252,9 @@ public class EventController extends PiazzaRestController {
 	public ResponseEntity<?> getEventTypes(
 			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			Principal user) {
 		try {
 			// Log the request
@@ -259,8 +262,8 @@ public class EventController extends PiazzaRestController {
 					String.format("User %s has requested a list of Event Types.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s/v2/%s?page=%s&per_page=%s&order=%s&sort_by=%s", WORKFLOW_URL, "eventType",
-					page, pageSize, order, key != null ? key : "");
+			String url = String.format("%s/v2/%s?page=%s&perPage=%s&order=%s&sortBy=%s", WORKFLOW_URL, "eventType",
+					page, perPage, order, sortBy != null ? sortBy : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -295,8 +298,9 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the message
-			logger.log(String.format("User %s has requested a new Event Type to be created.",
-					gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s has requested a new Event Type to be created.",
+							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s", WORKFLOW_URL, "eventType");
 			WorkflowResponse response = restTemplate.postForObject(url, om.writeValueAsString(eventType),
@@ -304,8 +308,8 @@ public class EventController extends PiazzaRestController {
 			return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Creating Event Type by user %s: %s", gatewayUtil.getPrincipalName(user),
-					exception.getMessage());
+			String error = String.format("Error Creating Event Type by user %s: %s",
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -333,8 +337,9 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested information for Event Type %s",
-					gatewayUtil.getPrincipalName(user), eventTypeId), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s has requested information for Event Type %s",
+							gatewayUtil.getPrincipalName(user), eventTypeId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "eventType", eventTypeId);
 			String response = restTemplate.getForObject(url, String.class);
@@ -376,9 +381,8 @@ public class EventController extends PiazzaRestController {
 			// Proxy the request to Workflow
 			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "eventType", eventTypeId);
 			restTemplate.delete(url);
-			return new ResponseEntity<PiazzaResponse>(
-					new SuccessResponse("EventType " + eventTypeId + " was deleted successfully", "Gateway"),
-					HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("EventType " + eventTypeId
+					+ " was deleted successfully", "Gateway"), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Event Type ID %s by user %s: %s", eventTypeId,
