@@ -133,13 +133,14 @@ public class DeploymentTests {
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = deploymentController.createDeployment(accessJob, user);
-		
+
 		// Verify
 		assertTrue(((JobResponse) entity.getBody()).jobId.equals("654321"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		Mockito.doThrow(new Exception("Kafka Blows Up")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class), anyString());
+		Mockito.doThrow(new Exception("Kafka Blows Up")).when(gatewayUtil)
+				.sendJobRequest(any(PiazzaJobRequest.class), anyString());
 		entity = deploymentController.createDeployment(accessJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
@@ -192,7 +193,8 @@ public class DeploymentTests {
 
 		// Verify
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(((DeploymentResponse) response).deployment.getId().equalsIgnoreCase(mockDeployment.getId()));
+		assertTrue(((DeploymentResponse) response).deployment.getDeploymentId().equalsIgnoreCase(
+				mockDeployment.getDeploymentId()));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test an Exception

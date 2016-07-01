@@ -337,7 +337,7 @@ public class ServiceController extends PiazzaRestController {
 	 * 
 	 * @param page
 	 *            The start page
-	 * @param pageSize
+	 * @param perPage
 	 *            The size per page
 	 * @param keyword
 	 *            The keywords to search on
