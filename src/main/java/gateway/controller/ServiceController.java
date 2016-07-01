@@ -124,8 +124,8 @@ public class ServiceController extends PiazzaRestController {
 			return new ResponseEntity<PiazzaResponse>(response, status);
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Registering Service by user %s: %s", gatewayUtil.getPrincipalName(user),
-					exception.getMessage());
+			String error = String.format("Error Registering Service by user %s: %s",
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -145,7 +145,8 @@ public class ServiceController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.GET, produces = "application/json")
 	@ApiOperation(value = "Retrieve Service information", notes = "Retrieves the information and metadata for the specified Service matching the ID.", tags = "Service")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Service object.", response = ServiceResponse.class),
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The Service object.", response = ServiceResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getService(
 			@ApiParam(value = "The ID of the Service to retrieve.", required = true) @PathVariable(value = "serviceId") String serviceId,
@@ -192,8 +193,8 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested Service deletion of %s", gatewayUtil.getPrincipalName(user),
-					serviceId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested Service deletion of %s",
+					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
 
 			// Proxy the request to the Service Controller instance
 			String url = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
@@ -235,8 +236,8 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user), serviceId),
-					PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user),
+					serviceId), PiazzaLogger.INFO);
 
 			// Proxy the request to the Service Controller instance
 			HttpHeaders theHeaders = new HttpHeaders();
@@ -244,20 +245,23 @@ public class ServiceController extends PiazzaRestController {
 			theHeaders.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<Service> request = new HttpEntity<Service>(serviceData, theHeaders);
 			String serviceControllerUrl = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
-			ResponseEntity<PiazzaResponse> response = restTemplate.exchange(serviceControllerUrl, HttpMethod.PUT, request, PiazzaResponse.class);
+			ResponseEntity<PiazzaResponse> response = restTemplate.exchange(serviceControllerUrl, HttpMethod.PUT,
+					request, PiazzaResponse.class);
 
 			if (response.getBody() instanceof ErrorResponse) {
-				return new ResponseEntity<PiazzaResponse>(
-						new ErrorResponse(((ErrorResponse) (response.getBody())).message, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(
+						((ErrorResponse) (response.getBody())).message, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 			} else {
-				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Update service successful", "Gateway"), HttpStatus.OK);
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Update service successful", "Gateway"),
+						HttpStatus.OK);
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId, gatewayUtil.getPrincipalName(user),
-					exception.getMessage());
+			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 
 		}
 	}
@@ -269,7 +273,7 @@ public class ServiceController extends PiazzaRestController {
 	 * 
 	 * @param page
 	 *            The start page
-	 * @param pageSize
+	 * @param perPage
 	 *            The size per page
 	 * @param keyword
 	 *            The keywords to search on
@@ -287,15 +291,17 @@ public class ServiceController extends PiazzaRestController {
 	public ResponseEntity<PiazzaResponse> getServices(
 			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Filter for the username that published the service.") @RequestParam(value = "userName", required = false) String userName,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = "asc") String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Proxy the request to the Service Controller
-			String url = String.format("%s/%s?page=%s&per_page=%s", SERVICECONTROLLER_URL, "service", page, pageSize);
+			String url = String.format("%s/%s?page=%s&perPage=%s", SERVICECONTROLLER_URL, "service", page, perPage);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
@@ -303,6 +309,13 @@ public class ServiceController extends PiazzaRestController {
 			// Add username if specified
 			if ((userName != null) && (userName.isEmpty() == false)) {
 				url = String.format("%s&userName=%s", url, userName);
+			}
+			// Sort by and order
+			if ((order != null) && (order.isEmpty() == false)) {
+				url = String.format("%s&order=%s", url, order);
+			}
+			if ((sortBy != null) && (sortBy.isEmpty() == false)) {
+				url = String.format("%s&sortBy=%s", url, sortBy);
 			}
 			PiazzaResponse servicesResponse = restTemplate.getForObject(url, PiazzaResponse.class);
 			HttpStatus status = servicesResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
@@ -324,7 +337,7 @@ public class ServiceController extends PiazzaRestController {
 	 * 
 	 * @param page
 	 *            The start page
-	 * @param pageSize
+	 * @param perPage
 	 *            The size per page
 	 * @param keyword
 	 *            The keywords to search on
@@ -342,16 +355,18 @@ public class ServiceController extends PiazzaRestController {
 	public ResponseEntity<PiazzaResponse> getServicesForCurrentUser(
 			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "per_page", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer pageSize,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = "asc") String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			Principal user) {
-		return getServices(keyword, page, pageSize, gatewayUtil.getPrincipalName(user), user);
+		return getServices(keyword, page, perPage, gatewayUtil.getPrincipalName(user), order, sortBy, user);
 	}
 
 	/**
 	 * Proxies an ElasticSearch DSL query to the Pz-Search component to return a
 	 * list of Service items.
 	 * 
-	 * @see http
+	 * @see http 
 	 *      ://pz-swagger.stage.geointservices.io/#!/Service/post_service_query
 	 * 
 	 * @return The list of Services matching the query.
@@ -367,8 +382,9 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s sending a complex query for Search Services.",
-					gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(
+					String.format("User %s sending a complex query for Search Services.",
+							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);

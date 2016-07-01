@@ -133,13 +133,14 @@ public class DeploymentTests {
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = deploymentController.createDeployment(accessJob, user);
-		
+
 		// Verify
 		assertTrue(((JobResponse) entity.getBody()).jobId.equals("654321"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		Mockito.doThrow(new Exception("Kafka Blows Up")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class), anyString());
+		Mockito.doThrow(new Exception("Kafka Blows Up")).when(gatewayUtil)
+				.sendJobRequest(any(PiazzaJobRequest.class), anyString());
 		entity = deploymentController.createDeployment(accessJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
@@ -155,11 +156,11 @@ public class DeploymentTests {
 		DeploymentListResponse mockResponse = new DeploymentListResponse();
 		mockResponse.data = new ArrayList<Deployment>();
 		mockResponse.getData().add(mockDeployment);
-		mockResponse.pagination = new Pagination(1, 0, 10);
+		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
 
 		// Test
-		ResponseEntity<PiazzaResponse> entity = deploymentController.getDeployment(null, 0, 10, user);
+		ResponseEntity<PiazzaResponse> entity = deploymentController.getDeployment(null, 0, 10, "asc", "test", user);
 		PiazzaResponse response = entity.getBody();
 
 		// Verify
@@ -171,7 +172,7 @@ public class DeploymentTests {
 
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockError);
-		entity = deploymentController.getDeployment(null, 0, 10, user);
+		entity = deploymentController.getDeployment(null, 0, 10, "asc", "test", user);
 		response = entity.getBody();
 		assertTrue(response instanceof ErrorResponse);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
@@ -192,7 +193,8 @@ public class DeploymentTests {
 
 		// Verify
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(((DeploymentResponse) response).deployment.getId().equalsIgnoreCase(mockDeployment.getId()));
+		assertTrue(((DeploymentResponse) response).deployment.getDeploymentId().equalsIgnoreCase(
+				mockDeployment.getDeploymentId()));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test an Exception
