@@ -84,6 +84,7 @@ public class JobTests {
 	private Principal user;
 	private Job mockJob;
 	private ErrorResponse mockError;
+	private JobErrorResponse mockJobError;
 
 	/**
 	 * Initialize mock objects.
@@ -95,6 +96,7 @@ public class JobTests {
 
 		// Mock a common error we can use to test
 		mockError = new ErrorResponse("Job Not Found", "Gateway");
+		mockJobError = new JobErrorResponse("1234", "Job Not Found", "Gateway");
 
 		// Mock a Job
 		mockJob = new Job();
@@ -141,11 +143,11 @@ public class JobTests {
 		assertTrue(response.submittedBy.equals("Test User 2"));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockError);
+		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockJobError);
 		entity = jobController.getJobStatus("123456", user);
-		assertTrue(entity.getBody() instanceof ErrorResponse);
+		assertTrue(entity.getBody() instanceof JobErrorResponse);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		ErrorResponse error = (ErrorResponse) entity.getBody();
+		JobErrorResponse error = (JobErrorResponse) entity.getBody();
 		assertTrue(error.message.contains("Job Not Found"));
 	}
 
