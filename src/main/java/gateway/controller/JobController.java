@@ -105,7 +105,7 @@ public class JobController extends PiazzaRestController {
 			// Proxy the request to the Job Manager
 			PiazzaResponse jobStatusResponse = restTemplate.getForObject(
 					String.format("%s/%s/%s", JOBMANAGER_URL, "job", jobId), PiazzaResponse.class);
-			HttpStatus status = jobStatusResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+			HttpStatus status = jobStatusResponse instanceof JobErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
 					: HttpStatus.OK;
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(jobStatusResponse, status);
