@@ -105,6 +105,9 @@ public class ServiceController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s requested Service registration.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
+			// TODO remove logging
+			if (service != null)
+			   logger.log("The service that was received is" + service.toString(), PiazzaLogger.INFO);
 
 			// Populate the authoring field in the Service Metadata
 			if (service.getResourceMetadata() == null) {
