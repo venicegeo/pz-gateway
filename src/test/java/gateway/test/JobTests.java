@@ -137,10 +137,10 @@ public class JobTests {
 
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
-		assertTrue(response.jobId.equals("123456"));
-		assertTrue(response.status.equalsIgnoreCase(StatusUpdate.STATUS_RUNNING));
-		assertTrue(response.progress.getPercentComplete().equals(50));
-		assertTrue(response.submittedBy.equals("Test User 2"));
+		assertTrue(response.data.jobId.equals("123456"));
+		assertTrue(response.data.status.equalsIgnoreCase(StatusUpdate.STATUS_RUNNING));
+		assertTrue(response.data.progress.getPercentComplete().equals(50));
+		assertTrue(response.data.submittedBy.equals("Test User 2"));
 
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockJobError);

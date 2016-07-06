@@ -126,7 +126,7 @@ public class GatewayUtil {
 				throw new Exception(((ErrorResponse) jobResponse.getBody()).message);
 			}
 			// Return the Job ID from the response.
-			return ((JobResponse)jobResponse.getBody()).jobId;
+			return ((JobResponse) jobResponse.getBody()).data.getJobId();
 		} catch (Exception exception) {
 			throw new Exception(String.format("Error with Job Manager when Requesting New Piazza Job: %s",
 					exception.getMessage()));
