@@ -105,7 +105,7 @@ public class JobController extends PiazzaRestController {
 			// Proxy the request to the Job Manager
 			PiazzaResponse jobStatusResponse = restTemplate.getForObject(
 					String.format("%s/%s/%s", JOBMANAGER_URL, "job", jobId), PiazzaResponse.class);
-			HttpStatus status = jobStatusResponse instanceof JobErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+			HttpStatus status = jobStatusResponse instanceof JobErrorResponse ? HttpStatus.NOT_FOUND
 					: HttpStatus.OK;
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(jobStatusResponse, status);
@@ -114,7 +114,7 @@ public class JobController extends PiazzaRestController {
 			String error = String.format("Error requesting Job Status for ID %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -165,7 +165,7 @@ public class JobController extends PiazzaRestController {
 			// Check if the response was an error. If so, set the status code
 			// appropriately.
 			if (cancelResponse.getBody() instanceof ErrorResponse) {
-				return new ResponseEntity<PiazzaResponse>(cancelResponse.getBody(), HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<PiazzaResponse>(cancelResponse.getBody(), HttpStatus.NOT_FOUND);
 			} else {
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Job " + jobId
 						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
@@ -175,7 +175,7 @@ public class JobController extends PiazzaRestController {
 			String error = String.format("Error requesting Job Abort for ID %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -217,7 +217,7 @@ public class JobController extends PiazzaRestController {
 			// Check if the response was an error. If so, set the status code
 			// appropriately.
 			if (jobResponse.getBody() instanceof ErrorResponse) {
-				return new ResponseEntity<PiazzaResponse>(jobResponse.getBody(), HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<PiazzaResponse>(jobResponse.getBody(), HttpStatus.NOT_FOUND);
 			} else {
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Job " + jobId
 						+ " was cloned successfully", "Gateway"), HttpStatus.OK);
@@ -227,7 +227,7 @@ public class JobController extends PiazzaRestController {
 			String error = String.format("Error Repeating Job ID %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 

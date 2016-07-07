@@ -202,7 +202,7 @@ public class DeploymentTests {
 		entity = deploymentController.getDeployment("123456", user);
 		response = entity.getBody();
 		assertTrue(response instanceof ErrorResponse);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
 	}
 
 	/**
@@ -224,7 +224,7 @@ public class DeploymentTests {
 		entity = deploymentController.deleteDeployment("123456", user);
 		PiazzaResponse response = entity.getBody();
 		assertTrue(response instanceof ErrorResponse);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
 		assertTrue(((ErrorResponse) response).message.contains("Could Not Delete"));
 	}
 }

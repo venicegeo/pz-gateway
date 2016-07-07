@@ -319,7 +319,7 @@ public class DataController extends PiazzaRestController {
 			// Proxy the request to Pz-Access
 			PiazzaResponse dataResponse = restTemplate.getForObject(
 					String.format("%s/%s/%s", ACCESS_URL, "data", dataId), PiazzaResponse.class);
-			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.NOT_FOUND
 					: HttpStatus.OK;
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(dataResponse, status);
@@ -329,7 +329,7 @@ public class DataController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -360,7 +360,7 @@ public class DataController extends PiazzaRestController {
 					PiazzaResponse.class);
 			// Response
 			if (response.getBody() instanceof ErrorResponse) {
-				return new ResponseEntity<PiazzaResponse>(response.getBody(), HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<PiazzaResponse>(response.getBody(), HttpStatus.NOT_FOUND);
 			} else {
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Data " + dataId
 						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
@@ -371,7 +371,7 @@ public class DataController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -414,7 +414,7 @@ public class DataController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 

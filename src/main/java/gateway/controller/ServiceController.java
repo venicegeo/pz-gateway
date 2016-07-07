@@ -158,7 +158,7 @@ public class ServiceController extends PiazzaRestController {
 			// Proxy the request to the Service Controller instance
 			PiazzaResponse response = restTemplate.getForObject(
 					String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), PiazzaResponse.class);
-			HttpStatus status = response instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR : HttpStatus.OK;
+			HttpStatus status = response instanceof ErrorResponse ? HttpStatus.NOT_FOUND : HttpStatus.OK;
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(response, status);
 		} catch (Exception exception) {
@@ -167,7 +167,7 @@ public class ServiceController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -208,7 +208,7 @@ public class ServiceController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -250,7 +250,7 @@ public class ServiceController extends PiazzaRestController {
 
 			if (response.getBody() instanceof ErrorResponse) {
 				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(
-						((ErrorResponse) (response.getBody())).message, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+						((ErrorResponse) (response.getBody())).message, "Gateway"), HttpStatus.NOT_FOUND);
 			} else {
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Update service successful", "Gateway"),
 						HttpStatus.OK);
@@ -261,7 +261,7 @@ public class ServiceController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 
 		}
 	}

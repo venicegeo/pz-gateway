@@ -150,7 +150,7 @@ public class EventTests {
 		when(restTemplate.getForObject(anyString(), eq(String.class)))
 				.thenThrow(new RestClientException("event error"));
 		response = eventController.getEventInformation("eventId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(response.getStatusCode().equals(HttpStatus.NOT_FOUND));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("event error"));
 	}
@@ -172,7 +172,7 @@ public class EventTests {
 		// Test Exception
 		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString(), eq(String.class));
 		response = eventController.deleteEvent("eventId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(response.getStatusCode().equals(HttpStatus.NOT_FOUND));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 	}
 
@@ -243,7 +243,7 @@ public class EventTests {
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(
 				new RestClientException("event type error"));
 		response = eventController.getEventType("eventTypeId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(response.getStatusCode().equals(HttpStatus.NOT_FOUND));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("event type error"));
 	}
@@ -265,7 +265,7 @@ public class EventTests {
 		// Test Exception
 		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString());
 		response = eventController.deleteEventType("eventTypeId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(response.getStatusCode().equals(HttpStatus.NOT_FOUND));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 	}
 }

@@ -198,7 +198,7 @@ public class AlertTriggerController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -237,7 +237,7 @@ public class AlertTriggerController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -315,7 +315,7 @@ public class AlertTriggerController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -352,7 +352,7 @@ public class AlertTriggerController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 }

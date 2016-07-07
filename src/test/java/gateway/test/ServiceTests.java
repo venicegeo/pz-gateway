@@ -172,7 +172,7 @@ public class ServiceTests {
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenThrow(
 				new RestClientException("No Service"));
 		entity = serviceController.getService("123456", user);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) entity.getBody()).message.contains("No Service"));
 	}
@@ -196,7 +196,7 @@ public class ServiceTests {
 		// Test Exception
 		Mockito.doThrow(new RestClientException("Delete Error")).when(restTemplate).delete(anyString());
 		entity = serviceController.deleteService("123456", false, user);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) entity.getBody()).message.contains("Delete Error"));
 	}
@@ -224,7 +224,7 @@ public class ServiceTests {
 				.when(restTemplate).exchange(any(String.class), eq(HttpMethod.PUT), any(request.getClass()),
 						eq(PiazzaResponse.class));
 		ResponseEntity<PiazzaResponse> entity2 = serviceController.updateService("123456", mockService, user);
-		assertTrue(entity2.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity2.getStatusCode().equals(HttpStatus.NOT_FOUND));
 		assertTrue(entity2.getBody() instanceof ErrorResponse);
 	}
 

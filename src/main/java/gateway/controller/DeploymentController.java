@@ -200,7 +200,7 @@ public class DeploymentController extends PiazzaRestController {
 			// Broker the request to Pz-Access
 			PiazzaResponse deploymentResponse = restTemplate.getForObject(
 					String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), PiazzaResponse.class);
-			HttpStatus status = deploymentResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
+			HttpStatus status = deploymentResponse instanceof ErrorResponse ? HttpStatus.NOT_FOUND
 					: HttpStatus.OK;
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(deploymentResponse, status);
@@ -210,7 +210,7 @@ public class DeploymentController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -249,7 +249,7 @@ public class DeploymentController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					HttpStatus.NOT_FOUND);
 		}
 	}
 }

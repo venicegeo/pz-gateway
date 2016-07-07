@@ -265,7 +265,7 @@ public class DataTests {
 		entity = dataController.getMetadata("123456", user);
 		response = entity.getBody();
 		assertTrue(response instanceof ErrorResponse);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
 	}
 
 	/**
@@ -287,12 +287,12 @@ public class DataTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test an Exception
-		mockEntity = new ResponseEntity<PiazzaResponse>(mockError, HttpStatus.INTERNAL_SERVER_ERROR);
+		mockEntity = new ResponseEntity<PiazzaResponse>(mockError, HttpStatus.NOT_FOUND);
 		when(restTemplate.exchange(anyString(), any(), any(), eq(PiazzaResponse.class))).thenReturn(mockEntity);
 		entity = dataController.deleteData("123456", user);
 		response = entity.getBody();
 		assertTrue(response instanceof ErrorResponse);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
 	}
 
 	/**
@@ -313,7 +313,7 @@ public class DataTests {
 		// Test an Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(PiazzaResponse.class))).thenReturn(mockError);
 		entity = dataController.updateMetadata("123456", mockData.getMetadata(), user);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
 	}
 
