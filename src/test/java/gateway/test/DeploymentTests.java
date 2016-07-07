@@ -135,7 +135,7 @@ public class DeploymentTests {
 		ResponseEntity<PiazzaResponse> entity = deploymentController.createDeployment(accessJob, user);
 
 		// Verify
-		assertTrue(((JobResponse) entity.getBody()).jobId.equals("654321"));
+		assertTrue(((JobResponse) entity.getBody()).data.getJobId().equals("654321"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
@@ -193,7 +193,7 @@ public class DeploymentTests {
 
 		// Verify
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(((DeploymentResponse) response).deployment.getDeploymentId().equalsIgnoreCase(
+		assertTrue(((DeploymentResponse) response).data.getDeploymentId().equalsIgnoreCase(
 				mockDeployment.getDeploymentId()));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
