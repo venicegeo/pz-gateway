@@ -245,7 +245,7 @@ public class JobController extends PiazzaRestController {
 	 *            The user executing the Job
 	 * @return The job ID, or the error if encountered
 	 */
-	@RequestMapping(value = { "/v2/job", "/job" }, method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = { "/job" }, method = RequestMethod.POST, produces = "application/json")
 	@ApiOperation(value = "Executes a registered Service", notes = "Creates a Piazza Job to execute a registered service in the system, with the specified parameters.", tags = {
 			"Job", "Service" })
 	@ApiResponses(value = {
