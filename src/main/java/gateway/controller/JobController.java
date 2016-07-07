@@ -146,7 +146,7 @@ public class JobController extends PiazzaRestController {
 
 			// Create the Request object.
 			PiazzaJobRequest request = new PiazzaJobRequest();
-			request.userName = gatewayUtil.getPrincipalName(user);
+			request.createdBy = gatewayUtil.getPrincipalName(user);
 			request.jobType = new AbortJob(jobId, reason);
 
 			// Send the message through Kafka to delete the Job. This message
@@ -206,7 +206,7 @@ public class JobController extends PiazzaRestController {
 					PiazzaLogger.INFO);
 			// Create the Request Object from the input parameters
 			PiazzaJobRequest request = new PiazzaJobRequest();
-			request.userName = gatewayUtil.getPrincipalName(user);
+			request.createdBy = gatewayUtil.getPrincipalName(user);
 			request.jobType = new RepeatJob(jobId);
 			// Proxy the request to the Job Manager
 			HttpHeaders headers = new HttpHeaders();
@@ -261,7 +261,7 @@ public class JobController extends PiazzaRestController {
 			// Create the Request to send to the Job Manager.
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
-			request.userName = gatewayUtil.getPrincipalName(user);
+			request.createdBy = gatewayUtil.getPrincipalName(user);
 
 			String jobId = gatewayUtil.sendJobRequest(request, null);
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);

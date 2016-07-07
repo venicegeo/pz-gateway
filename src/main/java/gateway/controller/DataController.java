@@ -205,7 +205,7 @@ public class DataController extends PiazzaRestController {
 			job.getData().setDataId(null);
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
-			request.userName = gatewayUtil.getPrincipalName(user);
+			request.createdBy = gatewayUtil.getPrincipalName(user);
 			String jobId = gatewayUtil.sendJobRequest(request, null);
 			// Return the Job ID of the newly created Job
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
@@ -278,7 +278,7 @@ public class DataController extends PiazzaRestController {
 			// Create the Request to send to Kafka
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
-			request.userName = gatewayUtil.getPrincipalName(user);
+			request.createdBy = gatewayUtil.getPrincipalName(user);
 			jobId = gatewayUtil.sendJobRequest(request, jobId);
 			// Return the Job ID of the newly created Job
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
