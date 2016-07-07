@@ -104,7 +104,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			try {
 				// Attempt to set the username of the Job in the Trigger to the
 				// submitting username
-				trigger.job.userName = gatewayUtil.getPrincipalName(user);
+				trigger.job.createdBy = gatewayUtil.getPrincipalName(user);
 			} catch (Exception exception) {
 				logger.log(
 						String.format("Failed to set the username field in Trigger created by User %s: ",

@@ -139,7 +139,7 @@ public class ServiceTests {
 
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
-		assertTrue(response.serviceId.equals("123456"));
+		assertTrue(response.data.getServiceId().equals("123456"));
 
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(PiazzaResponse.class))).thenThrow(
@@ -165,8 +165,8 @@ public class ServiceTests {
 
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
-		assertTrue(response.service.getServiceId().equalsIgnoreCase("123456"));
-		assertTrue(response.service.getResourceMetadata().getName().equalsIgnoreCase("Test"));
+		assertTrue(response.data.getServiceId().equalsIgnoreCase("123456"));
+		assertTrue(response.data.getResourceMetadata().getName().equalsIgnoreCase("Test"));
 
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenThrow(
@@ -191,7 +191,7 @@ public class ServiceTests {
 
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
-		assertTrue(response.serviceId.equalsIgnoreCase("123456"));
+		assertTrue(response.data.getServiceId().equalsIgnoreCase("123456"));
 
 		// Test Exception
 		Mockito.doThrow(new RestClientException("Delete Error")).when(restTemplate).delete(anyString());

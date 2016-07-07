@@ -186,7 +186,7 @@ public class DataTests {
 		// considered a success.
 		assertTrue(response instanceof JobResponse == true);
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(((JobResponse) response).jobId.equalsIgnoreCase("123456"));
+		assertTrue(((JobResponse) response).data.getJobId().equalsIgnoreCase("123456"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test an Exception
@@ -238,7 +238,7 @@ public class DataTests {
 		response = entity.getBody();
 
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(((JobResponse) response).jobId.equalsIgnoreCase("123456"));
+		assertTrue(((JobResponse) response).data.getJobId().equalsIgnoreCase("123456"));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 	}
 
