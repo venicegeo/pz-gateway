@@ -102,7 +102,7 @@ public class DeploymentController extends PiazzaRestController {
 							gatewayUtil.getPrincipalName(user), job.getDeploymentType(), job.getDataId()),
 					PiazzaLogger.INFO);
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
-			jobRequest.userName = gatewayUtil.getPrincipalName(user);
+			jobRequest.createdBy = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = job;
 			String jobId = gatewayUtil.sendJobRequest(jobRequest, null);
 			// Send the response back to the user

@@ -119,7 +119,7 @@ public class ServiceController extends PiazzaRestController {
 
 			// Create the Service Job to forward
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
-			jobRequest.userName = gatewayUtil.getPrincipalName(user);
+			jobRequest.createdBy = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = new RegisterServiceJob(service);
 			// Proxy the request to the Service Controller
 			PiazzaResponse response = restTemplate.postForObject(
@@ -346,7 +346,7 @@ public class ServiceController extends PiazzaRestController {
 	 *            The size per page
 	 * @param keyword
 	 *            The keywords to search on
-	 * @param userName
+	 * @param createdBy
 	 *            Filter services created by a certain user
 	 * @param user
 	 *            The user submitting the request

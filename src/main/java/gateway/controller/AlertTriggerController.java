@@ -104,14 +104,14 @@ public class AlertTriggerController extends PiazzaRestController {
 			try {
 				// Attempt to set the username of the Job in the Trigger to the
 				// submitting username
-				trigger.job.userName = gatewayUtil.getPrincipalName(user);
+				trigger.job.createdBy = gatewayUtil.getPrincipalName(user);
 			} catch (Exception exception) {
 				logger.log(
 						String.format("Failed to set the username field in Trigger created by User %s: ",
 								gatewayUtil.getPrincipalName(user), exception.getMessage()), PiazzaLogger.WARNING);
 			}
 			// Proxy the request to Workflow
-			String url = String.format("%s/v2/%s", WORKFLOW_URL, "trigger");
+			String url = String.format("%s/%s", WORKFLOW_URL, "trigger");
 			WorkflowResponse response = restTemplate.postForObject(url, om.writeValueAsString(trigger),
 					WorkflowResponse.class);
 			return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
@@ -149,7 +149,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested a list of Triggers.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s/v2/%s?page=%s&perPage=%s&order=%s&sortBy=%s&key=%s", WORKFLOW_URL,
+			String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&key=%s", WORKFLOW_URL,
 					"trigger", page, perPage, order, sortBy != null ? sortBy : "", key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
@@ -189,7 +189,7 @@ public class AlertTriggerController extends PiazzaRestController {
 					String.format("User %s has requested information for Trigger %s",
 							gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "trigger", triggerId);
+			String url = String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId);
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
@@ -227,7 +227,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested deletion of Trigger %s",
 					gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "trigger", triggerId);
+			String url = String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId);
 			restTemplate.delete(url);
 			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Trigger " + triggerId
 					+ " was deleted successfully", "Gateway"), HttpStatus.OK);
@@ -266,7 +266,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested a list of Alerts.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Broker the request to Workflow
-			String url = String.format("%s/v2/%s?page=%s&perPage=%s&order=%s&sortBy=%s&triggerId=%s&key=%s",
+			String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&triggerId=%s&key=%s",
 					WORKFLOW_URL, "alert", page, perPage, order, sortBy != null ? sortBy : "",
 					triggerId != null ? triggerId : "", key != null ? key : "");
 			String response = restTemplate.getForObject(url, String.class);
@@ -305,7 +305,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested deletion of Alert %s", gatewayUtil.getPrincipalName(user),
 					alertId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "alert", alertId);
+			String url = String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId);
 			restTemplate.delete(url);
 			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Alert " + alertId
 					+ " was deleted successfully", "Gateway"), HttpStatus.OK);
@@ -343,7 +343,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested information for Alert %s",
 					gatewayUtil.getPrincipalName(user), alertId), PiazzaLogger.INFO);
 			// Proxy the request to Workflow
-			String url = String.format("%s/v2/%s/%s", WORKFLOW_URL, "alert", alertId);
+			String url = String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId);
 			String response = restTemplate.getForObject(url, String.class);
 			return new ResponseEntity<String>(response, HttpStatus.OK);
 		} catch (Exception exception) {
