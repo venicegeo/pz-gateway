@@ -17,6 +17,8 @@ package gateway.controller;
 
 import java.security.Principal;
 
+import javax.validation.Valid;
+
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
 import io.swagger.annotations.Api;
@@ -94,7 +96,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The ID of the newly created Trigger", response = WorkflowResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> createTrigger(
-			@ApiParam(value = "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.", required = true) @RequestBody Trigger trigger,
+			@ApiParam(value = "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.", required = true)  @Valid @RequestBody Trigger trigger,
 			Principal user) {
 		try {
 			// Log the message

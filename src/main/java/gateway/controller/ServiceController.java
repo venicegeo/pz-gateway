@@ -237,7 +237,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> updateService(
 			@ApiParam(value = "The ID of the Service to Update.", required = true) @PathVariable(value = "serviceId") String serviceId,
-			@ApiParam(value = "The Service Metadata. All properties specified in the Service data here will overwrite the existing properties of the Service.", required = true, name = "service") @RequestBody Service serviceData,
+			@ApiParam(value = "The Service Metadata. All properties specified in the Service data here will overwrite the existing properties of the Service.", required = true, name = "service") @Valid @RequestBody Service serviceData,
 			Principal user) {
 		try {
 			// Log the request
@@ -383,7 +383,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = ServiceListResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> searchServices(
-			@ApiParam(value = "The Query string for the Search component.", name = "search", required = true) @RequestBody SearchRequest query,
+			@ApiParam(value = "The Query string for the Search component.", name = "search", required = true) @Valid @RequestBody SearchRequest query,
 			Principal user) {
 		try {
 			// Log the request
