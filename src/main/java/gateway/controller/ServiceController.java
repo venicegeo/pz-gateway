@@ -25,6 +25,8 @@ import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
+import javax.validation.Valid;
+
 import model.job.metadata.ResourceMetadata;
 import model.job.type.RegisterServiceJob;
 import model.request.PiazzaJobRequest;
@@ -99,7 +101,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The ID of the newly created Service", response = ServiceIdResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> registerService(
-			@ApiParam(value = "The metadata for the service. This includes the URL, parameters, inputs and outputs. It also includes other release metadata such as classification and availability.", required = true) @RequestBody Service service,
+			@ApiParam(value = "The metadata for the service. This includes the URL, parameters, inputs and outputs. It also includes other release metadata such as classification and availability.", required = true) @Valid @RequestBody Service service,
 			Principal user) {
 		try {
 			// Log the request
