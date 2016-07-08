@@ -84,7 +84,7 @@ public class JobTests {
 	private Principal user;
 	private Job mockJob;
 	private ErrorResponse mockError;
-	private JobErrorResponse mockJobError;
+	private ResponseEntity<PiazzaResponse> mockJobError;
 
 	/**
 	 * Initialize mock objects.
@@ -96,7 +96,7 @@ public class JobTests {
 
 		// Mock a common error we can use to test
 		mockError = new ErrorResponse("Job Not Found", "Gateway");
-		mockJobError = new JobErrorResponse("1234", "Job Not Found", "Gateway");
+		mockJobError = new ResponseEntity<PiazzaResponse>(new JobErrorResponse("1234", "Job Not Found", "Gateway"), HttpStatus.NOT_FOUND);
 
 		// Mock a Job
 		mockJob = new Job();
@@ -128,8 +128,8 @@ public class JobTests {
 	@Test
 	public void testGetStatus() {
 		// Mock
-		JobStatusResponse mockResponse = new JobStatusResponse(mockJob);
-		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
+		ResponseEntity<PiazzaResponse> mockResponse = new ResponseEntity<PiazzaResponse>(new JobStatusResponse(mockJob), HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = jobController.getJobStatus("123456", user);
@@ -143,7 +143,7 @@ public class JobTests {
 		assertTrue(response.data.createdBy.equals("Test User 2"));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(PiazzaResponse.class))).thenReturn(mockJobError);
+		when(restTemplate.getForEntity(anyString(), eq(PiazzaResponse.class))).thenReturn(mockJobError);
 		entity = jobController.getJobStatus("123456", user);
 		assertTrue(entity.getBody() instanceof JobErrorResponse);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
@@ -171,7 +171,7 @@ public class JobTests {
 		when(restTemplate.postForEntity(anyString(), any(), eq(PiazzaResponse.class))).thenThrow(
 				new RestClientException("Could Not Abort"));
 		entity = jobController.abortJob("123456", "Not Needed", user);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof JobErrorResponse);
 		JobErrorResponse error = (JobErrorResponse) entity.getBody();
 		assertTrue(error.message.contains("Could Not Abort"));
@@ -197,7 +197,7 @@ public class JobTests {
 		when(restTemplate.postForEntity(anyString(), any(), eq(PiazzaResponse.class))).thenThrow(
 				new RestClientException("Could Not Repeat"));
 		entity = jobController.repeatJob("123456", user);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof JobErrorResponse);
 		JobErrorResponse error = (JobErrorResponse) entity.getBody();
 		assertTrue(error.message.contains("Could Not Repeat"));

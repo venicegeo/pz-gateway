@@ -37,6 +37,7 @@ import model.workflow.EventType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -86,7 +87,7 @@ public class EventController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return The list of events, or the appropriate error.
 	 */
-	@RequestMapping(value = "/event", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/event", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get all Events", notes = "Retrieves a list of all Events", tags = { "Event", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Events.", response = EventListResponse.class),
@@ -129,7 +130,7 @@ public class EventController extends PiazzaRestController {
 	 *            The user submitting the event
 	 * @return The event ID, or an error.
 	 */
-	@RequestMapping(value = "/event", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/event", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Creates an Event for the Event Type", notes = "Sends an event to the Piazza workflow component", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = {
@@ -168,7 +169,7 @@ public class EventController extends PiazzaRestController {
 	 *            The user executing the request
 	 * @return The event metadata, or an error
 	 */
-	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get a specifc Event", notes = "Gets a specific Event by it's ID, that corresponds with the Event Type", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The requested Event.", response = Event.class),
@@ -208,7 +209,7 @@ public class EventController extends PiazzaRestController {
 	 *            The user executing the request
 	 * @return 200 OK, or an error
 	 */
-	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.DELETE, produces = "application/json")
+	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Delete a specific Event", notes = "Deletes the event with the given id", tags = { "Event",
 			"Workflow" })
 	@ApiResponses(value = {
@@ -243,7 +244,7 @@ public class EventController extends PiazzaRestController {
 	 * 
 	 * @return The list of event types, or an error.
 	 */
-	@RequestMapping(value = "/eventType", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/eventType", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "List Event Types", notes = "Returns all event types that have been registered with the Piazza Workflow service", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = {
@@ -287,7 +288,7 @@ public class EventController extends PiazzaRestController {
 	 *            The user making the request
 	 * @return The ID of the event type, or an error.
 	 */
-	@RequestMapping(value = "/eventType", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/eventType", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Register an Event Type", notes = "Defines an Event Type with the Workflow component", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = {
@@ -327,7 +328,7 @@ public class EventController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return Event type information, or an error
 	 */
-	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get an Event Type", notes = "Returns the metadata for a specific Event Type", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Event Type metadata.", response = EventType.class),
@@ -365,7 +366,7 @@ public class EventController extends PiazzaRestController {
 	 *            The user executing the request
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
-	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.DELETE, produces = "application/json")
+	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Delete an Event Type", notes = "Deletes a specific Event Type using the specified by the Id", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = {
