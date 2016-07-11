@@ -406,7 +406,7 @@ public class DataController extends PiazzaRestController {
 			String error = String.format("Error Updating Metadata for item %s by user %s: %s", dataId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 

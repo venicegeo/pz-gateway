@@ -253,9 +253,6 @@ public class DeploymentController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			if( exception instanceof HttpClientErrorException && ((HttpClientErrorException)exception).getStatusCode().compareTo(HttpStatus.NOT_FOUND) == 0) {
-				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(String.format("Deployment not found: %s", deploymentId), "Gateway"), HttpStatus.NOT_FOUND);
-			}			
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Deployment by ID %s by user %s: %s", deploymentId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());

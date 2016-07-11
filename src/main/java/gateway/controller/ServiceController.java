@@ -176,7 +176,7 @@ public class ServiceController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.NOT_FOUND);
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -219,7 +219,7 @@ public class ServiceController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.NOT_FOUND);
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -266,7 +266,7 @@ public class ServiceController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.NOT_FOUND);
+					HttpStatus.INTERNAL_SERVER_ERROR);
 
 		}
 	}
