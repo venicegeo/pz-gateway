@@ -251,7 +251,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return The list of Alerts, or an error
 	 */
 	@RequestMapping(value = "/alert", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the alerts", tags = { "Alert", "Workflow" })
+	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the Alerts.", tags = { "Alert", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Alerts owned by the current User.", response = AlertListResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -261,7 +261,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "A general keyword search to apply to all alerts.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
-			@ApiParam(value = "The TriggerID by which to filter results.") @RequestParam(value = "triggerId", required = false) String triggerId,
+			@ApiParam(value = "The Trigger Id by which to filter results.") @RequestParam(value = "triggerId", required = false) String triggerId,
 			Principal user) {
 		try {
 			// Log the request
@@ -300,7 +300,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "Message indicating Alert was deleted successfully", response = SuccessResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> deleteAlert(
-			@ApiParam(value = "The ID of the Alert to Delete.", required = true) @PathVariable(value = "alertId") String alertId,
+			@ApiParam(value = "The Id of the Alert to Delete.", required = true) @PathVariable(value = "alertId") String alertId,
 			Principal user) {
 		try {
 			// Log the request
