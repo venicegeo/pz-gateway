@@ -39,15 +39,10 @@ public class UserDetailsBean {
 	@Value("${security.url}")
 	private String SECURITY_URL;
 
-	public boolean getAuthenticationDecision(String username, String credential) {
+	public boolean getAuthenticationDecision(String uuid) {
 		try {
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
-
-			HttpEntity<PiazzaVerificationRequest> entity = new HttpEntity<PiazzaVerificationRequest>(
-					new PiazzaVerificationRequest(username, credential), headers);
 			String url = String.format("%s/%s", SECURITY_URL, "/v2/verification");
-			return new RestTemplate().postForEntity(url, entity, Boolean.class).getBody();
+			return new RestTemplate().postForEntity(url, new PiazzaVerificationRequest(uuid), Boolean.class).getBody();
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.log(e.getMessage(), PiazzaLogger.ERROR);
@@ -56,20 +51,14 @@ public class UserDetailsBean {
 	}
 
 	class PiazzaVerificationRequest {
-		private String username;
-		private String credential;
+		private String uuid;
 
-		PiazzaVerificationRequest(String username, String credential) {
-			this.username = username;
-			this.credential = credential;
+		PiazzaVerificationRequest(String uuid) {
+			this.uuid = uuid;
 		}
 
-		public String getUsername() {
-			return username;
-		}
-
-		public String getCredential() {
-			return credential;
+		public String getUuid() {
+			return uuid;
 		}
 	}
 }

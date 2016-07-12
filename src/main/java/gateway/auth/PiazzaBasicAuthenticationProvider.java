@@ -43,11 +43,10 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-		String name = authentication.getName();
-		Object credential = authentication.getCredentials();
+		String uuid = authentication.getName();
 
-		if (userDetails.getAuthenticationDecision(name, credential.toString())) {
-			return new UsernamePasswordAuthenticationToken(name, credential, new ArrayList<>());
+		if (userDetails.getAuthenticationDecision(uuid)) {
+			return new UsernamePasswordAuthenticationToken(uuid, null, new ArrayList<>());
 		} else {
 			return null;
 		}
