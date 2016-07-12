@@ -102,10 +102,14 @@ public class Application extends SpringBootServletInitializer {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class).httpBasic()
-					.authenticationEntryPoint(basicEntryPoint).and().authorizeRequests().anyRequest().authenticated()
-					.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().csrf()
-					.disable();
+			http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class)
+				.httpBasic().authenticationEntryPoint(basicEntryPoint)
+				.and()
+				.authorizeRequests().antMatchers("/key", "/").anonymous().anyRequest().authenticated()
+				.and()
+				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				.and()
+				.csrf().disable();
 		}
 
 		@Bean

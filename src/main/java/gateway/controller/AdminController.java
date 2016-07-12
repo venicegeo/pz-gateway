@@ -16,17 +16,23 @@
 package gateway.controller;
 
 import gateway.controller.util.PiazzaRestController;
+import model.response.ErrorResponse;
+import model.response.PiazzaResponse;
+import util.PiazzaLogger;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * REST Controller that defines administrative end points that reference
@@ -39,6 +45,8 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin
 @RestController
 public class AdminController extends PiazzaRestController {
+	@Autowired
+	private PiazzaLogger logger;
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
 	@Value("${SPACE}")
@@ -95,6 +103,25 @@ public class AdminController extends PiazzaRestController {
 		stats.put("Security", SECURITY_URL);
 		// Return
 		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
+	}
+
+	/**
+	 * Returns a user's UUID for subsequent authentication with pz-gateway
+	 * endpoints.
+	 * 
+	 * @return Component information
+	 */
+	@RequestMapping(value = "/key", method = RequestMethod.POST)
+	public ResponseEntity<PiazzaResponse> getUUIDForUser(@RequestBody Map<String, String> body) {
+		try {
+			return new RestTemplate().postForEntity(SECURITY_URL + "/key", body, PiazzaResponse.class);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error retrieving UUID: %s", exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	/**

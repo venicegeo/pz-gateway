@@ -36,7 +36,7 @@ import util.PiazzaLogger;
 public class UserDetailsBean {
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("#{'${security.protocol}' + '://' + '${security.prefix}' + '.' + '${DOMAIN}' + ':' + '${security.port}'}")
+	@Value("${security.url}")
 	private String SECURITY_URL;
 
 	public boolean getAuthenticationDecision(String username, String credential) {
@@ -46,7 +46,7 @@ public class UserDetailsBean {
 
 			HttpEntity<PiazzaVerificationRequest> entity = new HttpEntity<PiazzaVerificationRequest>(
 					new PiazzaVerificationRequest(username, credential), headers);
-			String url = String.format("%s/%s", SECURITY_URL, "/verification");
+			String url = String.format("%s/%s", SECURITY_URL, "/v2/verification");
 			return new RestTemplate().postForEntity(url, entity, Boolean.class).getBody();
 		} catch (Exception e) {
 			e.printStackTrace();
