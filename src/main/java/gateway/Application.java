@@ -48,7 +48,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 /**
- * Spring-boot configuration for the Gateway service.
+ * Spring-boot configuration for the Gateway service. 
  * 
  * @author Patrick.Doody, Russell.Orf
  * 
