@@ -24,6 +24,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
+import model.response.AuthenticationResponse;
+import util.PiazzaLogger;
+
 /**
  * Custom Authentication Provider to authentication the provided username and
  * credential in the 'Authorization' request header field.
@@ -33,7 +36,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider {
-
+	@Autowired
+	private PiazzaLogger logger;
 	@Autowired
 	private UserDetailsBean userDetails;
 
@@ -43,13 +47,17 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-		String uuid = authentication.getName();
-
-		if (userDetails.getAuthenticationDecision(uuid)) {
-			return new UsernamePasswordAuthenticationToken(uuid, null, new ArrayList<>());
-		} else {
-			return null;
+		try {
+			AuthenticationResponse response = userDetails.getAuthenticationDecision(authentication.getName());
+			if( response.getAuthenticated() ) {
+				return new UsernamePasswordAuthenticationToken(response.getUsername(), null, new ArrayList<>());
+			}
+		} catch(Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error retrieving UUID: %s", exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);			
 		}
+		return null;		
 	}
 
 	@Override

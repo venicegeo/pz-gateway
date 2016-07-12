@@ -15,15 +15,11 @@
  **/
 package gateway.auth;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import util.PiazzaLogger;
+import model.response.AuthenticationResponse;
 
 /**
  * Bean that communicates with the pz-security project for authentication
@@ -34,20 +30,12 @@ import util.PiazzaLogger;
  */
 @Service
 public class UserDetailsBean {
-	@Autowired
-	private PiazzaLogger logger;
 	@Value("${security.url}")
 	private String SECURITY_URL;
 
-	public boolean getAuthenticationDecision(String uuid) {
-		try {
-			String url = String.format("%s/%s", SECURITY_URL, "/v2/verification");
-			return new RestTemplate().postForEntity(url, new PiazzaVerificationRequest(uuid), Boolean.class).getBody();
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.log(e.getMessage(), PiazzaLogger.ERROR);
-			return false;
-		}
+	public AuthenticationResponse getAuthenticationDecision(String uuid) {
+		String url = String.format("%s/%s", SECURITY_URL, "/v2/verification");
+		return new RestTemplate().postForEntity(url, new PiazzaVerificationRequest(uuid), AuthenticationResponse.class).getBody();
 	}
 
 	class PiazzaVerificationRequest {
