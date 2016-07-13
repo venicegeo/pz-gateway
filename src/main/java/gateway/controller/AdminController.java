@@ -23,12 +23,16 @@ import util.PiazzaLogger;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,6 +51,8 @@ import org.springframework.web.client.RestTemplate;
 public class AdminController extends PiazzaRestController {
 	@Autowired
 	private PiazzaLogger logger;
+	@Autowired
+	private HttpServletRequest request;	
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
 	@Value("${SPACE}")
@@ -111,10 +117,12 @@ public class AdminController extends PiazzaRestController {
 	 * 
 	 * @return Component information
 	 */
-	@RequestMapping(value = "/key", method = RequestMethod.POST)
-	public ResponseEntity<PiazzaResponse> getUUIDForUser(@RequestBody Map<String, String> body) {
+	@RequestMapping(value = "/key", method = RequestMethod.GET)
+	public ResponseEntity<PiazzaResponse> getUUIDForUser() {
 		try {
-			return new RestTemplate().postForEntity(SECURITY_URL + "/key", body, PiazzaResponse.class);
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Authorization", request.getHeader("Authorization"));
+			return new RestTemplate().exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), PiazzaResponse.class);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error retrieving UUID: %s", exception.getMessage());

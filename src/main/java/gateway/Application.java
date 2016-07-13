@@ -40,6 +40,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
@@ -100,12 +101,17 @@ public class Application extends SpringBootServletInitializer {
 			auth.authenticationProvider(basicAuthProvider);
 		}
 
+	    @Override
+	    public void init(WebSecurity web) {
+	        web.ignoring().antMatchers("/key").antMatchers("/");
+	    }
+		
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class)
 				.httpBasic().authenticationEntryPoint(basicEntryPoint)
 				.and()
-				.authorizeRequests().antMatchers("/key", "/").anonymous().anyRequest().authenticated()
+				.authorizeRequests().anyRequest().authenticated()
 				.and()
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				.and()
