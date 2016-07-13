@@ -100,15 +100,16 @@ public class Application extends SpringBootServletInitializer {
 		protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 			auth.authenticationProvider(basicAuthProvider);
 		}
-
-	    @Override
-	    public void init(WebSecurity web) {
-	        web.ignoring().antMatchers("/key").antMatchers("/");
-	    }
+		
+		@Override
+		public void configure(WebSecurity web) throws Exception {
+		    web.ignoring().antMatchers("/key").antMatchers("/");
+		}
 		
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class)
+			http
+				.addFilterBefore(corsFilter(), ChannelProcessingFilter.class)
 				.httpBasic().authenticationEntryPoint(basicEntryPoint)
 				.and()
 				.authorizeRequests().anyRequest().authenticated()
