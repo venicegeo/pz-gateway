@@ -18,6 +18,7 @@ package gateway.controller;
 import gateway.controller.util.PiazzaRestController;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
+import model.response.UUIDResponse;
 import util.PiazzaLogger;
 
 import java.util.HashMap;
@@ -122,7 +123,9 @@ public class AdminController extends PiazzaRestController {
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Authorization", request.getHeader("Authorization"));
-			return new RestTemplate().exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), PiazzaResponse.class);
+			return new ResponseEntity<PiazzaResponse>(
+					new RestTemplate().exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), 
+					HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error retrieving UUID: %s", exception.getMessage());
