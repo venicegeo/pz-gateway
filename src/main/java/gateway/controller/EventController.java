@@ -25,6 +25,8 @@ import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
+import javax.validation.Valid;
+
 import model.response.ErrorResponse;
 import model.response.EventListResponse;
 import model.response.EventTypeListResponse;
@@ -136,7 +138,7 @@ public class EventController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The ID of the newly created Event", response = WorkflowResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> fireEvent(
-			@ApiParam(value = "The Event JSON object.", required = true) @RequestBody Event event, Principal user) {
+			@ApiParam(value = "The Event JSON object.", required = true) @Valid @RequestBody Event event, Principal user) {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has fired an event.", gatewayUtil.getPrincipalName(user)),
@@ -294,7 +296,7 @@ public class EventController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The ID of the newly created Event Type", response = WorkflowResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> createEventType(
-			@ApiParam(value = "The Event Type information. This defines the Schema for the Events that must be followed.", required = true) @RequestBody EventType eventType,
+			@ApiParam(value = "The Event Type information. This defines the Schema for the Events that must be followed.", required = true) @Valid @RequestBody EventType eventType,
 			Principal user) {
 		try {
 			// Log the message
