@@ -129,7 +129,7 @@ public class ServiceController extends PiazzaRestController {
 			jobRequest.jobType = new RegisterServiceJob(service);
 			// Proxy the request to the Service Controller
 			try {
-				return restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest, ServiceIdResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -168,7 +168,7 @@ public class ServiceController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
 			// Proxy the request to the Service Controller instance
 			try {
-				return restTemplate.getForEntity(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), ServiceResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -211,7 +211,7 @@ public class ServiceController extends PiazzaRestController {
 			String url = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
 			url = (softDelete) ? (String.format("%s?softDelete=%s", url, softDelete)) : (url);
 			try {
-				return restTemplate.exchange(url, HttpMethod.DELETE, null, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(url, HttpMethod.DELETE, null, ServiceIdResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -258,7 +258,7 @@ public class ServiceController extends PiazzaRestController {
 			theHeaders.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<Service> request = new HttpEntity<Service>(serviceData, theHeaders);
 			try {
-				return restTemplate.exchange(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), HttpMethod.PUT, request, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), HttpMethod.PUT, request, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -325,7 +325,7 @@ public class ServiceController extends PiazzaRestController {
 				url = String.format("%s&sortBy=%s", url, sortBy);
 			}
 			try {
-				return restTemplate.getForEntity(url, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(url, ServiceListResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
