@@ -25,6 +25,8 @@ import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
+import javax.validation.Valid;
+
 import messaging.job.JobMessageFactory;
 import model.job.type.AbortJob;
 import model.job.type.ExecuteServiceJob;
@@ -239,14 +241,14 @@ public class JobController extends PiazzaRestController {
 	 *            The user executing the Job
 	 * @return The job ID, or the error if encountered
 	 */
-	@RequestMapping(value = { "/v2/job", "/job" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = { "/job" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Executes a registered Service", notes = "Creates a Piazza Job to execute a registered service in the system, with the specified parameters.", tags = {
 			"Job", "Service" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Job ID for the execution of the Service. This can be queried using Job Status to track progress and, when available, fetch the result object.", response = JobResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> executeService(
-			@ApiParam(value = "The Payload that describes the Service to be executed, and the inputs for that service.", required = true, name = "body") @RequestBody ExecuteServiceJob job,
+			@ApiParam(value = "The Payload that describes the Service to be executed, and the inputs for that service.", required = true, name = "body") @Valid @RequestBody ExecuteServiceJob job,
 			Principal user) {
 		try {
 			// Log the request

@@ -25,6 +25,8 @@ import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
+import javax.validation.Valid;
+
 import model.job.type.AccessJob;
 import model.request.PiazzaJobRequest;
 import model.response.DeploymentListResponse;
@@ -101,7 +103,7 @@ public class DeploymentController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The Job ID for the specified Deployment. This could be a long-running process to copy the data over to GeoServer, so a new Job is spawned.", response = JobResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> createDeployment(
-			@ApiParam(value = "The Data ID and deployment information for creating the Deployment", name = "data", required = true) @RequestBody AccessJob job,
+			@ApiParam(value = "The Data ID and deployment information for creating the Deployment", name = "data", required = true) @Valid @RequestBody AccessJob job,
 			Principal user) {
 		try {
 			// Log the request

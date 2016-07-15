@@ -152,7 +152,7 @@ public class AlertTriggerTests {
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(
 				new RestClientException("Trigger Error"));
 		response = alertTriggerController.getTrigger("triggerId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.NOT_FOUND));
+		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("Trigger Error"));
 	}
@@ -174,7 +174,7 @@ public class AlertTriggerTests {
 		// Test Exception
 		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString());
 		response = alertTriggerController.deleteTrigger("triggerId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.NOT_FOUND));
+		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 	}
 
@@ -219,7 +219,7 @@ public class AlertTriggerTests {
 		// Test Exception
 		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString());
 		response = alertTriggerController.deleteAlert("alertId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.NOT_FOUND));
+		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 	}
 
@@ -242,7 +242,7 @@ public class AlertTriggerTests {
 		when(restTemplate.getForObject(anyString(), eq(String.class)))
 				.thenThrow(new RestClientException("Alert Error"));
 		response = alertTriggerController.getAlert("AlertID", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.NOT_FOUND));
+		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("Alert Error"));
 	}

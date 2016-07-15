@@ -25,6 +25,8 @@ import io.swagger.annotations.ApiResponses;
 
 import java.security.Principal;
 
+import javax.validation.Valid;
+
 import model.data.FileRepresentation;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
@@ -199,7 +201,7 @@ public class DataController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> ingestData(
-			@ApiParam(name = "data", value = "The description, location, and metadata for the Data to be loaded into Piazza.", required = true) @RequestBody IngestJob job,
+			@ApiParam(name = "data", value = "The description, location, and metadata for the Data to be loaded into Piazza.", required = true) @Valid @RequestBody IngestJob job,
 			Principal user) {
 		try {
 			// Log the request
@@ -242,7 +244,7 @@ public class DataController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> ingestDataFile(
-			@ApiParam(value = "The Load Job metadata. This is the identical model to the LoadJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency.", required = true) @RequestParam String data,
+			@ApiParam(value = "The Load Job metadata. This is the identical model to the LoadJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency.", required = true) @Valid @RequestParam String data,
 			@ApiParam(value = "The file to be uploaded.", required = true) @RequestParam final MultipartFile file,
 			Principal user) {
 		try {
@@ -389,7 +391,7 @@ public class DataController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> updateMetadata(
 			@ApiParam(value = "ID of the Data item to update the Metadata for.", required = true) @PathVariable(value = "dataId") String dataId,
-			@ApiParam(value = "The Resource Metadata object containing the updated metadata fields to write.", required = true) @RequestBody ResourceMetadata metadata,
+			@ApiParam(value = "The Resource Metadata object containing the updated metadata fields to write.", required = true) @Valid @RequestBody ResourceMetadata metadata,
 			Principal user) {
 		try {
 			// Log the request
@@ -425,7 +427,7 @@ public class DataController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> searchData(
-			@ApiParam(value = "The Query string for the Search component.", required = true) @RequestBody SearchRequest query,
+			@ApiParam(value = "The Query string for the Search component.", required = true) @Valid @RequestBody SearchRequest query,
 			Principal user) {
 		try {
 			// Log the request

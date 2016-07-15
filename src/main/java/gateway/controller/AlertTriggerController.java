@@ -17,6 +17,8 @@ package gateway.controller;
 
 import java.security.Principal;
 
+import javax.validation.Valid;
+
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
 import io.swagger.annotations.Api;
@@ -97,7 +99,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "The ID of the newly created Trigger", response = WorkflowResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> createTrigger(
-			@ApiParam(value = "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.", required = true) @RequestBody Trigger trigger,
+			@ApiParam(value = "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.", required = true)  @Valid @RequestBody Trigger trigger,
 			Principal user) {
 		try {
 			// Log the message
@@ -281,7 +283,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "A general keyword search to apply to all alerts.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
-			@ApiParam(value = "The TriggerID by which to filter results.") @RequestParam(value = "triggerId", required = false) String triggerId,
+			@ApiParam(value = "The Trigger Id by which to filter results.") @RequestParam(value = "triggerId", required = false) String triggerId,
 			Principal user) {
 		try {
 			// Log the request
@@ -325,7 +327,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiResponse(code = 200, message = "Message indicating Alert was deleted successfully", response = SuccessResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> deleteAlert(
-			@ApiParam(value = "The ID of the Alert to Delete.", required = true) @PathVariable(value = "alertId") String alertId,
+			@ApiParam(value = "The Id of the Alert to Delete.", required = true) @PathVariable(value = "alertId") String alertId,
 			Principal user) {
 		try {
 			// Log the request
