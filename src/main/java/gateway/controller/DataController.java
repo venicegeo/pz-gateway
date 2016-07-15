@@ -54,6 +54,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -72,6 +74,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @CrossOrigin
 @RestController
 public class DataController extends PiazzaRestController {
+	@Autowired
+	private ObjectMapper objectMapper;
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
@@ -102,7 +106,7 @@ public class DataController extends PiazzaRestController {
 	 * @return The list of results, with pagination information included.
 	 *         ErrorResponse if something goes wrong.
 	 */
-	@RequestMapping(value = "/data", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/data", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
@@ -136,11 +140,11 @@ public class DataController extends PiazzaRestController {
 			if ((sortBy != null) && (sortBy.isEmpty() == false)) {
 				url = String.format("%s&sortBy=%s", url, sortBy);
 			}
-			PiazzaResponse dataResponse = restTemplate.getForObject(url, PiazzaResponse.class);
-			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
-					: HttpStatus.OK;
-			// Respond
-			return new ResponseEntity<PiazzaResponse>(dataResponse, status);
+			try {
+				return restTemplate.getForEntity(url, PiazzaResponse.class);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+			}			
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
@@ -162,7 +166,7 @@ public class DataController extends PiazzaRestController {
 	 * @return The list of results, with pagination information included.
 	 *         ErrorResponse if something goes wrong.
 	 */
-	@RequestMapping(value = "/data/me", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/data/me", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data.", tags = "Data", response = DataResourceListResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
@@ -191,7 +195,7 @@ public class DataController extends PiazzaRestController {
 	 * @return The Response containing the Job ID, or containing the appropriate
 	 *         ErrorResponse
 	 */
-	@RequestMapping(value = "/data", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/data", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Load Data into Piazza", notes = "Loads data into the Piazza Core metadata holdings. Piazza can either host the data, or reflect an external location where the data is stored. Data must be loaded into Piazza before core components such as the Service Controller, or other external services, are able to consume that data.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
@@ -211,7 +215,6 @@ public class DataController extends PiazzaRestController {
 			String jobId = gatewayUtil.sendJobRequest(request, null);
 			// Return the Job ID of the newly created Job
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
-
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data for user %s of type %s:  %s",
@@ -235,7 +238,7 @@ public class DataController extends PiazzaRestController {
 	 * @return The response containing the Job ID, or containing the appropriate
 	 *         ErrorResponse
 	 */
-	@RequestMapping(value = "/data/file", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/data/file", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Load a Data File into Piazza", notes = "Loads a local user data file into the Piazza Core metadata holdings. This functions the same as /data endpoint, but a file is specified instead of a URI.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
@@ -261,10 +264,9 @@ public class DataController extends PiazzaRestController {
 				throw new Exception("File not specified in request.");
 			}
 			// Log the request
-			logger.log(
-					String.format("User %s requested Data Load Job of type %s with file: %s",
-							gatewayUtil.getPrincipalName(user), job.getData().getDataType().getClass().getName(),
-							file.getOriginalFilename()), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Data Load Job of type %s with file: %s",
+					gatewayUtil.getPrincipalName(user), job.getData().getDataType().getClass().getName(),
+					file.getOriginalFilename()), PiazzaLogger.INFO);
 
 			// Validate the Job inputs to ensure we are able to process the file
 			// and attach it to the job metadata.
@@ -306,7 +308,7 @@ public class DataController extends PiazzaRestController {
 	 * @return The status and metadata of the data resource, or appropriate
 	 *         ErrorResponse if failed.
 	 */
-	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get Metadata for Loaded Data", notes = "Reads all metadata for a Data item that has been previously loaded into Piazza.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Metadata describing the Data Item that matches the specified Data ID. Includes release metadata, and spatial metadata, etc.", response = DataResourceResponse.class),
@@ -319,12 +321,11 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Resource Metadata for %s.", gatewayUtil.getPrincipalName(user),
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
-			PiazzaResponse dataResponse = restTemplate.getForObject(
-					String.format("%s/%s/%s", ACCESS_URL, "data", dataId), PiazzaResponse.class);
-			HttpStatus status = dataResponse instanceof ErrorResponse ? HttpStatus.INTERNAL_SERVER_ERROR
-					: HttpStatus.OK;
-			// Respond
-			return new ResponseEntity<PiazzaResponse>(dataResponse, status);
+			try {
+				return restTemplate.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "data", dataId),	PiazzaResponse.class);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Metadata for item %s by user %s: %s", dataId,
@@ -339,12 +340,12 @@ public class DataController extends PiazzaRestController {
 	 * Deletes the Data Resource from Piazza.
 	 * 
 	 * @param dataId
-	 *            The ID of the data item to delte
+	 *            The ID of the data item to delete
 	 * @param user
 	 *            The user submitting the request
 	 * @return 200 OK if deleted, error response if not.
 	 */
-	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Delete Loaded Data", notes = "Deletes an entry to Data that has been previously loaded into Piazza. If the file was hosted by Piazza, then that file will also be deleted.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Message indicating confirmation of delete", response = SuccessResponse.class),
@@ -357,15 +358,10 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s requested Delete of Data ID %s.", gatewayUtil.getPrincipalName(user),
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Pz-ingest
-			ResponseEntity<PiazzaResponse> response = restTemplate.exchange(
-					String.format("%s/%s/%s", INGEST_URL, "data", dataId), HttpMethod.DELETE, null,
-					PiazzaResponse.class);
-			// Response
-			if (response.getBody() instanceof ErrorResponse) {
-				return new ResponseEntity<PiazzaResponse>(response.getBody(), HttpStatus.INTERNAL_SERVER_ERROR);
-			} else {
-				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Data " + dataId
-						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
+			try {
+				return restTemplate.exchange(String.format("%s/%s/%s", INGEST_URL, "data", dataId), HttpMethod.DELETE, null, PiazzaResponse.class);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -388,7 +384,7 @@ public class DataController extends PiazzaRestController {
 	 *            the user submitting the request
 	 * @return OK if successful; error if not.
 	 */
-	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.PUT, produces = "application/json")
+	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Update Metadata for Loaded Data.", notes = "This will update the metadata for a specific data item. Non-null values will overwrite. This will only update the corresponding 'metadata' field in the Data item. Spatial metadata, and file information cannot be updated. For cases where spatial data or file data needs to change, an re-load of the data must be done.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation that the Metadata has been updated.", response = SuccessResponse.class),
@@ -399,24 +395,20 @@ public class DataController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Update of Metadata for %s.",
-					gatewayUtil.getPrincipalName(user), dataId), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Update of Metadata for %s.", gatewayUtil.getPrincipalName(user),
+					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Ingest
-			PiazzaResponse response = restTemplate.postForObject(String.format("%s/%s/%s", INGEST_URL, "data", dataId),
-					metadata, PiazzaResponse.class);
-			if (response instanceof ErrorResponse) {
-				throw new Exception(((ErrorResponse) response).message);
+			try {
+				return restTemplate.postForEntity(String.format("%s/%s/%s", INGEST_URL, "data", dataId), metadata, PiazzaResponse.class);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
-			// Response
-			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Metadata " + dataId
-					+ " was successfully updated.", "Gateway"), HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Updating Metadata for item %s by user %s: %s", dataId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -428,7 +420,7 @@ public class DataController extends PiazzaRestController {
 	 * 
 	 * @return The list of DataResource items matching the query.
 	 */
-	@RequestMapping(value = "/data/query", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/data/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Query Metadata in Piazza Data holdings", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for loaded data. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
 			"Data", "Search" })
 	@ApiResponses(value = {
@@ -439,8 +431,7 @@ public class DataController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(
-					String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)),
+			logger.log(String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();
@@ -472,11 +463,11 @@ public class DataController extends PiazzaRestController {
 	 * @return The bytes of the file as a download, or an Error if the file
 	 *         cannot be retrieved.
 	 */
-	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Download Data File", notes = "Gets the Bytes of Data loaded into Piazza. Only works for data that is stored internally by Piazza.", tags = "Data")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The downloaded data file.", response = Byte[].class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<byte[]> getFile(
+	public ResponseEntity<?> getFile(
 			@ApiParam(value = "The ID of the Data to download.", required = true) @PathVariable(value = "dataId") String dataId,
 			@ApiParam(value = "Specify the name of the file that the user wishes to retrieve the data as. This will set the content-disposition header.") @RequestParam(value = "fileName", required = false) String fileName,
 			Principal user) throws Exception {
@@ -491,17 +482,20 @@ public class DataController extends PiazzaRestController {
 			if ((fileName != null) && (fileName.isEmpty() == false)) {
 				url = String.format("%s?fileName=%s", url, fileName);
 			}
-			ResponseEntity<byte[]> accessResponse = restTemplate.getForEntity(url, byte[].class);
 
-			// Stream the bytes back
-			return accessResponse;
+			// Proxy the request to Ingest
+			try {
+				// Stream the bytes back				
+				return restTemplate.getForEntity(url, byte[].class);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+			}			
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error downloading file for Data %s by user %s: %s", dataId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.INFO);
-
-			throw new Exception(error);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);		
 		}
 	}
 }
