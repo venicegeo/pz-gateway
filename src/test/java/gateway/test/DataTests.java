@@ -363,7 +363,7 @@ public class DataTests {
 		when(restTemplate.getForEntity(anyString(), eq(byte[].class))).thenReturn(mockResponse);
 
 		// Test
-		ResponseEntity<byte[]> entity = dataController.getFile("123456", "test.txt", user);
+		ResponseEntity<?> entity = dataController.getFile("123456", "test.txt", user);
 
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));

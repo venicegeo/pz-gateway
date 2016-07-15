@@ -467,7 +467,7 @@ public class DataController extends PiazzaRestController {
 	@ApiOperation(value = "Download Data File", notes = "Gets the Bytes of Data loaded into Piazza. Only works for data that is stored internally by Piazza.", tags = "Data")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The downloaded data file.", response = Byte[].class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<byte[]> getFile(
+	public ResponseEntity<?> getFile(
 			@ApiParam(value = "The ID of the Data to download.", required = true) @PathVariable(value = "dataId") String dataId,
 			@ApiParam(value = "Specify the name of the file that the user wishes to retrieve the data as. This will set the content-disposition header.") @RequestParam(value = "fileName", required = false) String fileName,
 			Principal user) throws Exception {
@@ -482,17 +482,20 @@ public class DataController extends PiazzaRestController {
 			if ((fileName != null) && (fileName.isEmpty() == false)) {
 				url = String.format("%s?fileName=%s", url, fileName);
 			}
-			ResponseEntity<byte[]> accessResponse = restTemplate.getForEntity(url, byte[].class);
 
-			// Stream the bytes back
-			return accessResponse;
+			// Proxy the request to Ingest
+			try {
+				// Stream the bytes back				
+				return restTemplate.getForEntity(url, byte[].class);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+			}			
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error downloading file for Data %s by user %s: %s", dataId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.INFO);
-
-			throw new Exception(error);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);		
 		}
 	}
 }
