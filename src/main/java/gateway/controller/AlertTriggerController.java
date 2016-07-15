@@ -122,7 +122,7 @@ public class AlertTriggerController extends PiazzaRestController {
 				WorkflowResponse response = restTemplate.postForObject(url, objectMapper.writeValueAsString(trigger), WorkflowResponse.class);
 				return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -165,7 +165,7 @@ public class AlertTriggerController extends PiazzaRestController {
 				String response = restTemplate.getForObject(url, String.class);
 				return new ResponseEntity<String>(response, HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -209,7 +209,7 @@ public class AlertTriggerController extends PiazzaRestController {
 				String response = restTemplate.getForObject(url, String.class);
 				return new ResponseEntity<String>(response, HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -253,7 +253,7 @@ public class AlertTriggerController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Trigger " + triggerId
 						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -298,7 +298,7 @@ public class AlertTriggerController extends PiazzaRestController {
 				String response = restTemplate.getForObject(url, String.class);
 				return new ResponseEntity<String>(response, HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -341,7 +341,7 @@ public class AlertTriggerController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Alert " + alertId
 						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -383,7 +383,7 @@ public class AlertTriggerController extends PiazzaRestController {
 				String response = restTemplate.getForObject(url, String.class);
 				return new ResponseEntity<String>(response, HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
