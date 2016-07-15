@@ -196,7 +196,7 @@ public class ServiceController extends PiazzaRestController {
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Unregister a Service", notes = "Unregisters a service by its ID.", tags = "Service")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Confirmation of Deleted.", response = ServiceIdResponse.class),
+			@ApiResponse(code = 200, message = "Confirmation of Deleted.", response = SuccessResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> deleteService(
 			@ApiParam(value = "The ID of the Service to unregister.", required = true) @PathVariable(value = "serviceId") String serviceId,
@@ -211,7 +211,7 @@ public class ServiceController extends PiazzaRestController {
 			String url = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
 			url = (softDelete) ? (String.format("%s?softDelete=%s", url, softDelete)) : (url);
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(url, HttpMethod.DELETE, null, ServiceIdResponse.class).getBody(), HttpStatus.OK);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(url, HttpMethod.DELETE, null, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
