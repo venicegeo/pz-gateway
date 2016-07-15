@@ -38,6 +38,7 @@ import model.workflow.Trigger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,6 +47,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,7 +67,7 @@ import util.PiazzaLogger;
 @RestController
 public class AlertTriggerController extends PiazzaRestController {
 	@Autowired
-	private ObjectMapper om;
+	private ObjectMapper objectMapper;
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
@@ -89,7 +92,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user making the request
 	 * @return The ID of the Trigger, or an error.
 	 */
-	@RequestMapping(value = "/trigger", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/trigger", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger with the Piazza Workflow component", tags = {
 			"Trigger", "Workflow" })
 	@ApiResponses(value = {
@@ -112,11 +115,15 @@ public class AlertTriggerController extends PiazzaRestController {
 						String.format("Failed to set the username field in Trigger created by User %s: ",
 								gatewayUtil.getPrincipalName(user), exception.getMessage()), PiazzaLogger.WARNING);
 			}
-			// Proxy the request to Workflow
-			String url = String.format("%s/%s", WORKFLOW_URL, "trigger");
-			WorkflowResponse response = restTemplate.postForObject(url, om.writeValueAsString(trigger),
-					WorkflowResponse.class);
-			return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
+			
+			try {
+				// Proxy the request to Workflow
+				String url = String.format("%s/%s", WORKFLOW_URL, "trigger");
+				WorkflowResponse response = restTemplate.postForObject(url, objectMapper.writeValueAsString(trigger), WorkflowResponse.class);
+				return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Creating Trigger by user %s: %s", gatewayUtil.getPrincipalName(user),
@@ -134,7 +141,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * 
 	 * @return The list of Triggers, or an error.
 	 */
-	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "List Triggers", notes = "Returns an array of triggers", tags = { "Trigger", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Triggers.", response = TriggerListResponse.class),
@@ -150,11 +157,16 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s has requested a list of Triggers.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
-			// Broker the request to Workflow
-			String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&key=%s", WORKFLOW_URL,
-					"trigger", page, perPage, order, sortBy != null ? sortBy : "", key != null ? key : "");
-			String response = restTemplate.getForObject(url, String.class);
-			return new ResponseEntity<String>(response, HttpStatus.OK);
+			
+			try {
+				// Broker the request to Workflow
+				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&key=%s", WORKFLOW_URL,
+						"trigger", page, perPage, order, sortBy != null ? sortBy : "", key != null ? key : "");
+				String response = restTemplate.getForObject(url, String.class);
+				return new ResponseEntity<String>(response, HttpStatus.OK);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Querying Triggers by user %s: %s", gatewayUtil.getPrincipalName(user),
@@ -176,7 +188,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return Trigger information, or an error
 	 */
-	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Gets Metadata for a Trigger", notes = "Retrieves the Trigger definition for the Trigger matching the specified Trigger ID.", tags = {
 			"Trigger", "Workflow" })
 	@ApiResponses(value = {
@@ -190,10 +202,15 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(
 					String.format("User %s has requested information for Trigger %s",
 							gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
-			// Proxy the request to Workflow
-			String url = String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId);
-			String response = restTemplate.getForObject(url, String.class);
-			return new ResponseEntity<String>(response, HttpStatus.OK);
+			
+			try {
+				// Proxy the request to Workflow
+				String url = String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId);
+				String response = restTemplate.getForObject(url, String.class);
+				return new ResponseEntity<String>(response, HttpStatus.OK);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Getting Trigger ID %s by user %s: %s", triggerId,
@@ -215,7 +232,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
-	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.DELETE, produces = "application/json")
+	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Deletes a Trigger", notes = "Deletes a Trigger with the Workflow component. This Trigger will no longer listen for conditions for events to fire.", tags = {
 			"Trigger", "Workflow" })
 	@ApiResponses(value = {
@@ -228,11 +245,16 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s has requested deletion of Trigger %s",
 					gatewayUtil.getPrincipalName(user), triggerId), PiazzaLogger.INFO);
-			// Proxy the request to Workflow
-			String url = String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId);
-			restTemplate.delete(url);
-			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Trigger " + triggerId
-					+ " was deleted successfully", "Gateway"), HttpStatus.OK);
+			
+			try {
+				// Proxy the request to Workflow
+				String url = String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId);
+				restTemplate.delete(url);
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Trigger " + triggerId
+						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Trigger ID %s by user %s: %s", triggerId,
@@ -250,8 +272,8 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * 
 	 * @return The list of Alerts, or an error
 	 */
-	@RequestMapping(value = "/alert", method = RequestMethod.GET, produces = "application/json")
-	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the Alerts.", tags = { "Alert", "Workflow" })
+	@RequestMapping(value = "/alert", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the alerts", tags = { "Alert", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Alerts owned by the current User.", response = AlertListResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -267,12 +289,17 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s has requested a list of Alerts.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
-			// Broker the request to Workflow
-			String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&triggerId=%s&key=%s",
-					WORKFLOW_URL, "alert", page, perPage, order, sortBy != null ? sortBy : "",
-					triggerId != null ? triggerId : "", key != null ? key : "");
-			String response = restTemplate.getForObject(url, String.class);
-			return new ResponseEntity<String>(response, HttpStatus.OK);
+			
+			try {
+				// Broker the request to Workflow
+				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&triggerId=%s&key=%s",
+						WORKFLOW_URL, "alert", page, perPage, order, sortBy != null ? sortBy : "",
+						triggerId != null ? triggerId : "", key != null ? key : "");
+				String response = restTemplate.getForObject(url, String.class);
+				return new ResponseEntity<String>(response, HttpStatus.OK);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Querying Alerts by user %s: %s", gatewayUtil.getPrincipalName(user),
@@ -295,7 +322,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.DELETE)
-	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert using the given Id", tags = { "Alert", "Workflow" }, produces = "application/json")
+	@ApiOperation(value = "Delete Alert", notes = "Deletes an Alert using the given Id", tags = { "Alert", "Workflow" }, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Message indicating Alert was deleted successfully", response = SuccessResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -306,11 +333,16 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s has requested deletion of Alert %s", gatewayUtil.getPrincipalName(user),
 					alertId), PiazzaLogger.INFO);
-			// Proxy the request to Workflow
-			String url = String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId);
-			restTemplate.delete(url);
-			return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Alert " + alertId
-					+ " was deleted successfully", "Gateway"), HttpStatus.OK);
+			
+			try {
+				// Proxy the request to Workflow
+				String url = String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId);
+				restTemplate.delete(url);
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Alert " + alertId
+						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Alert ID %s by user %s: %s", alertId,
@@ -332,7 +364,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return Trigger information, or an error
 	 */
-	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get Alert Information", notes = "Gets the metadata for a given Alert", tags = { "Alert",
 			"Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Alert metadata.", response = Alert.class),
@@ -344,10 +376,15 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s has requested information for Alert %s",
 					gatewayUtil.getPrincipalName(user), alertId), PiazzaLogger.INFO);
-			// Proxy the request to Workflow
-			String url = String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId);
-			String response = restTemplate.getForObject(url, String.class);
-			return new ResponseEntity<String>(response, HttpStatus.OK);
+			
+			try {
+				// Proxy the request to Workflow
+				String url = String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId);
+				String response = restTemplate.getForObject(url, String.class);
+				return new ResponseEntity<String>(response, HttpStatus.OK);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Getting Alert ID %s by user %s: %s", alertId,

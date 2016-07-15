@@ -90,7 +90,7 @@ public class EventTests {
 	@Test
 	public void testGetEvents() {
 		// Mock Response
-		when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn("event");
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(new ResponseEntity<String>("event", HttpStatus.OK));
 
 		// Test
 		ResponseEntity<?> response = eventController.getEvents(null, null, null, null, 0, 10, user);
@@ -100,7 +100,7 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(String.class)))
+		when(restTemplate.getForEntity(anyString(), eq(String.class)))
 				.thenThrow(new RestClientException("event error"));
 		response = eventController.getEvents(null, null, null, null, 0, 10, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
