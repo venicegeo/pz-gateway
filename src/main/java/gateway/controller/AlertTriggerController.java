@@ -31,7 +31,7 @@ import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 import model.response.SuccessResponse;
 import model.response.TriggerListResponse;
-import model.response.WorkflowResponse;
+import model.response.TriggerResponse;
 import model.workflow.Alert;
 import model.workflow.Trigger;
 
@@ -96,7 +96,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger with the Piazza Workflow component", tags = {
 			"Trigger", "Workflow" })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the newly created Trigger", response = WorkflowResponse.class),
+			@ApiResponse(code = 200, message = "The ID of the newly created Trigger", response = TriggerResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> createTrigger(
 			@ApiParam(value = "The Trigger information to register. This defines the Conditions that must be hit in order for some Action to occur.", required = true)  @Valid @RequestBody Trigger trigger,
@@ -119,8 +119,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			try {
 				// Proxy the request to Workflow
 				String url = String.format("%s/%s", WORKFLOW_URL, "trigger");
-				WorkflowResponse response = restTemplate.postForObject(url, objectMapper.writeValueAsString(trigger), WorkflowResponse.class);
-				return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
+				String response = restTemplate.postForObject(url, objectMapper.writeValueAsString(trigger), String.class);
+				return new ResponseEntity<String>(response, HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}

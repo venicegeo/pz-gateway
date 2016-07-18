@@ -91,8 +91,8 @@ public class AlertTriggerTests {
 	@Test
 	public void testCreateTrigger() throws JsonProcessingException {
 		// Mock Response
-		when(restTemplate.postForObject(anyString(), any(), eq(WorkflowResponse.class))).thenReturn(
-				any(WorkflowResponse.class));
+		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(
+				any(String.class));
 
 		// Test
 		ResponseEntity<?> response = alertTriggerController.createTrigger(new Trigger(), user);
@@ -101,7 +101,7 @@ public class AlertTriggerTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(WorkflowResponse.class))).thenThrow(
+		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
 				new RestClientException("Trigger Error"));
 		response = alertTriggerController.createTrigger(new Trigger(), user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));

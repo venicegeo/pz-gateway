@@ -29,7 +29,9 @@ import javax.validation.Valid;
 
 import model.response.ErrorResponse;
 import model.response.EventListResponse;
+import model.response.EventResponse;
 import model.response.EventTypeListResponse;
+import model.response.EventTypeResponse;
 import model.response.PiazzaResponse;
 import model.response.SuccessResponse;
 import model.response.WorkflowResponse;
@@ -142,7 +144,7 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Creates an Event for the Event Type", notes = "Sends an event to the Piazza workflow component", tags = {
 			"Event", "Workflow" })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the newly created Event", response = WorkflowResponse.class),
+			@ApiResponse(code = 200, message = "The ID of the newly created Event", response = EventResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> fireEvent(
 			@ApiParam(value = "The Event JSON object.", required = true) @Valid @RequestBody Event event, Principal user) {
@@ -153,9 +155,9 @@ public class EventController extends PiazzaRestController {
 			
 			try {
 				// Broker the request to Workflow
-				WorkflowResponse response = restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"),
-						objectMapper.writeValueAsString(event), WorkflowResponse.class);
-				return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
+				String response = restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"),
+						objectMapper.writeValueAsString(event), String.class);
+				return new ResponseEntity<String>(response, HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}			
@@ -316,7 +318,7 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Register an Event Type", notes = "Defines an Event Type with the Workflow component", tags = {
 			"Event Type", "Workflow" })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the newly created Event Type", response = WorkflowResponse.class),
+			@ApiResponse(code = 200, message = "The ID of the newly created Event Type", response = EventTypeResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> createEventType(
 			@ApiParam(value = "The Event Type information. This defines the Schema for the Events that must be followed.", required = true) @Valid @RequestBody EventType eventType,
@@ -330,8 +332,8 @@ public class EventController extends PiazzaRestController {
 			try {
 				// Proxy the request to Workflow
 				String url = String.format("%s/%s", WORKFLOW_URL, "eventType");
-				WorkflowResponse response = restTemplate.postForObject(url, objectMapper.writeValueAsString(eventType), WorkflowResponse.class);
-				return new ResponseEntity<WorkflowResponse>(response, HttpStatus.OK);
+				String response = restTemplate.postForObject(url, objectMapper.writeValueAsString(eventType), String.class);
+				return new ResponseEntity<String>(response, HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
