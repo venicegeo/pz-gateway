@@ -167,7 +167,7 @@ public class DeploymentController extends PiazzaRestController {
 				url = String.format("%s&sortBy=%s", url, sortBy);
 			}
 			try {
-				return restTemplate.getForEntity(url, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(url, DeploymentListResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -209,7 +209,7 @@ public class DeploymentController extends PiazzaRestController {
 					deploymentId), PiazzaLogger.INFO);
 			// Broker the request to Pz-Access
 			try {
-				return restTemplate.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), DeploymentResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -250,7 +250,7 @@ public class DeploymentController extends PiazzaRestController {
 					gatewayUtil.getPrincipalName(user), deploymentId), PiazzaLogger.INFO);
 			// Broker the request to Pz-Access
 			try {
-				return restTemplate.exchange(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), HttpMethod.DELETE, null, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), HttpMethod.DELETE, null, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}

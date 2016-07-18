@@ -112,7 +112,7 @@ public class JobController extends PiazzaRestController {
 					PiazzaLogger.INFO);
 			// Proxy the request to the Job Manager
 			try {
-				return restTemplate.getForEntity(String.format("%s/%s/%s", JOBMANAGER_URL, "job", jobId), PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(String.format("%s/%s/%s", JOBMANAGER_URL, "job", jobId), JobStatusResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -167,7 +167,7 @@ public class JobController extends PiazzaRestController {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			try {
-				return restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -197,7 +197,7 @@ public class JobController extends PiazzaRestController {
 	@ApiOperation(value = "Repeat Job", notes = "Repeats a previously submitted Job. This will clone the original Job, and run it again with identical parameters, using the requesting users authentication in the new Job.", tags = "Job")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "A new Job ID that corresponds to the cloned Job in Piazza.", response = JobResponse.class),
-			@ApiResponse(code = 500, message = "Internal Error", response = JobErrorResponse.class) })
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> repeatJob(
 			@ApiParam(value = "ID of the Job to Repeat", required = true) @PathVariable(value = "jobId") String jobId,
 			Principal user) {
@@ -214,7 +214,7 @@ public class JobController extends PiazzaRestController {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			try {
-				return restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, JobResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -222,7 +222,7 @@ public class JobController extends PiazzaRestController {
 			exception.printStackTrace();
 			String error = String.format("Error Repeating Job ID %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"),
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

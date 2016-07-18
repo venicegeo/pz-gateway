@@ -141,7 +141,7 @@ public class DataController extends PiazzaRestController {
 				url = String.format("%s&sortBy=%s", url, sortBy);
 			}
 			try {
-				return restTemplate.getForEntity(url, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(url, DataResourceListResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}			
@@ -322,7 +322,8 @@ public class DataController extends PiazzaRestController {
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Pz-Access
 			try {
-				return restTemplate.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "data", dataId),	PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "data", dataId),
+						DataResourceResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -359,7 +360,7 @@ public class DataController extends PiazzaRestController {
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Pz-ingest
 			try {
-				return restTemplate.exchange(String.format("%s/%s/%s", INGEST_URL, "data", dataId), HttpMethod.DELETE, null, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(String.format("%s/%s/%s", INGEST_URL, "data", dataId), HttpMethod.DELETE, null, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -399,7 +400,7 @@ public class DataController extends PiazzaRestController {
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Ingest
 			try {
-				return restTemplate.postForEntity(String.format("%s/%s/%s", INGEST_URL, "data", dataId), metadata, PiazzaResponse.class);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s/%s", INGEST_URL, "data", dataId), metadata, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}

@@ -38,8 +38,10 @@ import model.job.type.RepeatJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.JobErrorResponse;
+import model.response.JobResponse;
 import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
 import model.service.metadata.ExecuteServiceData;
 import model.status.StatusUpdate;
 
@@ -55,7 +57,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import util.PiazzaLogger;
@@ -128,8 +130,8 @@ public class JobTests {
 	@Test
 	public void testGetStatus() {
 		// Mock
-		ResponseEntity<PiazzaResponse> mockResponse = new ResponseEntity<PiazzaResponse>(new JobStatusResponse(mockJob), HttpStatus.OK);
-		when(restTemplate.getForEntity(anyString(), eq(PiazzaResponse.class))).thenReturn(mockResponse);
+		ResponseEntity<JobStatusResponse> mockResponse = new ResponseEntity<JobStatusResponse>(new JobStatusResponse(mockJob), HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(JobStatusResponse.class))).thenReturn(mockResponse);
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = jobController.getJobStatus("123456", user);
@@ -143,12 +145,11 @@ public class JobTests {
 		assertTrue(response.data.createdBy.equals("Test User 2"));
 
 		// Test Exception
-		when(restTemplate.getForEntity(anyString(), eq(PiazzaResponse.class))).thenReturn(mockJobError);
+		when(restTemplate.getForEntity(anyString(), eq(JobStatusResponse.class))).thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+
 		entity = jobController.getJobStatus("123456", user);
 		assertTrue(entity.getBody() instanceof JobErrorResponse);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.NOT_FOUND));
-		JobErrorResponse error = (JobErrorResponse) entity.getBody();
-		assertTrue(error.message.contains("Job Not Found"));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 	}
 
 	/**
@@ -157,9 +158,8 @@ public class JobTests {
 	@Test
 	public void testAbort() {
 		// Mock
-		PiazzaResponse mockResponse = new PiazzaResponse();
-		ResponseEntity<PiazzaResponse> mockEntity = new ResponseEntity<PiazzaResponse>(mockResponse, HttpStatus.OK);
-		when(restTemplate.postForEntity(anyString(), any(), eq(PiazzaResponse.class))).thenReturn(mockEntity);
+		ResponseEntity<SuccessResponse> mockEntity = new ResponseEntity<SuccessResponse>(new SuccessResponse("Deleted", "Job Manager"), HttpStatus.OK);
+		when(restTemplate.postForEntity(anyString(), any(), eq(SuccessResponse.class))).thenReturn(mockEntity);
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = jobController.abortJob("123456", "Not Needed", user);
@@ -168,13 +168,11 @@ public class JobTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.postForEntity(anyString(), any(), eq(PiazzaResponse.class))).thenThrow(
-				new RestClientException("Could Not Abort"));
+		when(restTemplate.postForEntity(anyString(), any(), eq(SuccessResponse.class))).thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+		
 		entity = jobController.abortJob("123456", "Not Needed", user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof JobErrorResponse);
-		JobErrorResponse error = (JobErrorResponse) entity.getBody();
-		assertTrue(error.message.contains("Could Not Abort"));
 	}
 
 	/**
@@ -183,9 +181,8 @@ public class JobTests {
 	@Test
 	public void testRepeat() {
 		// Mock
-		PiazzaResponse mockResponse = new PiazzaResponse();
-		ResponseEntity<PiazzaResponse> mockEntity = new ResponseEntity<PiazzaResponse>(mockResponse, HttpStatus.OK);
-		when(restTemplate.postForEntity(anyString(), any(), eq(PiazzaResponse.class))).thenReturn(mockEntity);
+		ResponseEntity<JobResponse> mockEntity = new ResponseEntity<JobResponse>(new JobResponse("Updated"), HttpStatus.OK);
+		when(restTemplate.postForEntity(anyString(), any(), eq(JobResponse.class))).thenReturn(mockEntity);
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = jobController.repeatJob("123456", user);
@@ -194,13 +191,12 @@ public class JobTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.postForEntity(anyString(), any(), eq(PiazzaResponse.class))).thenThrow(
-				new RestClientException("Could Not Repeat"));
+		when(restTemplate.postForEntity(anyString(), any(), eq(JobResponse.class)))
+			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+
 		entity = jobController.repeatJob("123456", user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(entity.getBody() instanceof JobErrorResponse);
-		JobErrorResponse error = (JobErrorResponse) entity.getBody();
-		assertTrue(error.message.contains("Could Not Repeat"));
+		assertTrue(entity.getBody() instanceof ErrorResponse);
 	}
 
 	/**
