@@ -29,6 +29,7 @@ import javax.validation.Valid;
 
 import model.job.type.AccessJob;
 import model.request.PiazzaJobRequest;
+import model.response.DeploymentGroupResponse;
 import model.response.DeploymentListResponse;
 import model.response.DeploymentResponse;
 import model.response.ErrorResponse;
@@ -56,6 +57,8 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import util.PiazzaLogger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * REST controller that handles requests for interacting with the Piazza Access
@@ -257,6 +260,78 @@ public class DeploymentController extends PiazzaRestController {
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Deployment by ID %s by user %s: %s", deploymentId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Creates a new Deployment Group.
+	 * 
+	 * @return Deployment Group information, or an ErrorResonse if exceptions
+	 *         occur.
+	 */
+	@ApiOperation(value = "Create a Deployment Group.", notes = "Creates a new Deployment Group ID that can be used in order to add some future set of Deployments into a single WMS layer.", tags = "Deployment")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Metadata about for the deployment group that has been created.", response = DeploymentGroupResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	@RequestMapping(value = "/deployment/group", method = RequestMethod.POST)
+	public ResponseEntity<PiazzaResponse> createDeploymentGroup(Principal user) {
+		try {
+			// Log the request
+			String createdBy = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Creation of Deployment Group.", createdBy), PiazzaLogger.INFO);
+			// Broker to pz-access
+			ResponseEntity<PiazzaResponse> response = restTemplate.postForEntity(
+					String.format("%s/deployment/group?createdBy=%s", ACCESS_URL, createdBy), null,
+					PiazzaResponse.class);
+			// Errors will have an exception get thrown. If no exception is
+			// thrown, then return the result directly back to the user.
+			return response;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error creating Deployment Group: %s", exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Deletes a Deployment Group. This will delete the Group in the Mongo DB
+	 * holdings, and also in the GeoServer instance. Unrecoverable once deleted.
+	 * 
+	 * @param deploymentGroupId
+	 *            The ID of the group to delete.
+	 * @param user
+	 *            The user requesting deletion.
+	 * @return OK if deleted, Error if not.
+	 */
+	@ApiOperation(value = "Delete a Deployment Group.", notes = "Deletes a Deployment Group from the Piazza metadata, and the GIS server.", tags = "Deployment")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Successful deletion of Deployment Group.", response = SuccessResponse.class),
+			@ApiResponse(code = 404, message = "The Deployment Group does not exist", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	@RequestMapping(value = "/deployment/group/{deploymentGroupId}", method = RequestMethod.DELETE)
+	public ResponseEntity<PiazzaResponse> deleteDeploymentGroup(
+			@PathVariable(value = "deploymentGroupId") String deploymentGroupId, Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s requested delete of Deployment Group %s",
+					gatewayUtil.getPrincipalName(user), deploymentGroupId), PiazzaLogger.INFO);
+			// Broker to access
+			String url = String.format("%s/deployment/group/%s", ACCESS_URL, deploymentGroupId);
+			try {
+				return restTemplate.exchange(url, HttpMethod.DELETE, null, PiazzaResponse.class);
+			} catch (HttpClientErrorException | HttpServerErrorException exception) {
+				return new ResponseEntity<PiazzaResponse>(new ObjectMapper().readValue(
+						exception.getResponseBodyAsString(), ErrorResponse.class), exception.getStatusCode());
+			}
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Deleting Deployment Group %s : %s", deploymentGroupId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
