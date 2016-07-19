@@ -158,6 +158,14 @@ public class AlertTriggerController extends PiazzaRestController {
 			logger.log(String.format("User %s has requested a list of Triggers.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			
+			// Validate params
+			String validationError = null;
+			if( (order != null && (validationError = gatewayUtil.validateInput("order", order)) != null) || 
+				(page != null && (validationError = gatewayUtil.validateInput("page", page)) != null) ||
+				(perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null) ) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, "Gateway"), HttpStatus.BAD_REQUEST);
+			}			
+			
 			try {
 				// Broker the request to Workflow
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&key=%s", WORKFLOW_URL,
@@ -289,6 +297,14 @@ public class AlertTriggerController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s has requested a list of Alerts.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
+			
+			// Validate params
+			String validationError = null;
+			if( (order != null && (validationError = gatewayUtil.validateInput("order", order)) != null) || 
+				(page != null && (validationError = gatewayUtil.validateInput("page", page)) != null) ||
+				(perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null) ) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, "Gateway"), HttpStatus.BAD_REQUEST);
+			}			
 			
 			try {
 				// Broker the request to Workflow

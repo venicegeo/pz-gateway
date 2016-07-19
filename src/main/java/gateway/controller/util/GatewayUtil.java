@@ -203,4 +203,25 @@ public class GatewayUtil {
 				PiazzaLogger.INFO);
 		return job;
 	}
+	
+	public String validateInput(String type, Object value) {
+		switch (type) {
+		case "order":
+			if (!value.equals("asc") && !value.equals("desc")) {
+				return "'order' parameter must be 'asc' or 'desc'";
+			}
+			break;
+		case "perPage":
+			if (Integer.parseInt(value.toString()) < 0) {
+				return "'perPage' parameter must be zero or greater.";
+			}
+			break;
+		case "page":
+			if (Integer.parseInt(value.toString()) < 0) {
+				return "'page' parameter must be zero or greater.";
+			}
+			break;
+		}
+		return null;
+	}
 }
