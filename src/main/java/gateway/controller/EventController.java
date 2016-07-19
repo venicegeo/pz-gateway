@@ -34,7 +34,6 @@ import model.response.EventTypeListResponse;
 import model.response.EventTypeResponse;
 import model.response.PiazzaResponse;
 import model.response.SuccessResponse;
-import model.response.WorkflowResponse;
 import model.workflow.Event;
 import model.workflow.EventType;
 
@@ -111,6 +110,14 @@ public class EventController extends PiazzaRestController {
 			logger.log(String.format("User %s queried for Events.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 
+			// Validate params
+			String validationError = null;
+			if( (order != null && (validationError = gatewayUtil.validateInput("order", order)) != null) || 
+				(page != null && (validationError = gatewayUtil.validateInput("page", page)) != null) ||
+				(perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null) ) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, "Gateway"), HttpStatus.BAD_REQUEST);
+			}
+			
 			try {
 				// Broker the request to Workflow
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&eventType=%s", WORKFLOW_URL,
@@ -283,6 +290,14 @@ public class EventController extends PiazzaRestController {
 			logger.log(
 					String.format("User %s has requested a list of Event Types.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
+			
+			// Validate params
+			String validationError = null;
+			if( (order != null && (validationError = gatewayUtil.validateInput("order", order)) != null) || 
+				(page != null && (validationError = gatewayUtil.validateInput("page", page)) != null) ||
+				(perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null) ) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, "Gateway"), HttpStatus.BAD_REQUEST);
+			}			
 			
 			try {
 				// Broker the request to Workflow

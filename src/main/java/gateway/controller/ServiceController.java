@@ -307,6 +307,15 @@ public class ServiceController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
+			
+			// Validate params
+			String validationError = null;
+			if( (order != null && (validationError = gatewayUtil.validateInput("order", order)) != null) || 
+				(page != null && (validationError = gatewayUtil.validateInput("page", page)) != null) ||
+				(perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null) ) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, "Gateway"), HttpStatus.BAD_REQUEST);
+			}
+			
 			// Proxy the request to the Service Controller
 			String url = String.format("%s/%s?page=%s&perPage=%s", SERVICECONTROLLER_URL, "service", page, perPage);
 			// Attach keywords if specified
