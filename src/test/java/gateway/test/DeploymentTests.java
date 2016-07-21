@@ -186,7 +186,7 @@ public class DeploymentTests {
 	@Test
 	public void testGetMetadata() {
 		// Mock the Response
-		DeploymentResponse mockResponse = new DeploymentResponse(mockDeployment);
+		DeploymentResponse mockResponse = new DeploymentResponse(mockDeployment, "Now");
 		when(restTemplate.getForEntity(anyString(), eq(DeploymentResponse.class)))
 			.thenReturn(new ResponseEntity<DeploymentResponse>(mockResponse, HttpStatus.OK));
 
@@ -196,7 +196,7 @@ public class DeploymentTests {
 
 		// Verify
 		assertTrue(response instanceof ErrorResponse == false);
-		assertTrue(((DeploymentResponse) response).data.getDeploymentId()
+		assertTrue(((DeploymentResponse) response).data.getDeployment().getDeploymentId()
 				.equalsIgnoreCase(mockDeployment.getDeploymentId()));
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
