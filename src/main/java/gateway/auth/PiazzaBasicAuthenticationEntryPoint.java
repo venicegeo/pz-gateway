@@ -26,9 +26,12 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import model.response.ErrorResponse;
+
 /**
- * Custom Sprint 'Entry Point' that issues an appropriate response when
- * authentication fails.
+ * Custom Sprint 'Entry Point' that issues an appropriate response when authentication fails.
  * 
  * @author Russell.Orf
  * 
@@ -42,7 +45,9 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 		response.addHeader("WWW-Authenticate", "Basic realm=\"" + getRealmName() + "\"");
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		PrintWriter writer = response.getWriter();
-		writer.println("HTTP Status 401 - pz-gateway is unable to authenticate the provided user");
+		// Create a Response Object
+		ErrorResponse error = new ErrorResponse("Gateway is unable to authenticate the provided user.", "Gateway");
+		writer.println(new ObjectMapper().writeValueAsString(error));
 	}
 
 	@Override
