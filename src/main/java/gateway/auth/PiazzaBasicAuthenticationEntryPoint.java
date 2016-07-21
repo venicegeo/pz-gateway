@@ -44,6 +44,7 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 			throws IOException, ServletException {
 		response.addHeader("WWW-Authenticate", "Basic realm=\"" + getRealmName() + "\"");
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.setContentType("application/json");
 		PrintWriter writer = response.getWriter();
 		// Create a Response Object
 		ErrorResponse error = new ErrorResponse("Gateway is unable to authenticate the provided user.", "Gateway");
