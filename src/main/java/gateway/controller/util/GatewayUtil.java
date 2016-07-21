@@ -51,8 +51,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
 /**
- * Utility class that defines common procedures for handling requests,
- * responses, and brokered end points to internal Piazza components.
+ * Utility class that defines common procedures for handling requests, responses, and brokered end points to internal
+ * Piazza components.
  * 
  * @author Patrick.Doody
  *
@@ -102,8 +102,8 @@ public class GatewayUtil {
 	}
 
 	/**
-	 * Sends a Job Request to the Job Manager. This will generate a Job ID and
-	 * return it once the Job Manager has indexed the Job into its database.
+	 * Sends a Job Request to the Job Manager. This will generate a Job ID and return it once the Job Manager has
+	 * indexed the Job into its database.
 	 * 
 	 * @param request
 	 *            The Job Request
@@ -119,8 +119,8 @@ public class GatewayUtil {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
-			ResponseEntity<PiazzaResponse> jobResponse = restTemplate.postForEntity(
-					String.format("%s/%s?jobId=%s", JOBMANAGER_URL, "requestJob", jobId), entity, PiazzaResponse.class);
+			ResponseEntity<PiazzaResponse> jobResponse = restTemplate
+					.postForEntity(String.format("%s/%s?jobId=%s", JOBMANAGER_URL, "requestJob", jobId), entity, PiazzaResponse.class);
 			// Check if the response was an error.
 			if (jobResponse.getBody() instanceof ErrorResponse) {
 				throw new Exception(((ErrorResponse) jobResponse.getBody()).message);
@@ -128,15 +128,13 @@ public class GatewayUtil {
 			// Return the Job ID from the response.
 			return ((JobResponse) jobResponse.getBody()).data.getJobId();
 		} catch (Exception exception) {
-			throw new Exception(String.format("Error with Job Manager when Requesting New Piazza Job: %s",
-					exception.getMessage()));
+			throw new Exception(String.format("Error with Job Manager when Requesting New Piazza Job: %s", exception.getMessage()));
 		}
 	}
 
 	/**
-	 * Sends a message to Kafka. This will additionally invoke .get() on the
-	 * message sent, which will block until the acknowledgement from Kafka has
-	 * been received that the message entered the Kafka queue.
+	 * Sends a message to Kafka. This will additionally invoke .get() on the message sent, which will block until the
+	 * acknowledgement from Kafka has been received that the message entered the Kafka queue.
 	 * 
 	 * @param message
 	 *            The message to send.
@@ -161,32 +159,27 @@ public class GatewayUtil {
 	}
 
 	/**
-	 * Safely returns the name of the user who has performed a request to a
-	 * Gateway endpoint.
+	 * Safely returns the name of the user who has performed a request to a Gateway endpoint.
 	 * 
 	 * @param user
 	 *            The principal
-	 * @return The username. If the request was not authenticated, then that
-	 *         will be returned.
+	 * @return The username. If the request was not authenticated, then that will be returned.
 	 */
 	public String getPrincipalName(Principal user) {
 		return user != null ? user.getName() : "UNAUTHENTICATED";
 	}
 
 	/**
-	 * Handles the uploaded file from the data/file endpoint. This will push the
-	 * file to S3, and then modify the content of the job to reference the new
-	 * S3 location of the file.
+	 * Handles the uploaded file from the data/file endpoint. This will push the file to S3, and then modify the content
+	 * of the job to reference the new S3 location of the file.
 	 * 
 	 * @param jobId
-	 *            The ID of the Job, used for generating a unique S3 bucket file
-	 *            name.
+	 *            The ID of the Job, used for generating a unique S3 bucket file name.
 	 * @param job
 	 *            The ingest job, containing the DataResource metadata
 	 * @param file
 	 *            The file to be uploaded
-	 * @return The modified job, with the location of the S3 file added to the
-	 *         metadata
+	 * @return The modified job, with the location of the S3 file added to the metadata
 	 */
 	public IngestJob pushS3File(String jobId, IngestJob job, MultipartFile file) throws Exception {
 		// The content length must be specified.
@@ -199,11 +192,19 @@ public class GatewayUtil {
 		// Attach the file to the FileLocation object
 		FileLocation fileLocation = new S3FileStore(AMAZONS3_BUCKET_NAME, fileKey, file.getSize(), AMAZONS3_DOMAIN);
 		((FileRepresentation) job.getData().getDataType()).setLocation(fileLocation);
-		logger.log(String.format("S3 File for Job %s Persisted to %s:%s", jobId, AMAZONS3_BUCKET_NAME, fileKey),
-				PiazzaLogger.INFO);
+		logger.log(String.format("S3 File for Job %s Persisted to %s:%s", jobId, AMAZONS3_BUCKET_NAME, fileKey), PiazzaLogger.INFO);
 		return job;
 	}
-	
+
+	/**
+	 * Validates Pagination Inputs for List requests
+	 * 
+	 * @param type
+	 *            The key name of the query parameter
+	 * @param value
+	 *            The value of the query parameter
+	 * @return Error description if errors occurred. Null if no errors occur.
+	 */
 	public String validateInput(String type, Object value) {
 		switch (type) {
 		case "order":
