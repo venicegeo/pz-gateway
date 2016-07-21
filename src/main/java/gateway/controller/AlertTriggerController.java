@@ -118,9 +118,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			
 			try {
 				// Proxy the request to Workflow
-				String url = String.format("%s/%s", WORKFLOW_URL, "trigger");
-				String response = restTemplate.postForObject(url, objectMapper.writeValueAsString(trigger), String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "trigger"), objectMapper.writeValueAsString(trigger), String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -168,10 +166,9 @@ public class AlertTriggerController extends PiazzaRestController {
 			
 			try {
 				// Broker the request to Workflow
-				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&key=%s", WORKFLOW_URL,
+				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&key=%s", WORKFLOW_URL, 
 						"trigger", page, perPage, order, sortBy != null ? sortBy : "", key != null ? key : "");
-				String response = restTemplate.getForObject(url, String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -213,9 +210,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			
 			try {
 				// Proxy the request to Workflow
-				String url = String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId);
-				String response = restTemplate.getForObject(url, String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId), String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -256,10 +251,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			
 			try {
 				// Proxy the request to Workflow
-				String url = String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId);
-				restTemplate.delete(url);
-				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Trigger " + triggerId
-						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
+				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId));
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Trigger " + triggerId + " was deleted successfully", "Gateway"), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -311,8 +304,7 @@ public class AlertTriggerController extends PiazzaRestController {
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&triggerId=%s&key=%s",
 						WORKFLOW_URL, "alert", page, perPage, order, sortBy != null ? sortBy : "",
 						triggerId != null ? triggerId : "", key != null ? key : "");
-				String response = restTemplate.getForObject(url, String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -352,10 +344,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			
 			try {
 				// Proxy the request to Workflow
-				String url = String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId);
-				restTemplate.delete(url);
-				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Alert " + alertId
-						+ " was deleted successfully", "Gateway"), HttpStatus.OK);
+				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId));
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Alert " + alertId + " was deleted successfully", "Gateway"), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -395,9 +385,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			
 			try {
 				// Proxy the request to Workflow
-				String url = String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId);
-				String response = restTemplate.getForObject(url, String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId), String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}

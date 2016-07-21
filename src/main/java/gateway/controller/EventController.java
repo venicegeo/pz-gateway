@@ -122,7 +122,7 @@ public class EventController extends PiazzaRestController {
 				// Broker the request to Workflow
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&eventType=%s", WORKFLOW_URL,
 						"event", page, perPage, order, sortBy != null ? sortBy : "", eventType != null ? eventType : "");				
-				return restTemplate.getForEntity(url, String.class);
+				return new ResponseEntity<String>(restTemplate.getForEntity(url, String.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}		
@@ -162,9 +162,7 @@ public class EventController extends PiazzaRestController {
 			
 			try {
 				// Broker the request to Workflow
-				String response = restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"),
-						objectMapper.writeValueAsString(event), String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"), objectMapper.writeValueAsString(event), String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}			
@@ -206,8 +204,7 @@ public class EventController extends PiazzaRestController {
 
 			try {
 				// Broker the request to pz-workflow
-				String response = restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "event", eventId), String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "event", eventId), String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -303,8 +300,7 @@ public class EventController extends PiazzaRestController {
 				// Broker the request to Workflow
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s", WORKFLOW_URL, "eventType",
 						page, perPage, order, sortBy != null ? sortBy : "");
-				String response = restTemplate.getForObject(url, String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -346,9 +342,8 @@ public class EventController extends PiazzaRestController {
 			
 			try {
 				// Proxy the request to Workflow
-				String url = String.format("%s/%s", WORKFLOW_URL, "eventType");
-				String response = restTemplate.postForObject(url, objectMapper.writeValueAsString(eventType), String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "eventType"), 
+						objectMapper.writeValueAsString(eventType), String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -389,8 +384,7 @@ public class EventController extends PiazzaRestController {
 			
 			try {
 				// Proxy the request to Workflow
-				String response = restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "eventType", eventTypeId), String.class);
-				return new ResponseEntity<String>(response, HttpStatus.OK);			
+				return new ResponseEntity<String>(restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "eventType", eventTypeId), String.class), HttpStatus.OK);			
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -431,8 +425,7 @@ public class EventController extends PiazzaRestController {
 			
 			try {
 				// Proxy the request to Workflow
-				String url = String.format("%s/%s/%s", WORKFLOW_URL, "eventType", eventTypeId);
-				restTemplate.delete(url);
+				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "eventType", eventTypeId));
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("EventType " + eventTypeId + " was deleted successfully", "Gateway"), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
