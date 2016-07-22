@@ -53,6 +53,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -92,18 +93,21 @@ public class JobController extends PiazzaRestController {
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/get_job_jobId
 	 * 
 	 * @param jobId
-	 *            The ID of the Job.
+	 *            The Id of the Job.
 	 * @param user
 	 *            User information
 	 * @return Contains Job Status, or an appropriate Error.
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Get Job Status", notes = "Fetches the Status for a single Piazza Job.", tags = "Job")
+	@ApiOperation(value = "Get Job Status", notes = "Gets the Status for a Piazza Job by its Id.", tags = "Job")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Information regarding the requested Job. At bare minimum, this will contain the Job ID of the Job that has been spawned as a result of the POSTed message. If more information is available, such as Status, it will also be included.", response = JobStatusResponse.class),
+			@ApiResponse(code = 200, message = "Information regarding the requested Job. At bare minimum, this will contain the Job Id of the Job that has been spawned as a result of the POSTed message. If more information is available, such as Status, it will also be included.", response = JobStatusResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = JobErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getJobStatus(
-			@ApiParam(value = "ID of the Job to Fetch", required = true) @PathVariable(value = "jobId") String jobId,
+			@ApiParam(value = "Id of the Job to Fetch", required = true) @PathVariable(value = "jobId") String jobId,
 			Principal user) {
 		try {
 			// Log the request
@@ -118,7 +122,7 @@ public class JobController extends PiazzaRestController {
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error requesting Job Status for ID %s: %s", jobId, exception.getMessage());
+			String error = String.format("Error requesting Job Status for Id %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -126,12 +130,12 @@ public class JobController extends PiazzaRestController {
 	}
 
 	/**
-	 * Cancels a running Job, specified by it's Job ID.
+	 * Cancels a running Job, specified by it's Job Id.
 	 * 
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/delete_job_jobId
 	 * 
 	 * @param jobId
-	 *            The ID of the Job to delete.
+	 *            The Id of the Job to delete.
 	 * @param user
 	 *            User information
 	 * @return No response body if successful, or an appropriate Error
@@ -140,14 +144,17 @@ public class JobController extends PiazzaRestController {
 	@ApiOperation(value = "Abort Job", notes = "Cancels a Running Job. If the Job is already completed in some way, then cancellation will not occur.", tags = "Job")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Job has requested to be cancelled. This may take some time, as the process may not be in an easily cancelled state at the time the request is made.", response = SuccessResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = JobErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> abortJob(
-			@ApiParam(value = "ID of the Job to cancel.", required = true) @PathVariable(value = "jobId") String jobId,
+			@ApiParam(value = "Id of the Job to cancel.", required = true) @PathVariable(value = "jobId") String jobId,
 			@ApiParam(value = "Details for the cancellation of the Job.") @RequestParam(value = "reason", required = false) String reason,
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Job Abort for Job ID %s with reason %s",
+			logger.log(String.format("User %s requested Job Abort for Job Id %s with reason %s",
 					gatewayUtil.getPrincipalName(user), jobId, reason), PiazzaLogger.INFO);
 
 			// Create the Request object.
@@ -173,7 +180,7 @@ public class JobController extends PiazzaRestController {
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error requesting Job Abort for ID %s: %s", jobId, exception.getMessage());
+			String error = String.format("Error requesting Job Abort for Id %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -182,24 +189,28 @@ public class JobController extends PiazzaRestController {
 
 	/**
 	 * Repeats a Job that has previously been submitted to Piazza. This will
-	 * spawn a new Job with new corresponding ID.
+	 * spawn a new Job with new corresponding Id.
 	 * 
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/put_job_jobId
 	 * 
 	 * @param jobId
-	 *            The ID of the Job to repeat.
+	 *            The Id of the Job to repeat.
 	 * @param user
 	 *            User information
-	 * @return Response containing the ID of the newly created Job, or
+	 * @return Response containing the Id of the newly created Job, or
 	 *         appropriate error
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.CREATED)	
 	@ApiOperation(value = "Repeat Job", notes = "Repeats a previously submitted Job. This will clone the original Job, and run it again with identical parameters, using the requesting users authentication in the new Job.", tags = "Job")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "A new Job ID that corresponds to the cloned Job in Piazza.", response = JobResponse.class),
+			@ApiResponse(code = 201, message = "A new Job Id that corresponds to the cloned Job in Piazza.", response = JobResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),			
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> repeatJob(
-			@ApiParam(value = "ID of the Job to Repeat", required = true) @PathVariable(value = "jobId") String jobId,
+			@ApiParam(value = "Id of the Job to Repeat", required = true) @PathVariable(value = "jobId") String jobId,
 			Principal user) {
 		try {
 			// Log the request
@@ -214,13 +225,13 @@ public class JobController extends PiazzaRestController {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, JobResponse.class).getBody(), HttpStatus.OK);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, JobResponse.class).getBody(), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Repeating Job ID %s: %s", jobId, exception.getMessage());
+			String error = String.format("Error Repeating Job Id %s: %s", jobId, exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -229,9 +240,9 @@ public class JobController extends PiazzaRestController {
 
 	/**
 	 * Executes a job with the Piazza service controller. This will create a Job
-	 * ID and then return that ID immediately. The job itself will be
+	 * Id and then return that Id immediately. The job itself will be
 	 * long-running and status can be tracked by requesting the status of that
-	 * Job ID. When the complete has completed, it will be made available
+	 * Job Id. When the complete has completed, it will be made available
 	 * through the Job result field. The ServiceController handles the execution
 	 * of the Job.
 	 * 
@@ -239,13 +250,17 @@ public class JobController extends PiazzaRestController {
 	 *            The job to execute
 	 * @param user
 	 *            The user executing the Job
-	 * @return The job ID, or the error if encountered
+	 * @return The job Id, or the error if encountered
 	 */
 	@RequestMapping(value = { "/job" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.CREATED)	
 	@ApiOperation(value = "Executes a registered Service", notes = "Creates a Piazza Job to execute a registered service in the system, with the specified parameters.", tags = {
 			"Job", "Service" })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The Job ID for the execution of the Service. This can be queried using Job Status to track progress and, when available, fetch the result object.", response = JobResponse.class),
+			@ApiResponse(code = 201, message = "The Job Id for the execution of the Service. This can be queried using Job Status to track progress and, when available, fetch the result object.", response = JobResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> executeService(
 			@ApiParam(value = "The Payload that describes the Service to be executed, and the inputs for that service.", required = true, name = "body") @Valid @RequestBody ExecuteServiceJob job,
@@ -260,7 +275,7 @@ public class JobController extends PiazzaRestController {
 			request.createdBy = gatewayUtil.getPrincipalName(user);
 
 			String jobId = gatewayUtil.sendJobRequest(request, null);
-			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Executing for user %s for Service %s: %s",

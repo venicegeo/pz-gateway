@@ -98,7 +98,7 @@ public class AlertTriggerTests {
 		ResponseEntity<?> response = alertTriggerController.createTrigger(new Trigger(), user);
 
 		// Verify
-		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(response.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
@@ -158,27 +158,6 @@ public class AlertTriggerTests {
 	}
 
 	/**
-	 * Test DELETE /trigger/{triggerId}
-	 */
-	@Test
-	public void testDeleteTrigger() {
-		// Mock Response
-		Mockito.doNothing().when(restTemplate).delete(anyString(), eq(String.class));
-
-		// Test
-		ResponseEntity<?> response = alertTriggerController.deleteTrigger("triggerId", user);
-
-		// Verify
-		assertTrue(response.getBody() instanceof SuccessResponse);
-
-		// Test Exception
-		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString());
-		response = alertTriggerController.deleteTrigger("triggerId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(response.getBody() instanceof ErrorResponse);
-	}
-
-	/**
 	 * Test GET /alert
 	 */
 	@Test
@@ -200,27 +179,6 @@ public class AlertTriggerTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("Alert Error"));
-	}
-
-	/**
-	 * Test DELETE /alert/{alertId}
-	 */
-	@Test
-	public void testDeleteAlert() {
-		// Mock Response
-		Mockito.doNothing().when(restTemplate).delete(anyString(), eq(String.class));
-
-		// Test
-		ResponseEntity<?> response = alertTriggerController.deleteAlert("alertId", user);
-
-		// Verify
-		assertTrue(response.getBody() instanceof SuccessResponse);
-
-		// Test Exception
-		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString());
-		response = alertTriggerController.deleteAlert("alertId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(response.getBody() instanceof ErrorResponse);
 	}
 
 	/**

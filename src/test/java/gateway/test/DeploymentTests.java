@@ -136,7 +136,7 @@ public class DeploymentTests {
 
 		// Verify
 		assertTrue(((JobResponse) entity.getBody()).data.getJobId().equals("654321"));
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
 		Mockito.doThrow(new Exception("Kafka Blows Up")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class),

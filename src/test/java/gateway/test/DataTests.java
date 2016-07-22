@@ -190,7 +190,7 @@ public class DataTests {
 		assertTrue(response instanceof JobResponse == true);
 		assertTrue(response instanceof ErrorResponse == false);
 		assertTrue(((JobResponse) response).data.getJobId().equalsIgnoreCase("123456"));
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test an Exception
 		when(gatewayUtil.sendJobRequest(any(PiazzaJobRequest.class), anyString())).thenThrow(new Exception());
@@ -242,7 +242,7 @@ public class DataTests {
 
 		assertTrue(response instanceof ErrorResponse == false);
 		assertTrue(((JobResponse) response).data.getJobId().equalsIgnoreCase("123456"));
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 	}
 
 	/**
@@ -341,7 +341,7 @@ public class DataTests {
 		DataResourceListResponse response = (DataResourceListResponse) entity.getBody();
 
 		// Verify
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 		assertTrue(response.getData().get(0).getDataId().equalsIgnoreCase(mockData.getDataId()));
 		assertTrue(response.getPagination().getCount().equals(1));
 

@@ -53,6 +53,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -99,12 +100,16 @@ public class ServiceController extends PiazzaRestController {
 	 *            The service to register.
 	 * @param user
 	 *            The user submitting the request
-	 * @return The Service ID, or appropriate error.
+	 * @return The Service Id, or appropriate error.
 	 */
 	@RequestMapping(value = "/service", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.CREATED)	
 	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the newly created Service", response = ServiceIdResponse.class),
+			@ApiResponse(code = 201, message = "The Id of the newly created Service", response = ServiceIdResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> registerService(
 			@ApiParam(value = "The metadata for the service. This includes the URL, parameters, inputs and outputs. It also includes other release metadata such as classification and availability.", required = true) @Valid @RequestBody Service service,
@@ -126,7 +131,7 @@ public class ServiceController extends PiazzaRestController {
 			jobRequest.jobType = new RegisterServiceJob(service);
 			// Proxy the request to the Service Controller
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest, ServiceIdResponse.class).getBody(), HttpStatus.OK);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest, ServiceIdResponse.class).getBody(), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
@@ -146,18 +151,21 @@ public class ServiceController extends PiazzaRestController {
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/get_service
 	 * 
 	 * @param serviceId
-	 *            The ID of the service to retrieve the data for.
+	 *            The Id of the service to retrieve the data for.
 	 * @param user
 	 *            The user submitting the request
 	 * @return Service metadata, or an error.
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Retrieve Service information", notes = "Retrieves the information and metadata for the specified Service matching the ID.", tags = "Service")
+	@ApiOperation(value = "Retrieve Service information", notes = "Gets a Service by its Id", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Service object.", response = ServiceResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getService(
-			@ApiParam(value = "The ID of the Service to retrieve.", required = true) @PathVariable(value = "serviceId") String serviceId,
+			@ApiParam(value = "The Id of the Service to retrieve.", required = true) @PathVariable(value = "serviceId") String serviceId,
 			Principal user) {
 		try {
 			// Log the request
@@ -185,18 +193,21 @@ public class ServiceController extends PiazzaRestController {
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/delete_service
 	 * 
 	 * @param serviceId
-	 *            The ID of the service to delete.
+	 *            The Id of the service to delete.
 	 * @param user
 	 *            The user submitting the request
 	 * @return Service metadata, or an error.
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Unregister a Service", notes = "Unregisters a service by its ID.", tags = "Service")
+	@ApiOperation(value = "Unregister a Service", notes = "Unregisters a service by its Id.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of Deleted.", response = SuccessResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> deleteService(
-			@ApiParam(value = "The ID of the Service to unregister.", required = true) @PathVariable(value = "serviceId") String serviceId,
+			@ApiParam(value = "The Id of the Service to unregister.", required = true) @PathVariable(value = "serviceId") String serviceId,
 			@ApiParam(hidden = true) @RequestParam(value = "softDelete", required = false) boolean softDelete,
 			Principal user) {
 		try {
@@ -228,7 +239,7 @@ public class ServiceController extends PiazzaRestController {
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/put_service
 	 * 
 	 * @param serviceId
-	 *            The ID of the service to update.
+	 *            The Id of the service to update.
 	 * @param serviceData
 	 *            The service data to update the existing service with.
 	 * @param user
@@ -236,12 +247,15 @@ public class ServiceController extends PiazzaRestController {
 	 * @return 200 OK if success, or an error if exceptions occur.
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Update Service Information", notes = "Updates a Service Metadata, with the Service to updated specified by its ID.", tags = "Service")
+	@ApiOperation(value = "Update Service Information", notes = "Updates a Service Metadata, with the Service to updated specified by its Id.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of Update.", response = SuccessResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> updateService(
-			@ApiParam(value = "The ID of the Service to Update.", required = true) @PathVariable(value = "serviceId") String serviceId,
+			@ApiParam(value = "The Id of the Service to Update.", required = true) @PathVariable(value = "serviceId") String serviceId,
 			@ApiParam(value = "The Service Metadata. All properties specified in the Service data here will overwrite the existing properties of the Service.", required = true, name = "service") @Valid @RequestBody Service serviceData,
 			Principal user) {
 		try {
@@ -291,6 +305,9 @@ public class ServiceController extends PiazzaRestController {
 	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Services registered to Piazza.", response = ServiceListResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getServices(
 			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
@@ -364,6 +381,9 @@ public class ServiceController extends PiazzaRestController {
 	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Services registered to Piazza.", response = ServiceListResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getServicesForCurrentUser(
 			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
@@ -385,10 +405,14 @@ public class ServiceController extends PiazzaRestController {
 	 * @return The list of Services matching the query.
 	 */
 	@RequestMapping(value = "/service/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.CREATED)	
 	@ApiOperation(value = "Query Metadata in Piazza Services", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for registered Services. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
 			"Search", "Service" })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = ServiceListResponse.class),
+			@ApiResponse(code = 201, message = "The list of Search results that match the query string.", response = ServiceListResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> searchServices(
 			@ApiParam(value = "The Query string for the Search component.", name = "search", required = true) @Valid @RequestBody SearchRequest query,
@@ -405,7 +429,7 @@ public class ServiceController extends PiazzaRestController {
 			ServiceListResponse searchResponse = restTemplate.postForObject(
 					String.format("%s/%s", SEARCH_URL, SEARCH_ENDPOINT), entity, ServiceListResponse.class);
 			// Respond
-			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),

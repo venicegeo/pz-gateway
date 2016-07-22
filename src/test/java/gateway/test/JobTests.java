@@ -188,7 +188,7 @@ public class JobTests {
 		ResponseEntity<PiazzaResponse> entity = jobController.repeatJob("123456", user);
 
 		// Verify
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
 		when(restTemplate.postForEntity(anyString(), any(), eq(JobResponse.class)))
@@ -213,7 +213,7 @@ public class JobTests {
 		ResponseEntity<PiazzaResponse> entity = jobController.executeService(executeJob, user);
 
 		// Verify
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
 		Mockito.doThrow(new Exception("REST Broke")).when(gatewayUtil)

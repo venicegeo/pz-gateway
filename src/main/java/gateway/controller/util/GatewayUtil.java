@@ -102,16 +102,16 @@ public class GatewayUtil {
 	}
 
 	/**
-	 * Sends a Job Request to the Job Manager. This will generate a Job ID and return it once the Job Manager has
+	 * Sends a Job Request to the Job Manager. This will generate a Job Id and return it once the Job Manager has
 	 * indexed the Job into its database.
 	 * 
 	 * @param request
 	 *            The Job Request
-	 * @return The Job ID
+	 * @return The Job Id
 	 */
 	public String sendJobRequest(PiazzaJobRequest request, String jobId) throws Exception {
 		try {
-			// Generate a Job ID
+			// Generate a Job Id
 			if (jobId == null) {
 				jobId = getUuid();
 			}
@@ -125,7 +125,7 @@ public class GatewayUtil {
 			if (jobResponse.getBody() instanceof ErrorResponse) {
 				throw new Exception(((ErrorResponse) jobResponse.getBody()).message);
 			}
-			// Return the Job ID from the response.
+			// Return the Job Id from the response.
 			return ((JobResponse) jobResponse.getBody()).data.getJobId();
 		} catch (Exception exception) {
 			throw new Exception(String.format("Error with Job Manager when Requesting New Piazza Job: %s", exception.getMessage()));
@@ -174,7 +174,7 @@ public class GatewayUtil {
 	 * of the job to reference the new S3 location of the file.
 	 * 
 	 * @param jobId
-	 *            The ID of the Job, used for generating a unique S3 bucket file name.
+	 *            The Id of the Job, used for generating a unique S3 bucket file name.
 	 * @param job
 	 *            The ingest job, containing the DataResource metadata
 	 * @param file

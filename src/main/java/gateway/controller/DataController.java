@@ -53,6 +53,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -110,6 +111,8 @@ public class DataController extends PiazzaRestController {
 	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),			
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getData(
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
@@ -176,9 +179,12 @@ public class DataController extends PiazzaRestController {
 	 *         ErrorResponse if something goes wrong.
 	 */
 	@RequestMapping(value = "/data/me", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data.", tags = "Data", response = DataResourceListResponse.class)
+	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data for the authenticated user.", tags = "Data", response = DataResourceListResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getDataForCurrentUser(
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
@@ -201,13 +207,17 @@ public class DataController extends PiazzaRestController {
 	 *            The Ingest Job, describing the data to be ingested.
 	 * @param user
 	 *            The user submitting the request
-	 * @return The Response containing the Job ID, or containing the appropriate
+	 * @return The Response containing the Job Id, or containing the appropriate
 	 *         ErrorResponse
 	 */
 	@RequestMapping(value = "/data", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.CREATED)	
 	@ApiOperation(value = "Load Data into Piazza", notes = "Loads data into the Piazza Core metadata holdings. Piazza can either host the data, or reflect an external location where the data is stored. Data must be loaded into Piazza before core components such as the Service Controller, or other external services, are able to consume that data.", tags = "Data")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
+			@ApiResponse(code = 201, message = "The Id of the Job created to handle the Loading of the Data.", response = JobResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> ingestData(
 			@ApiParam(name = "data", value = "The description, location, and metadata for the Data to be loaded into Piazza.", required = true) @Valid @RequestBody IngestJob job,
@@ -222,8 +232,8 @@ public class DataController extends PiazzaRestController {
 			request.jobType = job;
 			request.createdBy = gatewayUtil.getPrincipalName(user);
 			String jobId = gatewayUtil.sendJobRequest(request, null);
-			// Return the Job ID of the newly created Job
-			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
+			// Return the Job Id of the newly created Job
+			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data for user %s of type %s:  %s",
@@ -244,13 +254,17 @@ public class DataController extends PiazzaRestController {
 	 *            The file bytes
 	 * @param user
 	 *            The user submitting the request
-	 * @return The response containing the Job ID, or containing the appropriate
+	 * @return The response containing the Job Id, or containing the appropriate
 	 *         ErrorResponse
 	 */
 	@RequestMapping(value = "/data/file", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.CREATED)	
 	@ApiOperation(value = "Load a Data File into Piazza", notes = "Loads a local user data file into the Piazza Core metadata holdings. This functions the same as /data endpoint, but a file is specified instead of a URI.", tags = "Data")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
+			@ApiResponse(code = 201, message = "The Id of the Job created to handle the Loading of the Data.", response = JobResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> ingestDataFile(
 			@ApiParam(value = "The Load Job metadata. This is the identical model to the LoadJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency.", required = true) @Valid @RequestParam String data,
@@ -293,8 +307,8 @@ public class DataController extends PiazzaRestController {
 			request.jobType = job;
 			request.createdBy = gatewayUtil.getPrincipalName(user);
 			jobId = gatewayUtil.sendJobRequest(request, jobId);
-			// Return the Job ID of the newly created Job
-			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
+			// Return the Job Id of the newly created Job
+			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data File for user %s of type %s",
@@ -311,7 +325,7 @@ public class DataController extends PiazzaRestController {
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_data
 	 * 
 	 * @param dataId
-	 *            The ID of the Resource
+	 *            The Id of the Resource
 	 * @param user
 	 *            The user submitting the request
 	 * @return The status and metadata of the data resource, or appropriate
@@ -320,10 +334,13 @@ public class DataController extends PiazzaRestController {
 	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get Metadata for Loaded Data", notes = "Reads all metadata for a Data item that has been previously loaded into Piazza.", tags = "Data")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Metadata describing the Data Item that matches the specified Data ID. Includes release metadata, and spatial metadata, etc.", response = DataResourceResponse.class),
+			@ApiResponse(code = 200, message = "Metadata describing the Data Item that matches the specified Data Id. Includes release metadata, and spatial metadata, etc.", response = DataResourceResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getMetadata(
-			@ApiParam(value = "ID of the Data item to pull Metadata for.", required = true) @PathVariable(value = "dataId") String dataId,
+			@ApiParam(value = "Id of the Data item to pull Metadata for.", required = true) @PathVariable(value = "dataId") String dataId,
 			Principal user) {
 		try {
 			// Log the request
@@ -350,7 +367,7 @@ public class DataController extends PiazzaRestController {
 	 * Deletes the Data Resource from Piazza.
 	 * 
 	 * @param dataId
-	 *            The ID of the data item to delete
+	 *            The Id of the data item to delete
 	 * @param user
 	 *            The user submitting the request
 	 * @return 200 OK if deleted, error response if not.
@@ -359,13 +376,16 @@ public class DataController extends PiazzaRestController {
 	@ApiOperation(value = "Delete Loaded Data", notes = "Deletes an entry to Data that has been previously loaded into Piazza. If the file was hosted by Piazza, then that file will also be deleted.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Message indicating confirmation of delete", response = SuccessResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> deleteData(
-			@ApiParam(value = "ID of the Data item to Delete.", required = true) @PathVariable(value = "dataId") String dataId,
+			@ApiParam(value = "Id of the Data item to Delete.", required = true) @PathVariable(value = "dataId") String dataId,
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Delete of Data ID %s.", gatewayUtil.getPrincipalName(user),
+			logger.log(String.format("User %s requested Delete of Data Id %s.", gatewayUtil.getPrincipalName(user),
 					dataId), PiazzaLogger.INFO);
 			// Proxy the request to Pz-ingest
 			try {
@@ -389,7 +409,7 @@ public class DataController extends PiazzaRestController {
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/post_data
 	 * 
 	 * @param dataId
-	 *            The ID of the resource
+	 *            The Id of the resource
 	 * @param user
 	 *            the user submitting the request
 	 * @return OK if successful; error if not.
@@ -398,9 +418,12 @@ public class DataController extends PiazzaRestController {
 	@ApiOperation(value = "Update Metadata for Loaded Data.", notes = "This will update the metadata for a specific data item. Non-null values will overwrite. This will only update the corresponding 'metadata' field in the Data item. Spatial metadata, and file information cannot be updated. For cases where spatial data or file data needs to change, an re-load of the data must be done.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation that the Metadata has been updated.", response = SuccessResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> updateMetadata(
-			@ApiParam(value = "ID of the Data item to update the Metadata for.", required = true) @PathVariable(value = "dataId") String dataId,
+			@ApiParam(value = "Id of the Data item to update the Metadata for.", required = true) @PathVariable(value = "dataId") String dataId,
 			@ApiParam(value = "The Resource Metadata object containing the updated metadata fields to write.", required = true) @Valid @RequestBody ResourceMetadata metadata,
 			Principal user) {
 		try {
@@ -431,10 +454,14 @@ public class DataController extends PiazzaRestController {
 	 * @return The list of DataResource items matching the query.
 	 */
 	@RequestMapping(value = "/data/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.CREATED)	
 	@ApiOperation(value = "Query Metadata in Piazza Data holdings", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for loaded data. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
 			"Data", "Search" })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
+			@ApiResponse(code = 201, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> searchData(
 			@ApiParam(value = "The Query string for the Search component.", required = true) @Valid @RequestBody SearchRequest query,
@@ -450,7 +477,7 @@ public class DataController extends PiazzaRestController {
 			DataResourceListResponse searchResponse = restTemplate.postForObject(
 					String.format("%s/%s", SEARCH_URL, SEARCH_ENDPOINT), entity, DataResourceListResponse.class);
 			// Respond
-			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
@@ -467,7 +494,7 @@ public class DataController extends PiazzaRestController {
 	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_file_dataId
 	 * 
 	 * @param dataId
-	 *            The ID of the Data to download
+	 *            The Id of the Data to download
 	 * @param user
 	 *            The user submitting the request
 	 * @return The bytes of the file as a download, or an Error if the file
@@ -475,10 +502,14 @@ public class DataController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Download Data File", notes = "Gets the Bytes of Data loaded into Piazza. Only works for data that is stored internally by Piazza.", tags = "Data")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "The downloaded data file.", response = Byte[].class),
+	@ApiResponses(value = { 
+			@ApiResponse(code = 200, message = "The downloaded data file.", response = Byte[].class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),	
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getFile(
-			@ApiParam(value = "The ID of the Data to download.", required = true) @PathVariable(value = "dataId") String dataId,
+			@ApiParam(value = "The Id of the Data to download.", required = true) @PathVariable(value = "dataId") String dataId,
 			@ApiParam(value = "Specify the name of the file that the user wishes to retrieve the data as. This will set the content-disposition header.") @RequestParam(value = "fileName", required = false) String fileName,
 			Principal user) throws Exception {
 		try {

@@ -77,7 +77,7 @@ public class Application extends SpringBootServletInitializer {
 
 	@Bean
 	public Docket gatewayApi() {
-		return new Docket(DocumentationType.SWAGGER_2).ignoredParameterTypes(Principal.class).groupName("Piazza")
+		return new Docket(DocumentationType.SWAGGER_2).useDefaultResponseMessages(false).ignoredParameterTypes(Principal.class).groupName("Piazza")
 				.apiInfo(apiInfo()).select().apis(RequestHandlerSelectors.withClassAnnotation(Api.class))
 				.paths(PathSelectors.any()).build();
 	}
