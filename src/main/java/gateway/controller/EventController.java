@@ -97,9 +97,8 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Get all Events", notes = "Retrieves a list of all Events", tags = { "Event", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Events.", response = EventListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEvents(
 			@ApiParam(value = "The name of the event type to filter by.") @RequestParam(value = "eventTypeName", required = false) String eventTypeName,
@@ -157,9 +156,8 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Creates an Event for the EventType", notes = "Sends an Event to the Piazza workflow component", tags = {	"Event", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "The created Event", response = EventResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),			
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> fireEvent(
 			@ApiParam(value = "The Event JSON object.", required = true) @Valid @RequestBody Event event, Principal user) {
@@ -202,7 +200,6 @@ public class EventController extends PiazzaRestController {
 	@ApiResponses(value = { 
 			@ApiResponse(code = 200, message = "The requested Event", response = Event.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEventInformation(
@@ -242,9 +239,8 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "List EventTypes", notes = "Returns all EventTypes", tags = {	"Event Type", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of EventTypes.", response = EventTypeListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEventTypes(
 			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
@@ -301,9 +297,8 @@ public class EventController extends PiazzaRestController {
 	@ApiOperation(value = "Register an EventType", notes = "Defines an EventType", tags = {	"Event Type", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "The created EventType", response = EventTypeResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> createEventType(
 			@ApiParam(value = "The EventType information. This defines the schema for the Events that must be followed.", required = true) @Valid @RequestBody EventType eventType,
@@ -347,7 +342,6 @@ public class EventController extends PiazzaRestController {
 	@ApiResponses(value = { 
 			@ApiResponse(code = 200, message = "The EventType", response = EventType.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEventType(
@@ -374,4 +368,48 @@ public class EventController extends PiazzaRestController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	/**
+	 * Deletes an EventType
+	 * 
+	 * @see "http://pz-swagger.stage.geointservices.io/#!/Event_Type/delete_eventType_eventTypeId"
+	 * 
+	 * @param eventTypeId
+	 *            The Id of the EventType to delete
+	 * @param user
+	 *            The user executing the request
+	 * @return 200 OK if deleted, error if exceptions occurred
+	 */
+	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Delete an EventType", notes = "Deletes a specific EventType by Id", tags = { "Event Type", "Workflow" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Confirmation of EventType deletion.", response = SuccessResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),						
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),			
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<?> deleteEventType(
+			@ApiParam(value = "The unique identifier for the EventType to delete.", required = true) @PathVariable(value = "eventTypeId") String eventTypeId,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s has requested deletion of EventType %s",
+					gatewayUtil.getPrincipalName(user), eventTypeId), PiazzaLogger.INFO);
+			
+			try {
+				// Proxy the request to Workflow
+				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "eventType", eventTypeId));
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("EventType " + eventTypeId + " was deleted successfully", "Gateway"), HttpStatus.OK);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+			}
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Deleting EventType Id %s by user %s: %s", eventTypeId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}	
 }

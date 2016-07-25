@@ -103,7 +103,6 @@ public class JobController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Information regarding the requested Job. At bare minimum, this will contain the Job Id of the Job that has been spawned as a result of the POSTed message. If more information is available, such as Status, it will also be included.", response = JobStatusResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = JobErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getJobStatus(
@@ -145,7 +144,6 @@ public class JobController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Job has requested to be cancelled. This may take some time, as the process may not be in an easily cancelled state at the time the request is made.", response = SuccessResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = JobErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> abortJob(
@@ -205,8 +203,8 @@ public class JobController extends PiazzaRestController {
 	@ApiOperation(value = "Repeat Job", notes = "Repeats a previously submitted Job. This will clone the original Job, and run it again with identical parameters, using the requesting users authentication in the new Job.", tags = "Job")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "A new Job Id that corresponds to the cloned Job in Piazza.", response = JobResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),		
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),			
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> repeatJob(
@@ -258,9 +256,8 @@ public class JobController extends PiazzaRestController {
 			"Job", "Service" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "The Job Id for the execution of the Service. This can be queried using Job Status to track progress and, when available, fetch the result object.", response = JobResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> executeService(
 			@ApiParam(value = "The Payload that describes the Service to be executed, and the inputs for that service.", required = true, name = "body") @Valid @RequestBody ExecuteServiceJob job,

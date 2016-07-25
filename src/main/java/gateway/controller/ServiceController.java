@@ -107,9 +107,8 @@ public class ServiceController extends PiazzaRestController {
 	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "The Id of the newly created Service", response = ServiceIdResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> registerService(
 			@ApiParam(value = "The metadata for the service. This includes the URL, parameters, inputs and outputs. It also includes other release metadata such as classification and availability.", required = true) @Valid @RequestBody Service service,
@@ -161,7 +160,6 @@ public class ServiceController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Service object.", response = ServiceResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getService(
@@ -203,7 +201,6 @@ public class ServiceController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of Deleted.", response = SuccessResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> deleteService(
@@ -250,8 +247,8 @@ public class ServiceController extends PiazzaRestController {
 	@ApiOperation(value = "Update Service Information", notes = "Updates a Service Metadata, with the Service to updated specified by its Id.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of Update.", response = SuccessResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),		
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> updateService(
@@ -305,9 +302,8 @@ public class ServiceController extends PiazzaRestController {
 	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Services registered to Piazza.", response = ServiceListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getServices(
 			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
@@ -381,9 +377,8 @@ public class ServiceController extends PiazzaRestController {
 	@ApiOperation(value = "Retrieve list of Services", notes = "Retrieves the list of available Services currently registered to this Piazza system.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Services registered to Piazza.", response = ServiceListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getServicesForCurrentUser(
 			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
@@ -410,9 +405,8 @@ public class ServiceController extends PiazzaRestController {
 			"Search", "Service" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "The list of Search results that match the query string.", response = ServiceListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> searchServices(
 			@ApiParam(value = "The Query string for the Search component.", name = "search", required = true) @Valid @RequestBody SearchRequest query,

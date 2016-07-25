@@ -100,9 +100,8 @@ public class DeploymentController extends PiazzaRestController {
 			"Deployment", "Data" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "The Job Id for the specified Deployment. This could be a long-running process to copy the data over to GeoServer, so a new Job is spawned.", response = JobResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> createDeployment(
 			@ApiParam(value = "The Data Id and deployment information for creating the Deployment", name = "data", required = true) @Valid @RequestBody AccessJob job,
@@ -139,9 +138,8 @@ public class DeploymentController extends PiazzaRestController {
 	@ApiOperation(value = "Obtain a list of all GeoServer deployments held by Piazza.", notes = "Data can be made available through the Piazza GeoServer as WMS/WCS/WFS. This must be done through POSTing to the /deployment endpoint. This endpoint will return a list of all Deployed resources.", tags = "Deployment")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DeploymentListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getDeployment(
 			@ApiParam(value = "A general keyword search to apply to all Deployments.") @RequestParam(value = "keyword", required = false) String keyword,
@@ -206,7 +204,6 @@ public class DeploymentController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The metadata about the Deployment. Contains the unique Id of the deployment; the Data Id that it represents; and server information regarding the access of the deployed service (likely GeoServer) including the GetCapabilities document.", response = DeploymentResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getDeployment(
@@ -250,7 +247,6 @@ public class DeploymentController extends PiazzaRestController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation that the deployment has been deleted.", response = SuccessResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> deleteDeployment(
@@ -284,15 +280,14 @@ public class DeploymentController extends PiazzaRestController {
 	 * 
 	 * @return Deployment Group information, or an ErrorResonse if exceptions occur.
 	 */
-	@ApiOperation(value = "Create a Deployment Group.", notes = "Creates a new Deployment Group Id that can be used in order to add some future set of Deployments into a single WMS layer.", tags = "Deployment")
+	@RequestMapping(value = "/deployment/group", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)	
+	@ApiOperation(value = "Create a Deployment Group.", notes = "Creates a new Deployment Group Id that can be used in order to add some future set of Deployments into a single WMS layer.", tags = "Deployment")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "Metadata about for the deployment group that has been created.", response = DeploymentGroupResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),		
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
-			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	@RequestMapping(value = "/deployment/group", method = RequestMethod.POST)
 	public ResponseEntity<PiazzaResponse> createDeploymentGroup(Principal user) {
 		try {
 			// Log the request
@@ -320,14 +315,13 @@ public class DeploymentController extends PiazzaRestController {
 	 *            The user requesting deletion.
 	 * @return OK if deleted, Error if not.
 	 */
+	@RequestMapping(value = "/deployment/group/{deploymentGroupId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Delete a Deployment Group.", notes = "Deletes a Deployment Group from the Piazza metadata, and the GIS server.", tags = "Deployment")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Successful deletion of Deployment Group.", response = SuccessResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	@RequestMapping(value = "/deployment/group/{deploymentGroupId}", method = RequestMethod.DELETE)
 	public ResponseEntity<PiazzaResponse> deleteDeploymentGroup(@PathVariable(value = "deploymentGroupId") String deploymentGroupId,
 			Principal user) {
 		try {
