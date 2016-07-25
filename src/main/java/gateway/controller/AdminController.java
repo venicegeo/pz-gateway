@@ -125,7 +125,7 @@ public class AdminController extends PiazzaRestController {
 			headers.set("Authorization", request.getHeader("Authorization"));
 			return new ResponseEntity<PiazzaResponse>(
 					new RestTemplate().exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), 
-					HttpStatus.OK);
+					HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error retrieving UUID: %s", exception.getMessage());

@@ -230,6 +230,7 @@ public class DataController extends PiazzaRestController {
 			request.jobType = job;
 			request.createdBy = gatewayUtil.getPrincipalName(user);
 			String jobId = gatewayUtil.sendJobRequest(request, null);
+
 			// Return the Job Id of the newly created Job
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
@@ -304,6 +305,7 @@ public class DataController extends PiazzaRestController {
 			request.jobType = job;
 			request.createdBy = gatewayUtil.getPrincipalName(user);
 			jobId = gatewayUtil.sendJobRequest(request, jobId);
+			
 			// Return the Job Id of the newly created Job
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {

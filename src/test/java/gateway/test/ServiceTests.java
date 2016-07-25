@@ -131,7 +131,8 @@ public class ServiceTests {
 		Service service = new Service();
 		service.setServiceId("123456");
 		ServiceIdResponse mockResponse = new ServiceIdResponse(service.getServiceId());
-		when(restTemplate.postForEntity(anyString(), any(), eq(ServiceIdResponse.class))).thenReturn(new ResponseEntity<ServiceIdResponse>(mockResponse, HttpStatus.OK));
+		when(restTemplate.postForEntity(anyString(), any(), eq(ServiceIdResponse.class)))
+				.thenReturn(new ResponseEntity<ServiceIdResponse>(mockResponse, HttpStatus.CREATED));
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = serviceController.registerService(service, user);
@@ -142,7 +143,8 @@ public class ServiceTests {
 		assertTrue(response.data.getServiceId().equals("123456"));
 
 		// Test Exception
-		when(restTemplate.postForEntity(anyString(), any(), eq(ServiceIdResponse.class))).thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+		when(restTemplate.postForEntity(anyString(), any(), eq(ServiceIdResponse.class)))
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 		entity = serviceController.registerService(service, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
@@ -155,7 +157,8 @@ public class ServiceTests {
 	public void testGetMetadata() {
 		// Mock
 		ServiceResponse mockResponse = new ServiceResponse(mockService);
-		when(restTemplate.getForEntity(anyString(), eq(ServiceResponse.class))).thenReturn(new ResponseEntity<ServiceResponse>(mockResponse, HttpStatus.OK));
+		when(restTemplate.getForEntity(anyString(), eq(ServiceResponse.class)))
+				.thenReturn(new ResponseEntity<ServiceResponse>(mockResponse, HttpStatus.OK));
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = serviceController.getService("123456", user);
@@ -167,7 +170,8 @@ public class ServiceTests {
 		assertTrue(response.data.getResourceMetadata().getName().equalsIgnoreCase("Test"));
 
 		// Test Exception
-		when(restTemplate.getForEntity(anyString(), eq(ServiceResponse.class))).thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+		when(restTemplate.getForEntity(anyString(), eq(ServiceResponse.class)))
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 		entity = serviceController.getService("123456", user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
@@ -181,7 +185,7 @@ public class ServiceTests {
 	public void testDelete() {
 		// Mock
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.DELETE), eq(null), eq(SuccessResponse.class)))
-			.thenReturn(new ResponseEntity<SuccessResponse>(new SuccessResponse("Deleted", "Service Controller"), HttpStatus.OK));
+				.thenReturn(new ResponseEntity<SuccessResponse>(new SuccessResponse("Deleted", "Service Controller"), HttpStatus.OK));
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = serviceController.deleteService("123456", false, user);
@@ -193,7 +197,7 @@ public class ServiceTests {
 
 		// Test Exception
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.DELETE), eq(null), eq(SuccessResponse.class)))
-			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 		entity = serviceController.deleteService("123456", false, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
@@ -207,9 +211,8 @@ public class ServiceTests {
 	public void testUpdateMetadata() {
 		// Mock
 		HttpEntity<Service> request = new HttpEntity<Service>(null, null);
-		doReturn(new ResponseEntity<PiazzaResponse>(new SuccessResponse("Yes", "Gateway"), HttpStatus.OK)).when(
-				restTemplate).exchange(any(String.class), eq(HttpMethod.PUT), any(request.getClass()),
-				eq(SuccessResponse.class));
+		doReturn(new ResponseEntity<PiazzaResponse>(new SuccessResponse("Yes", "Gateway"), HttpStatus.OK)).when(restTemplate)
+				.exchange(any(String.class), eq(HttpMethod.PUT), any(request.getClass()), eq(SuccessResponse.class));
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = serviceController.updateService("123456", mockService, user);
@@ -218,8 +221,8 @@ public class ServiceTests {
 		assertTrue(entity.getBody() instanceof SuccessResponse);
 
 		// Test Exception
-		doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
-			.when(restTemplate).exchange(any(String.class), eq(HttpMethod.PUT), any(request.getClass()), eq(SuccessResponse.class));
+		doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(restTemplate).exchange(any(String.class),
+				eq(HttpMethod.PUT), any(request.getClass()), eq(SuccessResponse.class));
 		ResponseEntity<PiazzaResponse> entity2 = serviceController.updateService("123456", mockService, user);
 		assertTrue(entity2.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity2.getBody() instanceof ErrorResponse);
@@ -235,7 +238,8 @@ public class ServiceTests {
 		mockResponse.data = new ArrayList<Service>();
 		mockResponse.getData().add(mockService);
 		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
-		when(restTemplate.getForEntity(anyString(), eq(ServiceListResponse.class))).thenReturn(new ResponseEntity<ServiceListResponse>(mockResponse, HttpStatus.OK));
+		when(restTemplate.getForEntity(anyString(), eq(ServiceListResponse.class)))
+				.thenReturn(new ResponseEntity<ServiceListResponse>(mockResponse, HttpStatus.OK));
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = serviceController.getServices(null, 0, 10, null, null, null, user);
@@ -249,7 +253,8 @@ public class ServiceTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForEntity(anyString(), eq(ServiceListResponse.class))).thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+		when(restTemplate.getForEntity(anyString(), eq(ServiceListResponse.class)))
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 		entity = serviceController.getServices(null, 0, 10, null, null, null, user);
 		response = entity.getBody();
 		assertTrue(response instanceof ErrorResponse);
@@ -278,8 +283,7 @@ public class ServiceTests {
 		assertTrue(response.getPagination().getCount().equals(1));
 
 		// Test Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(ServiceListResponse.class))).thenThrow(
-				new RestClientException("Error"));
+		when(restTemplate.postForObject(anyString(), any(), eq(ServiceListResponse.class))).thenThrow(new RestClientException("Error"));
 		entity = serviceController.searchServices(null, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
