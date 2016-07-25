@@ -162,7 +162,7 @@ public class EventController extends PiazzaRestController {
 			
 			try {
 				// Broker the request to Workflow
-				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"), objectMapper.writeValueAsString(event), String.class), HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"), objectMapper.writeValueAsString(event), String.class), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}			
@@ -343,7 +343,7 @@ public class EventController extends PiazzaRestController {
 			try {
 				// Proxy the request to Workflow
 				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "eventType"), 
-						objectMapper.writeValueAsString(eventType), String.class), HttpStatus.OK);
+						objectMapper.writeValueAsString(eventType), String.class), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}

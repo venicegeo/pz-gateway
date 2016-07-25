@@ -223,7 +223,7 @@ public class DataController extends PiazzaRestController {
 			request.createdBy = gatewayUtil.getPrincipalName(user);
 			String jobId = gatewayUtil.sendJobRequest(request, null);
 			// Return the Job ID of the newly created Job
-			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data for user %s of type %s:  %s",
@@ -294,7 +294,7 @@ public class DataController extends PiazzaRestController {
 			request.createdBy = gatewayUtil.getPrincipalName(user);
 			jobId = gatewayUtil.sendJobRequest(request, jobId);
 			// Return the Job ID of the newly created Job
-			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data File for user %s of type %s",

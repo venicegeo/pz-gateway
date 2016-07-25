@@ -111,7 +111,7 @@ public class DeploymentController extends PiazzaRestController {
 			jobRequest.jobType = job;
 			String jobId = gatewayUtil.sendJobRequest(jobRequest, null);
 			// Send the response back to the user
-			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.OK);
+			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Loading Data for user %s for ID %s of type %s: %s", gatewayUtil.getPrincipalName(user),
@@ -283,7 +283,7 @@ public class DeploymentController extends PiazzaRestController {
 			// Broker to pz-access
 			return new ResponseEntity<PiazzaResponse>(restTemplate
 					.postForEntity(String.format("%s/deployment/group?createdBy=%s", ACCESS_URL, createdBy), null, PiazzaResponse.class)
-					.getBody(), HttpStatus.OK);
+					.getBody(), HttpStatus.CREATED);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error creating Deployment Group: %s", exception.getMessage());

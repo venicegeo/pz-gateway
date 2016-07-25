@@ -118,7 +118,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			
 			try {
 				// Proxy the request to Workflow
-				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "trigger"), objectMapper.writeValueAsString(trigger), String.class), HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "trigger"), objectMapper.writeValueAsString(trigger), String.class), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
 			}

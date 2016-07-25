@@ -126,7 +126,7 @@ public class ServiceController extends PiazzaRestController {
 			jobRequest.jobType = new RegisterServiceJob(service);
 			// Proxy the request to the Service Controller
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest, ServiceIdResponse.class).getBody(), HttpStatus.OK);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest, ServiceIdResponse.class).getBody(), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
