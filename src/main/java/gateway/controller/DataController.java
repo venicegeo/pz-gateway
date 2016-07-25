@@ -207,7 +207,7 @@ public class DataController extends PiazzaRestController {
 	@RequestMapping(value = "/data", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Load Data into Piazza", notes = "Loads data into the Piazza Core metadata holdings. Piazza can either host the data, or reflect an external location where the data is stored. Data must be loaded into Piazza before core components such as the Service Controller, or other external services, are able to consume that data.", tags = "Data")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
+			@ApiResponse(code = 201, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> ingestData(
 			@ApiParam(name = "data", value = "The description, location, and metadata for the Data to be loaded into Piazza.", required = true) @Valid @RequestBody IngestJob job,
@@ -250,7 +250,7 @@ public class DataController extends PiazzaRestController {
 	@RequestMapping(value = "/data/file", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Load a Data File into Piazza", notes = "Loads a local user data file into the Piazza Core metadata holdings. This functions the same as /data endpoint, but a file is specified instead of a URI.", tags = "Data")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
+			@ApiResponse(code = 201, message = "The ID of the Job created to handle the Loading of the Data.", response = JobResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> ingestDataFile(
 			@ApiParam(value = "The Load Job metadata. This is the identical model to the LoadJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency.", required = true) @Valid @RequestParam String data,

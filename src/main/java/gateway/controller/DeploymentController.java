@@ -97,7 +97,7 @@ public class DeploymentController extends PiazzaRestController {
 	@ApiOperation(value = "Obtain a GeoServer deployment for a Data Resource object", notes = "Data that has been loaded into Piazza can be deployed to GeoServer. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed.", tags = {
 			"Deployment", "Data" })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The Job ID for the specified Deployment. This could be a long-running process to copy the data over to GeoServer, so a new Job is spawned.", response = JobResponse.class),
+			@ApiResponse(code = 201, message = "The Job ID for the specified Deployment. This could be a long-running process to copy the data over to GeoServer, so a new Job is spawned.", response = JobResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> createDeployment(
 			@ApiParam(value = "The Data ID and deployment information for creating the Deployment", name = "data", required = true) @Valid @RequestBody AccessJob job,
@@ -272,7 +272,7 @@ public class DeploymentController extends PiazzaRestController {
 	 */
 	@ApiOperation(value = "Create a Deployment Group.", notes = "Creates a new Deployment Group ID that can be used in order to add some future set of Deployments into a single WMS layer.", tags = "Deployment")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Metadata about for the deployment group that has been created.", response = DeploymentGroupResponse.class),
+			@ApiResponse(code = 201, message = "Metadata about for the deployment group that has been created.", response = DeploymentGroupResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	@RequestMapping(value = "/deployment/group", method = RequestMethod.POST)
 	public ResponseEntity<PiazzaResponse> createDeploymentGroup(Principal user) {

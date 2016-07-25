@@ -104,7 +104,7 @@ public class ServiceController extends PiazzaRestController {
 	@RequestMapping(value = "/service", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The ID of the newly created Service", response = ServiceIdResponse.class),
+			@ApiResponse(code = 201, message = "The ID of the newly created Service", response = ServiceIdResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> registerService(
 			@ApiParam(value = "The metadata for the service. This includes the URL, parameters, inputs and outputs. It also includes other release metadata such as classification and availability.", required = true) @Valid @RequestBody Service service,
