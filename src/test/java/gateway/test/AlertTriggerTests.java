@@ -98,7 +98,7 @@ public class AlertTriggerTests {
 		ResponseEntity<?> response = alertTriggerController.createTrigger(new Trigger(), user);
 
 		// Verify
-		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(response.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(

@@ -120,7 +120,7 @@ public class EventTests {
 		ResponseEntity<?> response = eventController.fireEvent(new Event(), user);
 
 		// Verify
-		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(response.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
@@ -213,7 +213,7 @@ public class EventTests {
 
 		// Verify
 		assertTrue(response.getBody().toString().equals("OK"));
-		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(response.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
