@@ -93,7 +93,7 @@ public class EventTests {
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(new ResponseEntity<String>("event", HttpStatus.OK));
 
 		// Test
-		ResponseEntity<?> response = eventController.getEvents(null, null, null, null, 0, 10, user);
+		ResponseEntity<?> response = eventController.getEvents(null, null, null, null, null, 0, 10, user);
 
 		// Verify
 		assertTrue(response.getBody().toString().equals("event"));
@@ -102,7 +102,7 @@ public class EventTests {
 		// Test Exception
 		when(restTemplate.getForEntity(anyString(), eq(String.class)))
 				.thenThrow(new RestClientException("event error"));
-		response = eventController.getEvents(null, null, null, null, 0, 10, user);
+		response = eventController.getEvents(null, null, null, null, null, 0, 10, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("event error"));
@@ -153,27 +153,6 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("event error"));
-	}
-
-	/**
-	 * Test DELETE /event/{eventId}
-	 */
-	@Test
-	public void testDeleteEvent() {
-		// Mock Response
-		Mockito.doNothing().when(restTemplate).delete(anyString(), eq(String.class));
-
-		// Test
-		ResponseEntity<?> response = eventController.deleteEvent("eventId", user);
-
-		// Verify
-		assertTrue(response.getBody() instanceof SuccessResponse);
-
-		// Test Exception
-		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString(), eq(String.class));
-		response = eventController.deleteEvent("eventId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(response.getBody() instanceof ErrorResponse);
 	}
 
 	/**
@@ -246,26 +225,5 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("event type error"));
-	}
-
-	/**
-	 * Test DELETE /event/eventType/{eventTypeId}
-	 */
-	@Test
-	public void testDeleteEventType() {
-		// Mock Response
-		Mockito.doNothing().when(restTemplate).delete(anyString());
-
-		// Test
-		ResponseEntity<?> response = eventController.deleteEventType("eventTypeId", user);
-
-		// Verify
-		assertTrue(response.getBody() instanceof SuccessResponse);
-
-		// Test Exception
-		Mockito.doThrow(new RestClientException("")).when(restTemplate).delete(anyString());
-		response = eventController.deleteEventType("eventTypeId", user);
-		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(response.getBody() instanceof ErrorResponse);
 	}
 }

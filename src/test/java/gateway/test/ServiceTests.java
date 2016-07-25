@@ -278,7 +278,7 @@ public class ServiceTests {
 		ServiceListResponse response = (ServiceListResponse) entity.getBody();
 
 		// Verify
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 		assertTrue(response.getData().get(0).getServiceId().equalsIgnoreCase(mockService.getServiceId()));
 		assertTrue(response.getPagination().getCount().equals(1));
 

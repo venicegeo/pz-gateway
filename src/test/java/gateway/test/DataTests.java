@@ -341,7 +341,7 @@ public class DataTests {
 		DataResourceListResponse response = (DataResourceListResponse) entity.getBody();
 
 		// Verify
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 		assertTrue(response.getData().get(0).getDataId().equalsIgnoreCase(mockData.getDataId()));
 		assertTrue(response.getPagination().getCount().equals(1));
 
