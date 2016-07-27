@@ -37,7 +37,11 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * REST Controller that defines administrative end points that reference
@@ -53,7 +57,9 @@ public class AdminController extends PiazzaRestController {
 	@Autowired
 	private PiazzaLogger logger;
 	@Autowired
-	private HttpServletRequest request;	
+	private HttpServletRequest request;
+	@Autowired
+	private ObjectMapper objectMapper;	
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
 	@Value("${SPACE}")
@@ -123,9 +129,13 @@ public class AdminController extends PiazzaRestController {
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Authorization", request.getHeader("Authorization"));
-			return new ResponseEntity<PiazzaResponse>(
-					new RestTemplate().exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), 
-					HttpStatus.CREATED);
+			try {
+				return new ResponseEntity<PiazzaResponse>(
+						new RestTemplate().exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), 
+						HttpStatus.CREATED);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error retrieving UUID: %s", exception.getMessage());
