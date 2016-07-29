@@ -90,6 +90,7 @@ public class ServiceController extends PiazzaRestController {
 	private RestTemplate restTemplate = new RestTemplate();
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
+	private static final String DEFAULT_SORTBY = "resourceMetadata.createdOn";
 
 	/**
 	 * Registers an external service with the Piazza Service Controller.
@@ -311,7 +312,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Filter for the username that published the service.") @RequestParam(value = "userName", required = false) String userName,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = "asc") String order,
-			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SORTBY) String sortBy,
 			Principal user) {
 		try {
 			// Log the request
