@@ -451,11 +451,11 @@ public class DataController extends PiazzaRestController {
 	 * @return The list of DataResource items matching the query.
 	 */
 	@RequestMapping(value = "/data/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseStatus(HttpStatus.CREATED)	
+	@ResponseStatus(HttpStatus.OK)	
 	@ApiOperation(value = "Query Metadata in Piazza Data holdings", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for loaded data. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
 			"Data", "Search" })
 	@ApiResponses(value = {
-			@ApiResponse(code = 201, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
+			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -473,7 +473,7 @@ public class DataController extends PiazzaRestController {
 			DataResourceListResponse searchResponse = restTemplate.postForObject(
 					String.format("%s/%s", SEARCH_URL, SEARCH_ENDPOINT), entity, DataResourceListResponse.class);
 			// Respond
-			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.CREATED);
+			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
