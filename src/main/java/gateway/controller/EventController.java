@@ -60,7 +60,7 @@ import util.PiazzaLogger;
 
 /**
  * REST controller defining end points that interact with the Piazza workflow
- * service; including events and event types.
+ * service; including events and EventTypes.
  * 
  * @author Patrick.Doody
  *
@@ -101,8 +101,8 @@ public class EventController extends PiazzaRestController {
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEvents(
-			@ApiParam(value = "The name of the event type to filter by.") @RequestParam(value = "eventTypeName", required = false) String eventTypeName,
-			@ApiParam(value = "The Id of the event type to filter by.") @RequestParam(value = "eventTypeId", required = false) String eventTypeId,
+			@ApiParam(value = "The name of the EventType to filter by.") @RequestParam(value = "eventTypeName", required = false) String eventTypeName,
+			@ApiParam(value = "The Id of the EventType to filter by.") @RequestParam(value = "eventTypeId", required = false) String eventTypeId,
 			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
@@ -236,7 +236,7 @@ public class EventController extends PiazzaRestController {
 	 * @return The list of EventTypes, or an error.
 	 */
 	@RequestMapping(value = "/eventType", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "List EventTypes", notes = "Returns all EventTypes", tags = {	"Event Type", "Workflow" })
+	@ApiOperation(value = "List EventTypes", notes = "Returns all EventTypes", tags = {	"EventType", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The list of EventTypes.", response = EventTypeListResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
@@ -252,7 +252,7 @@ public class EventController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(
-					String.format("User %s has requested a list of Event Types.", gatewayUtil.getPrincipalName(user)),
+					String.format("User %s has requested a list of EventTypes.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
 			
 			// Validate params
@@ -273,7 +273,7 @@ public class EventController extends PiazzaRestController {
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Querying Event Types by user %s: %s",
+			String error = String.format("Error Querying EventTypes by user %s: %s",
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
@@ -294,7 +294,7 @@ public class EventController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/eventType", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)	
-	@ApiOperation(value = "Register an EventType", notes = "Defines an EventType", tags = {	"Event Type", "Workflow" })
+	@ApiOperation(value = "Register an EventType", notes = "Defines an EventType", tags = {	"EventType", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "The created EventType", response = EventTypeResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
@@ -318,7 +318,7 @@ public class EventController extends PiazzaRestController {
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Creating Event Type by user %s: %s",
+			String error = String.format("Error Creating EventType by user %s: %s",
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
@@ -338,7 +338,7 @@ public class EventController extends PiazzaRestController {
 	 * @return EventType information, or an error
 	 */
 	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Get an EventType", notes = "Gets an EventType by Id", tags = { "Event Type", "Workflow" })
+	@ApiOperation(value = "Get an EventType", notes = "Gets an EventType by Id", tags = { "EventType", "Workflow" })
 	@ApiResponses(value = { 
 			@ApiResponse(code = 200, message = "The EventType", response = EventType.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
@@ -361,7 +361,7 @@ public class EventController extends PiazzaRestController {
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			String error = String.format("Error Getting Event Type Id %s by user %s: %s", eventTypeId,
+			String error = String.format("Error Getting EventType Id %s by user %s: %s", eventTypeId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
@@ -381,7 +381,7 @@ public class EventController extends PiazzaRestController {
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
 	@RequestMapping(value = "/eventType/{eventTypeId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Delete an EventType", notes = "Deletes a specific EventType by Id", tags = { "Event Type", "Workflow" })
+	@ApiOperation(value = "Delete an EventType", notes = "Deletes a specific EventType by Id", tags = { "EventType", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of EventType deletion.", response = SuccessResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
