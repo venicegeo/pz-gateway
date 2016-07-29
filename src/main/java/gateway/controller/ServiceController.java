@@ -91,6 +91,7 @@ public class ServiceController extends PiazzaRestController {
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_SORTBY = "resourceMetadata.createdOn";
+	private static final String DEFAULT_ORDER = "asc";
 
 	/**
 	 * Registers an external service with the Piazza Service Controller.
@@ -293,7 +294,7 @@ public class ServiceController extends PiazzaRestController {
 	 *            The size per page
 	 * @param keyword
 	 *            The keywords to search on
-	 * @param userName
+	 * @param createdBy
 	 *            Filter services created by a certain user
 	 * @param user
 	 *            The user submitting the request
@@ -310,8 +311,8 @@ public class ServiceController extends PiazzaRestController {
 			@ApiParam(value = "A general keyword search to apply to all Services.") @RequestParam(value = "keyword", required = false) String keyword,
 			@ApiParam(value = "Paginating large results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
-			@ApiParam(value = "Filter for the username that published the service.") @RequestParam(value = "userName", required = false) String userName,
-			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = "asc") String order,
+			@ApiParam(value = "Filter for the user name that published the service.") @RequestParam(value = "createdBy", required = false) String createdBy,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SORTBY) String sortBy,
 			Principal user) {
 		try {
@@ -334,8 +335,8 @@ public class ServiceController extends PiazzaRestController {
 				url = String.format("%s&keyword=%s", url, keyword);
 			}
 			// Add username if specified
-			if ((userName != null) && (userName.isEmpty() == false)) {
-				url = String.format("%s&userName=%s", url, userName);
+			if ((createdBy != null) && (createdBy.isEmpty() == false)) {
+				url = String.format("%s&userName=%s", url, createdBy);
 			}
 			// Sort by and order
 			if ((order != null) && (order.isEmpty() == false)) {
