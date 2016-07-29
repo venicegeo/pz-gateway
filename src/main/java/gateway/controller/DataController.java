@@ -120,7 +120,7 @@ public class DataController extends PiazzaRestController {
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
-			@ApiParam(value = "Filter for the username that published the service.") @RequestParam(value = "userName", required = false) String userName,
+			@ApiParam(value = "Filter for the username that published the service.") @RequestParam(value = "createdBy", required = false) String createdBy,
 			Principal user) {
 		try {
 			// Log the request
@@ -142,8 +142,8 @@ public class DataController extends PiazzaRestController {
 				url = String.format("%s&keyword=%s", url, keyword);
 			}
 			// Add username if specified
-			if ((userName != null) && (userName.isEmpty() == false)) {
-				url = String.format("%s&userName=%s", url, userName);
+			if ((createdBy != null) && (createdBy.isEmpty() == false)) {
+				url = String.format("%s&userName=%s", url, createdBy);
 			}
 			// Add optional pagination
 			if ((order != null) && (order.isEmpty() == false)) {
