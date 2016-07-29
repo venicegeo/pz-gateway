@@ -211,7 +211,7 @@ public class DataController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/data", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)	
-	@ApiOperation(value = "Load Data into Piazza", notes = "Loads data into the Piazza Core metadata holdings. Piazza can either host the data, or reflect an external location where the data is stored. Data must be loaded into Piazza before core components such as the Service Controller, or other external services, are able to consume that data.", tags = "Data")
+	@ApiOperation(value = "Load Data into Piazza", notes = "Loads Data into the Piazza Core metadata holdings. Piazza can either host the Data, or reflect an external location where the data is stored. Data must be loaded into Piazza before core components such as the ServiceController, or other external services, are able to consume that Data.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "The Id of the Job created to handle the Loading of the Data.", response = JobResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),			
@@ -412,7 +412,7 @@ public class DataController extends PiazzaRestController {
 	 * @return OK if successful; error if not.
 	 */
 	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Update Metadata for Loaded Data.", notes = "This will update the metadata for a specific data item. Non-null values will overwrite. This will only update the corresponding 'metadata' field in the Data item. Spatial metadata, and file information cannot be updated. For cases where spatial data or file data needs to change, an re-load of the data must be done.", tags = "Data")
+	@ApiOperation(value = "Update Metadata for Loaded Data.", notes = "This will update the metadata for a specific data item. Non-null values will overwrite. This will only update the corresponding 'metadata' field in the Data item. Spatial metadata, and file information cannot be updated. For cases where spatial metadata or file data needs to change, an re-load of the Data must be done.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation that the Metadata has been updated.", response = SuccessResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),			
@@ -497,7 +497,7 @@ public class DataController extends PiazzaRestController {
 	 *         cannot be retrieved.
 	 */
 	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Download Data File", notes = "Gets the Bytes of Data loaded into Piazza. Only works for data that is stored internally by Piazza.", tags = "Data")
+	@ApiOperation(value = "Download Data File", notes = "Gets the Bytes of Data loaded into Piazza. Only works for Data that is stored internally by Piazza.", tags = "Data")
 	@ApiResponses(value = { 
 			@ApiResponse(code = 200, message = "The downloaded data file.", response = Byte[].class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),

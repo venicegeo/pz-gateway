@@ -280,7 +280,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * @return 200 OK if deleted, error if exceptions occurred
 	 */
 	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Deletes a Trigger", notes = "Deletes a Trigger with the Workflow component. This Trigger will no longer listen for conditions for events to fire.", tags = {
+	@ApiOperation(value = "Deletes a Trigger", notes = "Deletes a Trigger. This Trigger will no longer listen for conditions for events to fire.", tags = {
 			"Trigger", "Workflow" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Message indicating Trigger was deleted successfully", response = SuccessResponse.class),

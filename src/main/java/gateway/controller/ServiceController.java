@@ -197,7 +197,7 @@ public class ServiceController extends PiazzaRestController {
 	 * @return Service metadata, or an error.
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Unregister a Service", notes = "Unregisters a service by its Id.", tags = "Service")
+	@ApiOperation(value = "Unregister a Service", notes = "Unregisters a Service by its Id.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of Deleted.", response = SuccessResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
