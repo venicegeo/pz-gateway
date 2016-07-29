@@ -20,23 +20,15 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import gateway.controller.AlertTriggerController;
-import gateway.controller.util.GatewayUtil;
 
 import java.security.Principal;
 
 import javax.management.remote.JMXPrincipal;
 
-import model.response.ErrorResponse;
-import model.response.SuccessResponse;
-import model.response.WorkflowResponse;
-import model.workflow.Trigger;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +38,10 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gateway.controller.AlertTriggerController;
+import gateway.controller.util.GatewayUtil;
+import model.response.ErrorResponse;
+import model.workflow.Trigger;
 import util.PiazzaLogger;
 import util.UUIDFactory;
 
@@ -118,7 +114,7 @@ public class AlertTriggerTests {
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn("Trigger");
 
 		// Test
-		ResponseEntity<?> response = alertTriggerController.getTriggers(null, 0, 10, null, "test", user);
+		ResponseEntity<?> response = alertTriggerController.getTriggers(0, 10, null, "test", user);
 
 		// Verify
 		assertTrue(response.getBody().toString().equals("Trigger"));
@@ -127,7 +123,7 @@ public class AlertTriggerTests {
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(
 				new RestClientException("Trigger Error"));
-		response = alertTriggerController.getTriggers(null, 0, 10, null, "test", user);
+		response = alertTriggerController.getTriggers(0, 10, null, "test", user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("Trigger Error"));
@@ -166,7 +162,7 @@ public class AlertTriggerTests {
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn("Alert");
 
 		// Test
-		ResponseEntity<?> response = alertTriggerController.getAlerts(0, 10, null, null, "test", null, user);
+		ResponseEntity<?> response = alertTriggerController.getAlerts(0, 10, null, "test", null, user);
 
 		// Verify
 		assertTrue(response.getBody().toString().equals("Alert"));
@@ -175,7 +171,7 @@ public class AlertTriggerTests {
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(String.class)))
 				.thenThrow(new RestClientException("Alert Error"));
-		response = alertTriggerController.getAlerts(0, 10, null, null, "test", null, user);
+		response = alertTriggerController.getAlerts(0, 10, null, "test", null, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("Alert Error"));

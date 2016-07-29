@@ -103,7 +103,6 @@ public class EventController extends PiazzaRestController {
 	public ResponseEntity<?> getEvents(
 			@ApiParam(value = "The name of the EventType to filter by.") @RequestParam(value = "eventTypeName", required = false) String eventTypeName,
 			@ApiParam(value = "The Id of the EventType to filter by.") @RequestParam(value = "eventTypeId", required = false) String eventTypeId,
-			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
@@ -243,7 +242,6 @@ public class EventController extends PiazzaRestController {
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getEventTypes(
-			@ApiParam(value = "The field to use for sorting.") @RequestParam(value = "key", required = false) String key,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
