@@ -207,7 +207,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> deleteService(
 			@ApiParam(value = "The Id of the Service to unregister.", required = true) @PathVariable(value = "serviceId") String serviceId,
-			@ApiParam(hidden = true) @RequestParam(value = "softDelete", required = false) boolean softDelete,
+			@ApiParam(value = "Determines if the Service should be completely removed, or just disabled. If set to false, the Service will be entirely deleted.", hidden = true) @RequestParam(value = "softDelete", required = false) boolean softDelete,
 			Principal user) {
 		try {
 			// Log the request
