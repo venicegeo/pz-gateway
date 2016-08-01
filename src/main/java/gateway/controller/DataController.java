@@ -413,7 +413,7 @@ public class DataController extends PiazzaRestController {
 	 * @return OK if successful; error if not.
 	 */
 	@RequestMapping(value = "/data/{dataId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Update Metadata for Loaded Data.", notes = "This will update the metadata for a specific data item. Non-null values will overwrite. This will only update the corresponding 'metadata' field in the Data item. Spatial metadata, and file information cannot be updated. For cases where spatial metadata or file data needs to change, an re-load of the Data must be done.", tags = "Data")
+	@ApiOperation(value = "Update Metadata for Loaded Data.", notes = "This will update the metadata for a specific data item. Non-null values will overwrite. This will only update the corresponding 'metadata' field in the Data item. Spatial metadata, and file information cannot be updated. For cases where spatial metadata or file data needs to change, and re-load of the Data must be done.", tags = "Data")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation that the Metadata has been updated.", response = SuccessResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),			
