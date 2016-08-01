@@ -97,7 +97,7 @@ public class DeploymentController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/deployment", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)	
-	@ApiOperation(value = "Obtain a GIS Server Deployment for a Data Resource object", notes = "Data that has been loaded into Piazza can be deployed to the GIS Server. This will copy the data to the GeoServer data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed.", tags = {
+	@ApiOperation(value = "Obtain a GIS Server Deployment for a Data Resource object", notes = "Data that has been loaded into Piazza can be deployed to the GIS Server. This will copy the data to the GIS Server data directory (if needed), or point to the Piazza PostGIS; and then create a WMS/WCS/WFS layer (as available) for the service. Only data that has been internally hosted within Piazza can be deployed.", tags = {
 			"Deployment", "Data" })
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "The Job Id for the specified Deployment. This could be a long-running process to copy the data over to the GIS Server, so a new Job is spawned.", response = JobResponse.class),
