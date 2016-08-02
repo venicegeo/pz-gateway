@@ -429,4 +429,46 @@ public class EventController extends PiazzaRestController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}	
+	
+	/**
+	 * Deletes an Event
+
+	 * @param eventId
+	 *            The Id of the Event to delete
+	 * @param user
+	 *            The user executing the request
+	 * @return 200 OK if deleted, error if exceptions occurred
+	 */
+	@RequestMapping(value = "/event/{eventId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Delete an Event", notes = "Deletes a specific Event by Id", tags = { "Event", "Workflow" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Confirmation of Event deletion.", response = SuccessResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 403, message = "Forbidden", response = ErrorResponse.class),						
+			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),			
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<?> deleteEvent(
+			@ApiParam(value = "The unique identifier for the Event to delete.", required = true) @PathVariable(value = "eventId") String eventId,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s has requested deletion of Event %s",
+					gatewayUtil.getPrincipalName(user), eventId), PiazzaLogger.INFO);
+			
+			try {
+				// Proxy the request to Workflow
+				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "event", eventId));
+				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Event " + eventId + " was deleted successfully", "Gateway"), HttpStatus.OK);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+			}
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Deleting Event Id %s by user %s: %s", eventId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}	
 }
