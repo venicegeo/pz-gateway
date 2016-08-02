@@ -497,7 +497,7 @@ public class DataController extends PiazzaRestController {
 	 * @return The bytes of the file as a download, or an Error if the file
 	 *         cannot be retrieved.
 	 */
-	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET, produces = {MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET)
 	@ApiOperation(value = "Download Data File", notes = "Gets the Bytes of Data loaded into Piazza. Only works for Data that is stored internally by Piazza.", tags = "Data")
 	@ApiResponses(value = { 
 			@ApiResponse(code = 200, message = "The downloaded data file.", response = Byte[].class),
@@ -514,7 +514,7 @@ public class DataController extends PiazzaRestController {
 					dataId), PiazzaLogger.INFO);
 
 			// Get the bytes of the Data
-			String url = String.format("%s/file/%s", ACCESS_URL, dataId);
+			String url = String.format("%s/file/%s.json", ACCESS_URL, dataId);
 			// Attach keywords if specified
 			if ((fileName != null) && (fileName.isEmpty() == false)) {
 				url = String.format("%s?fileName=%s", url, fileName);
@@ -522,7 +522,7 @@ public class DataController extends PiazzaRestController {
 
 			// Proxy the request to Ingest
 			try {
-				// Stream the bytes back				
+				// Stream the bytes back
 				return restTemplate.getForEntity(url, byte[].class);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
