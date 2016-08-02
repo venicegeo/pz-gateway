@@ -497,7 +497,7 @@ public class DataController extends PiazzaRestController {
 	 * @return The bytes of the file as a download, or an Error if the file
 	 *         cannot be retrieved.
 	 */
-	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET, produces = {MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})
 	@ApiOperation(value = "Download Data File", notes = "Gets the Bytes of Data loaded into Piazza. Only works for Data that is stored internally by Piazza.", tags = "Data")
 	@ApiResponses(value = { 
 			@ApiResponse(code = 200, message = "The downloaded data file.", response = Byte[].class),
