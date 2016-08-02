@@ -167,6 +167,15 @@ public class EventController extends PiazzaRestController {
 					PiazzaLogger.INFO);
 			
 			try {
+				// Attempt to set the createdBy field
+				event.createdBy = gatewayUtil.getPrincipalName(user);
+			} catch (Exception exception) {
+				logger.log(
+						String.format("Failed to set the createdBy field in Event created by User %s: ",
+								gatewayUtil.getPrincipalName(user), exception.getMessage()), PiazzaLogger.WARNING);
+			}
+			
+			try {
 				// Broker the request to Workflow
 				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"), objectMapper.writeValueAsString(event), String.class), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
@@ -307,6 +316,15 @@ public class EventController extends PiazzaRestController {
 			logger.log(
 					String.format("User %s has requested a new EventType to be created.",
 							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			
+			try {
+				// Attempt to set the createdBy field
+				eventType.createdBy = gatewayUtil.getPrincipalName(user);
+			} catch (Exception exception) {
+				logger.log(
+						String.format("Failed to set the createdBy field in EventType created by User %s: ",
+								gatewayUtil.getPrincipalName(user), exception.getMessage()), PiazzaLogger.WARNING);
+			}
 			
 			try {
 				// Proxy the request to Workflow
