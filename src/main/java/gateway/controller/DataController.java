@@ -117,6 +117,7 @@ public class DataController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getData(
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
+			@ApiParam(value = "Filter datasets that were created by a specific Job Id.") @RequestParam(value = "createdByJobId", required = false) String createdByJobId,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
@@ -152,6 +153,9 @@ public class DataController extends PiazzaRestController {
 			}
 			if ((sortBy != null) && (sortBy.isEmpty() == false)) {
 				url = String.format("%s&sortBy=%s", url, sortBy);
+			}
+			if ((createdByJobId != null) && (createdByJobId.isEmpty() == false)) {
+				url = String.format("%s&createdByJobId=%s", url, createdByJobId);
 			}
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(url, DataResourceListResponse.class).getBody(), HttpStatus.OK);
