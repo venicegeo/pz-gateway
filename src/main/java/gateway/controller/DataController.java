@@ -192,12 +192,13 @@ public class DataController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getDataForCurrentUser(
 			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
+			@ApiParam(value = "Filter datasets that were created by a specific Job Id.") @RequestParam(value = "createdByJobId", required = false) String createdByJobId,
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			Principal user) {
-		return getData(keyword, page, perPage, order, sortBy, gatewayUtil.getPrincipalName(user), user);
+		return getData(keyword, createdByJobId, page, perPage, order, sortBy, gatewayUtil.getPrincipalName(user), user);
 	}
 
 	/**

@@ -144,7 +144,7 @@ public class DataTests {
 				.thenReturn(new ResponseEntity<DataResourceListResponse>(mockResponse, HttpStatus.OK));
 
 		// Get the data
-		ResponseEntity<PiazzaResponse> entity = dataController.getData(null, 0, 10, null, "asc", null, user);
+		ResponseEntity<PiazzaResponse> entity = dataController.getData(null, null, 0, 10, null, "asc", null, user);
 		PiazzaResponse response = entity.getBody();
 
 		// Verify the results
@@ -159,7 +159,7 @@ public class DataTests {
 			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
 		// Get the data
-		entity = dataController.getData(null, 0, 10, null, "asc", null, user);
+		entity = dataController.getData(null, null, 0, 10, null, "asc", null, user);
 		response = entity.getBody();
 
 		// Verify that a proper exception was thrown.
