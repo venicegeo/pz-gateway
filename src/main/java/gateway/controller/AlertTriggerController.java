@@ -34,9 +34,12 @@ import model.response.TriggerListResponse;
 import model.response.TriggerResponse;
 import model.workflow.Alert;
 import model.workflow.Trigger;
+import model.workflow.TriggerUpdate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -157,7 +160,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> updateMetadata(
 			@ApiParam(value = "Id of the Trigger to update", required = true) @PathVariable(value = "triggerId") String triggerId,
-			@ApiParam(value = "The Trigger object containing the updated fields to write.", required = true) @Valid @RequestBody Trigger trigger,
+			@ApiParam(value = "The object containing the boolean field to enable or disable", required = true) @Valid @RequestBody TriggerUpdate triggerUpdate,
 			Principal user) {
 		try {
 			// Log the request
@@ -165,7 +168,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			
 			// Proxy the request to Ingest
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId), trigger, SuccessResponse.class).getBody(), HttpStatus.OK);
+				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId), HttpMethod.PUT, new HttpEntity<TriggerUpdate>(triggerUpdate), SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
 			}
