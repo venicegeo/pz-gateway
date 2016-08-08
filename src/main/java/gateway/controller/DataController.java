@@ -53,6 +53,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
@@ -271,8 +272,8 @@ public class DataController extends PiazzaRestController {
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> ingestDataFile(
-			@ApiParam(value = "The description, location, and metadata for the Data to be loaded into Piazza. This is the identical model to the LoadJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency.", required = true) @Valid @RequestParam String data,
-			@ApiParam(value = "The file to be uploaded.", required = true) @RequestParam final MultipartFile file,
+			@ApiParam(value = "The description, location, and metadata for the Data to be loaded into Piazza. This is the identical model to the LoadJob as specified in the body of the /data request. It is only noted as a string type here because of a Swagger deficiency.", required = true) @Valid @RequestPart String data,
+			@ApiParam(value = "The file to be uploaded.", required = true) @RequestPart final MultipartFile file,
 			Principal user) {
 		try {
 			IngestJob job;
