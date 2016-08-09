@@ -281,9 +281,9 @@ public class DataController extends PiazzaRestController {
 				// Serialize the JSON payload of the multipart request
 				job = new ObjectMapper().readValue(data, IngestJob.class);
 			} catch (Exception exception) {
-				throw new Exception(String.format(
-						"Incorrect JSON passed through the `data` parameter. Please verify input. Error: %s",
-						exception.getMessage()));
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(
+						String.format("Incorrect JSON passed through the `data` parameter. Please verify input. Error: %s",	
+						exception.getMessage()), "Gateway"), HttpStatus.BAD_REQUEST);
 			}
 			// Ensure the user isn't trying to hack a dataId into their request.
 			job.getData().setDataId(null);
