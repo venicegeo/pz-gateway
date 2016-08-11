@@ -22,6 +22,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import model.response.ErrorResponse;
+import util.PiazzaLogger;
 
 /**
  * Custom Sprint 'Entry Point' that issues an appropriate response when authentication fails.
@@ -38,6 +40,8 @@ import model.response.ErrorResponse;
  */
 @Component
 public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntryPoint {
+	@Autowired
+	private PiazzaLogger logger;
 
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authEx)
@@ -48,6 +52,12 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 		PrintWriter writer = response.getWriter();
 		// Create a Response Object
 		ErrorResponse error = new ErrorResponse("Gateway is unable to authenticate the provided user.", "Gateway");
+
+		// Log the request
+		logger.log(String.format("Unable to authenticate a user with Auth Type %s and Header %s", request.getAuthType(),
+				request.getHeader("Authorization").toString()), PiazzaLogger.ERROR);
+
+		// Write back the response
 		writer.println(new ObjectMapper().writeValueAsString(error));
 	}
 
