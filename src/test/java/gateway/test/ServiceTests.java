@@ -274,7 +274,7 @@ public class ServiceTests {
 		when(restTemplate.postForObject(anyString(), any(), eq(ServiceListResponse.class))).thenReturn(mockResponse);
 
 		// Test
-		ResponseEntity<PiazzaResponse> entity = serviceController.searchServices(null, user);
+		ResponseEntity<PiazzaResponse> entity = serviceController.searchServices(null, 0, 10, null, null, user);
 		ServiceListResponse response = (ServiceListResponse) entity.getBody();
 
 		// Verify
@@ -284,7 +284,7 @@ public class ServiceTests {
 
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(ServiceListResponse.class))).thenThrow(new RestClientException("Error"));
-		entity = serviceController.searchServices(null, user);
+		entity = serviceController.searchServices(null, 0, 10, null, null, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
 	}

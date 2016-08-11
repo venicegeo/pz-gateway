@@ -337,7 +337,7 @@ public class DataTests {
 				.thenReturn(mockResponse);
 
 		// Test
-		ResponseEntity<PiazzaResponse> entity = dataController.searchData(null, user);
+		ResponseEntity<PiazzaResponse> entity = dataController.searchData(null, 0, 10, null, null, user);
 		DataResourceListResponse response = (DataResourceListResponse) entity.getBody();
 
 		// Verify
@@ -348,7 +348,7 @@ public class DataTests {
 		// Test an Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class)))
 				.thenThrow(new RestClientException(""));
-		entity = dataController.searchData(null, user);
+		entity = dataController.searchData(null, 0, 10, null, null, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
 	}

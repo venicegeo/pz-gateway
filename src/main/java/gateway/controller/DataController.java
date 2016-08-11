@@ -468,6 +468,10 @@ public class DataController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> searchData(
 			@ApiParam(value = "The Query string for the Search component.", required = true) @Valid @RequestBody SearchRequest query,
+			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SORTBY) String sortBy,
 			Principal user) {
 		try {
 			// Log the request
@@ -478,7 +482,7 @@ public class DataController extends PiazzaRestController {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<Object> entity = new HttpEntity<Object>(query, headers);
 			DataResourceListResponse searchResponse = restTemplate.postForObject(
-					String.format("%s/%s", SEARCH_URL, SEARCH_ENDPOINT), entity, DataResourceListResponse.class);
+					String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s", SEARCH_URL, SEARCH_ENDPOINT, page, perPage, order, sortBy), entity, DataResourceListResponse.class);
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
