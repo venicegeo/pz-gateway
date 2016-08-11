@@ -53,9 +53,13 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 		// Create a Response Object
 		ErrorResponse error = new ErrorResponse("Gateway is unable to authenticate the provided user.", "Gateway");
 
+		try {
 		// Log the request
 		logger.log(String.format("Unable to authenticate a user with Auth Type %s and Header %s", request.getAuthType(),
 				request.getHeader("Authorization").toString()), PiazzaLogger.ERROR);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
 
 		// Write back the response
 		writer.println(new ObjectMapper().writeValueAsString(error));
