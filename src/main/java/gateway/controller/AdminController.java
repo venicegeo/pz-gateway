@@ -32,6 +32,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -82,7 +83,8 @@ public class AdminController extends PiazzaRestController {
 	private String LOGGER_URL;
 	@Value("${security.url}")
 	private String SECURITY_URL;
-
+	@Value("${version}")
+	private String VERSION;
 	/**
 	 * Healthcheck required for all Piazza Core Services
 	 * 
@@ -91,6 +93,11 @@ public class AdminController extends PiazzaRestController {
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String getHealthCheck() {
 		return "Hello, Health Check here for pz-gateway.";
+	}
+
+	@RequestMapping(value = "/version", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public String getVersion() {
+		return "{\"version\":\"" + VERSION + "\"}";
 	}
 
 	/**
