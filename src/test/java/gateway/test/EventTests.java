@@ -164,7 +164,7 @@ public class EventTests {
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn("eventTypes");
 
 		// Test
-		ResponseEntity<?> response = eventController.getEventTypes(null, null, 0, 10, user);
+		ResponseEntity<?> response = eventController.getEventTypes(null, null, null, 0, 10, user);
 
 		// Verify
 		assertTrue(response.getBody().toString().equals("eventTypes"));
@@ -173,7 +173,7 @@ public class EventTests {
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(String.class)))
 				.thenThrow(new RestClientException("event error"));
-		response = eventController.getEventTypes(null, null, 0, 10, user);
+		response = eventController.getEventTypes(null, null, null, 0, 10, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("event error"));
