@@ -85,6 +85,7 @@ public class AdminController extends PiazzaRestController {
 	private String SECURITY_URL;
 	@Value("${version}")
 	private String VERSION;
+
 	/**
 	 * Healthcheck required for all Piazza Core Services
 	 * 
