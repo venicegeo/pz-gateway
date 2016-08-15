@@ -37,16 +37,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.access.channel.ChannelProcessingFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 /**
  * Spring-boot configuration for the Gateway service. 
@@ -103,13 +100,12 @@ public class Application extends SpringBootServletInitializer {
 		
 		@Override
 		public void configure(WebSecurity web) throws Exception {
-		    web.ignoring().antMatchers("/key").antMatchers("/version").antMatchers("/");
+		    web.ignoring().antMatchers("/key").antMatchers("/version").antMatchers("/").antMatchers(HttpMethod.OPTIONS);
 		}
 		
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http
-				.addFilterBefore(corsFilter(), ChannelProcessingFilter.class)
 				.httpBasic().authenticationEntryPoint(basicEntryPoint)
 				.and()
 				.authorizeRequests().anyRequest().authenticated()
@@ -117,21 +113,6 @@ public class Application extends SpringBootServletInitializer {
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				.and()
 				.csrf().disable();
-		}
-
-		@Bean
-		public CorsFilter corsFilter() {
-			UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-			CorsConfiguration config = new CorsConfiguration();
-			config.addAllowedOrigin("*");
-			config.addAllowedHeader("*");
-			config.addAllowedMethod("OPTIONS");
-			config.addAllowedMethod("GET");
-			config.addAllowedMethod("PUT");
-			config.addAllowedMethod("POST");
-			config.addAllowedMethod("DELETE");
-			source.registerCorsConfiguration("/**", config);
-			return new CorsFilter(source);
 		}
 	}
 }
