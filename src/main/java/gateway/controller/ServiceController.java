@@ -39,6 +39,7 @@ import model.response.ServiceResponse;
 import model.response.SuccessResponse;
 import model.service.metadata.Service;
 
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -125,6 +126,7 @@ public class ServiceController extends PiazzaRestController {
 				service.setResourceMetadata(new ResourceMetadata());
 			}
 			service.getResourceMetadata().createdBy = gatewayUtil.getPrincipalName(user);
+			service.getResourceMetadata().createdOn = (new DateTime()).toString();
 
 			// Create the Service Job to forward
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
