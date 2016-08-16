@@ -37,7 +37,9 @@ import model.response.JobErrorResponse;
 import model.response.JobResponse;
 import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
+import model.response.ServiceResponse;
 import model.response.SuccessResponse;
+import model.service.metadata.Service;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +80,8 @@ public class JobController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
+	@Autowired
+	private ServiceController serviceController;
 	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
 	@Value("${SPACE}")
@@ -264,6 +268,13 @@ public class JobController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s requested Execute Job for Service %s.",
 					gatewayUtil.getPrincipalName(user), job.data.getServiceId()), PiazzaLogger.INFO);
+			
+			// Check that Service is not 'OFFLINE'
+			Service service = ((ServiceResponse)serviceController.getService(job.data.getServiceId(), user).getBody()).data;
+			if( service.getResourceMetadata().getAvailability().equals("OFFLINE") ) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse("Cannot execute Service with resourceMetadata.availablity 'OFFLINE'", "Gateway"), HttpStatus.BAD_REQUEST);
+			}
+			
 			// Create the Request to send to the Job Manager.
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
