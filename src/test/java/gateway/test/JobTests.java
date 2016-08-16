@@ -23,6 +23,7 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import gateway.controller.JobController;
+import gateway.controller.ServiceController;
 import gateway.controller.util.GatewayUtil;
 
 import java.security.Principal;
@@ -33,6 +34,7 @@ import javax.management.remote.JMXPrincipal;
 
 import model.job.Job;
 import model.job.JobProgress;
+import model.job.metadata.ResourceMetadata;
 import model.job.type.ExecuteServiceJob;
 import model.job.type.RepeatJob;
 import model.request.PiazzaJobRequest;
@@ -41,8 +43,10 @@ import model.response.JobErrorResponse;
 import model.response.JobResponse;
 import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
+import model.response.ServiceResponse;
 import model.response.SuccessResponse;
 import model.service.metadata.ExecuteServiceData;
+import model.service.metadata.Service;
 import model.status.StatusUpdate;
 
 import org.apache.kafka.clients.producer.Producer;
@@ -80,6 +84,8 @@ public class JobTests {
 	private RestTemplate restTemplate;
 	@InjectMocks
 	private JobController jobController;
+	@Mock
+	private ServiceController serviceController;
 	@Mock
 	private Producer<String, String> producer;
 
@@ -208,6 +214,16 @@ public class JobTests {
 		ExecuteServiceJob executeJob = new ExecuteServiceJob("123456");
 		executeJob.data = new ExecuteServiceData();
 		executeJob.data.setServiceId("654321");
+
+		ServiceResponse serviceResponse = new ServiceResponse();
+		Service service = new Service();
+		service.setServiceId("654321");
+		service.setResourceMetadata(new ResourceMetadata());
+		service.getResourceMetadata().availability = "ONLINE";
+		serviceResponse.data = service;
+
+		Mockito.doNothing().when(logger).log(anyString(), anyString());
+		when(serviceController.getService("654321", user)).thenReturn(new ResponseEntity<PiazzaResponse>(serviceResponse, HttpStatus.OK));
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = jobController.executeService(executeJob, user);
