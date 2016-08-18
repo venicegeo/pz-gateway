@@ -255,7 +255,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> updateService(
 			@ApiParam(value = "The Id of the Service to Update.", required = true) @PathVariable(value = "serviceId") String serviceId,
-			@ApiParam(value = "The Service Metadata. All properties specified in the Service data here will overwrite the existing properties of the Service.", required = true, name = "service") @Valid @RequestBody Service serviceData,
+			@ApiParam(value = "The Service Metadata. All properties specified in the Service data here will overwrite the existing properties of the Service.", required = true, name = "service") @RequestBody Service serviceData,
 			Principal user) {
 		try {
 			// Log the request
