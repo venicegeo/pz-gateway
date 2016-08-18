@@ -246,7 +246,7 @@ public class ServiceController extends PiazzaRestController {
 	 * @return 200 OK if success, or an error if exceptions occur.
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Update Service Information", notes = "Updates a Service Metadata, with the Service to updated specified by its Id.", tags = "Service")
+	@ApiOperation(value = "Update Service Information", notes = "Updates Service Metadata, to the Service specified by Id.", tags = "Service")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Confirmation of Update.", response = SuccessResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),		
