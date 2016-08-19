@@ -81,8 +81,10 @@ public class AdminController extends PiazzaRestController {
 	private String LOGGER_URL;
 	@Value("${security.url}")
 	private String SECURITY_URL;
-	@Value("${version}")
-	private String VERSION;
+	@Value("${release.url}")
+	private String RELEASE_URL;
+
+	private RestTemplate restTemplate = new RestTemplate();
 
 	/**
 	 * Healthcheck required for all Piazza Core Services
@@ -95,8 +97,12 @@ public class AdminController extends PiazzaRestController {
 	}
 
 	@RequestMapping(value = "/version", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public String getVersion() {
-		return "{\"version\":\"" + VERSION + "\"}";
+	public ResponseEntity<?> getVersion() {
+		try {
+			return new ResponseEntity<String>(restTemplate.getForObject(RELEASE_URL, String.class), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(String.format("Error retrieving version for Piazza: %s", e.getMessage()), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	/**
@@ -120,6 +126,7 @@ public class AdminController extends PiazzaRestController {
 		stats.put("UUIDGen", UUIDGEN_URL);
 		stats.put("Logger", LOGGER_URL);
 		stats.put("Security", SECURITY_URL);
+		stats.put("Release", RELEASE_URL);
 		// Return
 		return new ResponseEntity<Map<String, Object>>(stats, HttpStatus.OK);
 	}
