@@ -36,6 +36,7 @@ public class CorsFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
+		response.setHeader("Access-Control-Allow-Headers", "authorization");
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", "*");
 		response.setHeader("Access-Control-Max-Age", "36000");
