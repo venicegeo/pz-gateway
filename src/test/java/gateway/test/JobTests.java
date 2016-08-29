@@ -128,6 +128,8 @@ public class JobTests {
 				return future;
 			}
 		});
+		
+		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();		
 	}
 
 	/**
@@ -154,7 +156,7 @@ public class JobTests {
 		when(restTemplate.getForEntity(anyString(), eq(JobStatusResponse.class))).thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
 		entity = jobController.getJobStatus("123456", user);
-		assertTrue(entity.getBody() instanceof JobErrorResponse);
+		assertTrue(entity.getBody() instanceof ErrorResponse);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 	}
 
@@ -178,7 +180,7 @@ public class JobTests {
 		
 		entity = jobController.abortJob("123456", "Not Needed", user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(entity.getBody() instanceof JobErrorResponse);
+		assertTrue(entity.getBody() instanceof ErrorResponse);
 	}
 
 	/**

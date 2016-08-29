@@ -49,6 +49,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Utility class that defines common procedures for handling requests, responses, and brokered end points to internal
@@ -59,6 +60,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
  */
 @Component
 public class GatewayUtil {
+	@Autowired
+	private ObjectMapper objectMapper;	
 	@Autowired
 	private UUIDFactory uuidFactory;
 	@Autowired
@@ -224,5 +227,22 @@ public class GatewayUtil {
 			break;
 		}
 		return null;
+	}
+	
+	/**
+	 * Attempts to deserialize JSON content into the ErrorResponse object, 
+	 * constructs a new object if it fails.
+	 * 
+	 * @param String errorBody
+	 *            The JSON content
+	 * @return ErrorResponse object to return to the client
+	 */	
+	public ErrorResponse getErrorResponse(String errorBody) {
+		try {
+			return objectMapper.readValue(errorBody, ErrorResponse.class); 
+		}
+		catch(Exception e) {
+			return new ErrorResponse(errorBody, "Gateway");
+		}
 	}
 }

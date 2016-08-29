@@ -120,6 +120,8 @@ public class ServiceTests {
 				return future;
 			}
 		});
+		
+		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();
 	}
 
 	/**
@@ -175,7 +177,6 @@ public class ServiceTests {
 		entity = serviceController.getService("123456", user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
-		assertTrue(((ErrorResponse) entity.getBody()).message.contains("Error"));
 	}
 
 	/**
@@ -201,7 +202,6 @@ public class ServiceTests {
 		entity = serviceController.deleteService("123456", false, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
-		assertTrue(((ErrorResponse) entity.getBody()).message.contains("Error"));
 	}
 
 	/**
