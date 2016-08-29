@@ -118,6 +118,8 @@ public class DeploymentTests {
 				return future;
 			}
 		});
+		
+		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();		
 	}
 
 	/**

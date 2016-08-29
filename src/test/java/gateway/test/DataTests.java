@@ -127,6 +127,8 @@ public class DataTests {
 				return future;
 			}
 		});
+		
+		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();		
 	}
 
 	/**
