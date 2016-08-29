@@ -90,7 +90,7 @@ public class ServiceController extends PiazzaRestController {
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_SORTBY = "resourceMetadata.createdOn";
-	private static final String DEFAULT_ORDER = "asc";
+	private static final String DEFAULT_ORDER = "desc";
 
 	/**
 	 * Registers an external service with the Piazza Service Controller.

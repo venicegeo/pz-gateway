@@ -93,7 +93,7 @@ public class DataController extends PiazzaRestController {
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
-	private static final String DEFAULT_ORDER = "asc";
+	private static final String DEFAULT_ORDER = "desc";
 	private static final String DEFAULT_SORTBY = "metadata.createdOn";
 	private static final String DEFAULT_SORTBY_ES = "dataResource.metadata.createdOn"; //schema for Elasticsearch
 	private RestTemplate restTemplate = new RestTemplate();

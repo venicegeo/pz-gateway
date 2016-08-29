@@ -80,7 +80,7 @@ public class DeploymentController extends PiazzaRestController {
 	private RestTemplate restTemplate = new RestTemplate();
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
-	private static final String DEFAULT_ORDER = "asc";
+	private static final String DEFAULT_ORDER = "desc";
 
 	/**
 	 * Processes a request to create a GIS Server deployment for Piazza data.
