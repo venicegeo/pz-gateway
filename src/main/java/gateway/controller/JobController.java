@@ -141,7 +141,7 @@ public class JobController extends PiazzaRestController {
 	 * @return No response body if successful, or an appropriate Error
 	 */
 	@RequestMapping(value = "/job/{jobId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Abort Job", notes = "Cancels a Running Job. If the Job is already completed in some way, then cancellation will not occur.", tags = "Job")
+	@ApiOperation(value = "Abort Job", notes = "Requests a Running Job to be cancelled. If the Job is already completed in some way, then cancellation will not occur.", tags = "Job")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "The Job has requested to be cancelled. This may take some time, as the process may not be in an easily cancelled state at the time the request is made.", response = SuccessResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
