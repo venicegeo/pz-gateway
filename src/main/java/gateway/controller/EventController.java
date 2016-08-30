@@ -78,7 +78,7 @@ public class EventController extends PiazzaRestController {
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
-	private static final String DEFAULT_ORDER = "asc";
+	private static final String DEFAULT_ORDER = "desc";
 	private static final String DEFAULT_SORTBY = "createdOn";
 
 	private RestTemplate restTemplate = new RestTemplate();
@@ -126,7 +126,7 @@ public class EventController extends PiazzaRestController {
 						"event", page, perPage, order, sortBy != null ? sortBy : "", eventTypeName != null ? eventTypeName : "", eventTypeId != null ? eventTypeId : "");				
 				return new ResponseEntity<String>(restTemplate.getForEntity(url, String.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}		
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -177,7 +177,7 @@ public class EventController extends PiazzaRestController {
 				// Broker the request to Workflow
 				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"), objectMapper.writeValueAsString(event), String.class), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}			
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -221,7 +221,7 @@ public class EventController extends PiazzaRestController {
 				// Broker the request to pz-workflow
 				return new ResponseEntity<String>(restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "event", eventId), String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -276,7 +276,7 @@ public class EventController extends PiazzaRestController {
 						page, perPage, order, sortBy != null ? sortBy : "", name != null ? name : "");
 				return new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -330,7 +330,7 @@ public class EventController extends PiazzaRestController {
 				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "eventType"), 
 						objectMapper.writeValueAsString(eventType), String.class), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -373,7 +373,7 @@ public class EventController extends PiazzaRestController {
 				// Proxy the request to Workflow
 				return new ResponseEntity<String>(restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "eventType", eventTypeId), String.class), HttpStatus.OK);			
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -417,7 +417,7 @@ public class EventController extends PiazzaRestController {
 				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "eventType", eventTypeId));
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("EventType " + eventTypeId + " was deleted successfully", "Gateway"), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -459,7 +459,7 @@ public class EventController extends PiazzaRestController {
 				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "event", eventId));
 				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Event " + eventId + " was deleted successfully", "Gateway"), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }"), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();

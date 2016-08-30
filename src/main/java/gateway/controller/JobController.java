@@ -119,8 +119,7 @@ public class JobController extends PiazzaRestController {
 						.getForEntity(String.format("%s/%s/%s", JOBMANAGER_URL, "job", jobId), JobStatusResponse.class).getBody(),
 						HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class),
-						hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -177,8 +176,7 @@ public class JobController extends PiazzaRestController {
 						.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, SuccessResponse.class).getBody(),
 						HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class),
-						hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -226,8 +224,7 @@ public class JobController extends PiazzaRestController {
 						restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, JobResponse.class).getBody(),
 						HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class),
-						hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();

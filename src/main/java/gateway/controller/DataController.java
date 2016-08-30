@@ -75,8 +75,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RestController
 public class DataController extends PiazzaRestController {
 	@Autowired
-	private ObjectMapper objectMapper;
-	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
@@ -93,8 +91,9 @@ public class DataController extends PiazzaRestController {
 
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
-	private static final String DEFAULT_ORDER = "asc";
+	private static final String DEFAULT_ORDER = "desc";
 	private static final String DEFAULT_SORTBY = "metadata.createdOn";
+	private static final String DEFAULT_SORTBY_ES = "dataResource.metadata.createdOn"; //schema for Elasticsearch
 	private RestTemplate restTemplate = new RestTemplate();
 
 	/**
@@ -159,7 +158,7 @@ public class DataController extends PiazzaRestController {
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(url, DataResourceListResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}			
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -354,7 +353,7 @@ public class DataController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "data", dataId),
 						DataResourceResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -393,7 +392,7 @@ public class DataController extends PiazzaRestController {
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(String.format("%s/%s/%s", INGEST_URL, "data", dataId), HttpMethod.DELETE, null, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -436,7 +435,7 @@ public class DataController extends PiazzaRestController {
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s/%s", INGEST_URL, "data", dataId), metadata, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -469,7 +468,7 @@ public class DataController extends PiazzaRestController {
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
-			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SORTBY) String sortBy,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SORTBY_ES) String sortBy,
 			Principal user) {
 		try {
 			// Log the request
@@ -533,7 +532,7 @@ public class DataController extends PiazzaRestController {
 				// Stream the bytes back
 				return restTemplate.getForEntity(url, byte[].class);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}			
 		} catch (Exception exception) {
 			exception.printStackTrace();

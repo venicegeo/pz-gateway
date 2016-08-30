@@ -15,6 +15,7 @@
  **/
 package gateway.controller;
 
+import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
@@ -41,8 +42,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 /**
  * REST Controller that defines administrative end points that reference
  * logging, administartion, and debugging information related to the Gateway
@@ -58,7 +57,7 @@ public class AdminController extends PiazzaRestController {
 	@Autowired
 	private HttpServletRequest request;
 	@Autowired
-	private ObjectMapper objectMapper;	
+	private GatewayUtil gatewayUtil;	
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
 	@Value("${SPACE}")
@@ -147,7 +146,7 @@ public class AdminController extends PiazzaRestController {
 						new RestTemplate().exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), 
 						HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();

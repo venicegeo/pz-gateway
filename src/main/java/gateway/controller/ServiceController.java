@@ -59,8 +59,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import util.PiazzaLogger;
 
 /**
@@ -73,8 +71,6 @@ import util.PiazzaLogger;
 @Api
 @RestController
 public class ServiceController extends PiazzaRestController {
-	@Autowired
-	private ObjectMapper objectMapper;		
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
@@ -90,7 +86,7 @@ public class ServiceController extends PiazzaRestController {
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_SORTBY = "resourceMetadata.createdOn";
-	private static final String DEFAULT_ORDER = "asc";
+	private static final String DEFAULT_ORDER = "desc";
 
 	/**
 	 * Registers an external service with the Piazza Service Controller.
@@ -134,7 +130,7 @@ public class ServiceController extends PiazzaRestController {
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest, ServiceIdResponse.class).getBody(), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -175,7 +171,7 @@ public class ServiceController extends PiazzaRestController {
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), ServiceResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -220,7 +216,7 @@ public class ServiceController extends PiazzaRestController {
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(url, HttpMethod.DELETE, null, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -270,7 +266,7 @@ public class ServiceController extends PiazzaRestController {
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), HttpMethod.PUT, request, SuccessResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
@@ -348,7 +344,7 @@ public class ServiceController extends PiazzaRestController {
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(url, ServiceListResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				return new ResponseEntity<PiazzaResponse>(objectMapper.readValue(hee.getResponseBodyAsString(), ErrorResponse.class), hee.getStatusCode());
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			exception.printStackTrace();
