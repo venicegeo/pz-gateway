@@ -467,12 +467,6 @@ public class DataController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> searchData(
 			@ApiParam(value = "The Query string for the Search component.", required = true) @Valid @RequestBody SearchRequest query,
-			/*
-			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
-			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
-			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SORTBY_ES) String sortBy,
-*/
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false) String order,
@@ -482,16 +476,19 @@ public class DataController extends PiazzaRestController {
 			// Log the request
 			logger.log(String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)),
 					PiazzaLogger.INFO);
+			
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<Object> entity = new HttpEntity<Object>(query, headers);
-			String parampage = page == null ? "" : "page=" + page.toString();
-			String paramperPage = perPage == null ? "" : "perPage=" + perPage.toString();
-			String paramorder = order == null ? "" : "order=" + order;
-			String paramsortBy = sortBy == null ? "" : "sortBy=" + sortBy;
+			
+			String paramPage = (page == null) ? "" : "page=" + page.toString();
+			String paramPerPage = (perPage == null) ? "" : "perPage=" + perPage.toString();
+			String paramOrder = (order == null) ? "" : "order=" + order;
+			String paramSortBy = (sortBy == null) ? "" : "sortBy=" + sortBy;
+			
 			DataResourceListResponse searchResponse = restTemplate.postForObject(
-					String.format("%s/%s?%s&%s&%s&%s", SEARCH_URL, SEARCH_ENDPOINT, parampage, paramperPage, paramorder, paramsortBy), entity, DataResourceListResponse.class);
+					String.format("%s/%s?%s&%s&%s&%s", SEARCH_URL, SEARCH_ENDPOINT, paramPage, paramPerPage, paramOrder, paramSortBy), entity, DataResourceListResponse.class);
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
