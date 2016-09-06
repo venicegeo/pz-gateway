@@ -24,12 +24,15 @@ import gateway.controller.EventController;
 import gateway.controller.util.GatewayUtil;
 
 import java.security.Principal;
+import java.util.ArrayList;
 
 import javax.management.remote.JMXPrincipal;
 
 import model.response.ErrorResponse;
-import model.response.SuccessResponse;
-import model.response.WorkflowResponse;
+import model.response.EventListResponse;
+import model.response.EventTypeListResponse;
+import model.response.Pagination;
+import model.response.PiazzaResponse;
 import model.workflow.Event;
 import model.workflow.EventType;
 
@@ -37,7 +40,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -156,7 +158,7 @@ public class EventTests {
 	}
 
 	/**
-	 * Test GET /event/eventType
+	 * Test GET /eventType
 	 */
 	@Test
 	public void testEventTypes() {
@@ -180,7 +182,7 @@ public class EventTests {
 	}
 
 	/**
-	 * Test POST /event/eventType
+	 * Test POST /eventType
 	 */
 //	@Test
 	public void testCreateEventType() {
@@ -204,7 +206,7 @@ public class EventTests {
 	}
 
 	/**
-	 * Test GET /event/eventType/{eventTypeId}
+	 * Test GET /eventType/{eventTypeId}
 	 */
 	@Test
 	public void testGetEventType() {
@@ -226,4 +228,68 @@ public class EventTests {
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("event type error"));
 	}
+	
+	/**
+	 * Test POST /event/query
+	 */
+	@Test
+	public void testQueryEvents() {
+		// Mock
+		Event event = new Event();
+		event.eventId = "123456";
+		
+		EventListResponse mockResponse = new EventListResponse();
+		mockResponse.data = new ArrayList<Event>();
+		mockResponse.getData().add(event);
+		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		when(restTemplate.postForObject(anyString(), any(), eq(EventListResponse.class))).thenReturn(mockResponse);
+
+		// Test
+		ResponseEntity<PiazzaResponse> entity = eventController.searchEvents(null, 0, 10, null, null, user);
+		EventListResponse response = (EventListResponse) entity.getBody();
+
+		// Verify
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(response.getData().get(0).eventId.equalsIgnoreCase(event.eventId));
+		assertTrue(response.getPagination().getCount().equals(1));
+
+		// Test an Exception
+		when(restTemplate.postForObject(anyString(), any(), eq(EventListResponse.class)))
+				.thenThrow(new RestClientException(""));
+		entity = eventController.searchEvents(null, 0, 10, null, null, user);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getBody() instanceof ErrorResponse);
+	}
+	
+	/**
+	 * Test POST /eventType/query
+	 */
+	@Test
+	public void testQueryEventTypes() {
+		// Mock
+		EventType eventType = new EventType();
+		eventType.eventTypeId = "123456";
+		
+		EventTypeListResponse mockResponse = new EventTypeListResponse();
+		mockResponse.data = new ArrayList<EventType>();
+		mockResponse.getData().add(eventType);
+		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		when(restTemplate.postForObject(anyString(), any(), eq(EventTypeListResponse.class))).thenReturn(mockResponse);
+
+		// Test
+		ResponseEntity<PiazzaResponse> entity = eventController.searchEventTypes(null, 0, 10, null, null, user);
+		EventTypeListResponse response = (EventTypeListResponse) entity.getBody();
+
+		// Verify
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(response.getData().get(0).eventTypeId.equalsIgnoreCase(eventType.eventTypeId));
+		assertTrue(response.getPagination().getCount().equals(1));
+
+		// Test an Exception
+		when(restTemplate.postForObject(anyString(), any(), eq(EventTypeListResponse.class)))
+				.thenThrow(new RestClientException(""));
+		entity = eventController.searchEventTypes(null, 0, 10, null, null, user);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getBody() instanceof ErrorResponse);
+	}	
 }
