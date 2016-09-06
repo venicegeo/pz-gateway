@@ -27,6 +27,7 @@ import java.security.Principal;
 
 import javax.validation.Valid;
 
+import model.request.SearchRequest;
 import model.response.ErrorResponse;
 import model.response.EventListResponse;
 import model.response.EventResponse;
@@ -39,6 +40,8 @@ import model.workflow.EventType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -465,6 +468,112 @@ public class EventController extends PiazzaRestController {
 			exception.printStackTrace();
 			String error = String.format("Error Deleting Event Id %s by user %s: %s", eventId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	/**
+	 * Proxies an ElasticSearch DSL query to the Pz-Workflow component to return a
+	 * list of Event items.
+	 * 
+	 * @see TBD
+	 * 
+	 * @return The list of Event items matching the query.
+	 */
+	@RequestMapping(value = "/event/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.OK)	
+	@ApiOperation(value = "Query Events in Piazza Workflow", notes = "Sends a complex query message to the Piazza Workflow component, that allow users to search for Events. Searching is capable of filtering by keywords or other dynamic information.", tags = {
+			"Event", "Workflow", "Search" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Event results that match the query string.", response = EventListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<PiazzaResponse> searchEvents(
+			@ApiParam(value = "The Query string for the Workflow component.", required = true) @Valid @RequestBody SearchRequest query,
+			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false) Integer perPage,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s sending a complex query for Workflow.", gatewayUtil.getPrincipalName(user)),
+					PiazzaLogger.INFO);
+			
+			// Send the query to the Pz-Workflow component
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<Object> entity = new HttpEntity<Object>(query, headers);
+			
+			String paramPage = (page == null) ? "" : "page=" + page.toString();
+			String paramPerPage = (perPage == null) ? "" : "perPage=" + perPage.toString();
+			String paramOrder = (order == null) ? "" : "order=" + order;
+			String paramSortBy = (sortBy == null) ? "" : "sortBy=" + sortBy;
+			
+			EventListResponse searchResponse = restTemplate.postForObject(
+					String.format("%s/%s/%s?%s&%s&%s&%s", WORKFLOW_URL, "event", "query", paramPage, paramPerPage, paramOrder, paramSortBy), entity, EventListResponse.class);
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	/**
+	 * Proxies an ElasticSearch DSL query to the Pz-Workflow component to return a
+	 * list of EventType items.
+	 * 
+	 * @see TBD
+	 * 
+	 * @return The list of EventType items matching the query.
+	 */
+	@RequestMapping(value = "/eventType/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.OK)	
+	@ApiOperation(value = "Query EventTypes in Piazza Workflow", notes = "Sends a complex query message to the Piazza Workflow component, that allow users to search for EventTypes. Searching is capable of filtering by keywords or other dynamic information.", tags = {
+			"EventType", "Workflow", "Search" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of EventType results that match the query string.", response = EventTypeListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<PiazzaResponse> searchEventTypes(
+			@ApiParam(value = "The Query string for the Workflow component.", required = true) @Valid @RequestBody SearchRequest query,
+			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false) Integer perPage,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s sending a complex query for Workflow.", gatewayUtil.getPrincipalName(user)),
+					PiazzaLogger.INFO);
+			
+			// Send the query to the Pz-Workflow component
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<Object> entity = new HttpEntity<Object>(query, headers);
+			
+			String paramPage = (page == null) ? "" : "page=" + page.toString();
+			String paramPerPage = (perPage == null) ? "" : "perPage=" + perPage.toString();
+			String paramOrder = (order == null) ? "" : "order=" + order;
+			String paramSortBy = (sortBy == null) ? "" : "sortBy=" + sortBy;
+			
+			EventTypeListResponse searchResponse = restTemplate.postForObject(
+					String.format("%s/%s/%s?%s&%s&%s&%s", WORKFLOW_URL, "eventType", "query", paramPage, paramPerPage, paramOrder, paramSortBy), entity, EventTypeListResponse.class);
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
