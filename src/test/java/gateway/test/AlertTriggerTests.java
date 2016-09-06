@@ -22,6 +22,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.security.Principal;
+import java.util.ArrayList;
 
 import javax.management.remote.JMXPrincipal;
 
@@ -41,6 +42,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gateway.controller.AlertTriggerController;
 import gateway.controller.util.GatewayUtil;
 import model.response.ErrorResponse;
+import model.response.Pagination;
+import model.response.PiazzaResponse;
+import model.response.TriggerListResponse;
 import model.workflow.Trigger;
 import util.PiazzaLogger;
 import util.UUIDFactory;
@@ -200,4 +204,36 @@ public class AlertTriggerTests {
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("Alert Error"));
 	}
+	
+	/**
+	 * Test POST /trigger/query
+	 */
+	@Test
+	public void testQueryTriggers() {
+		// Mock
+		Trigger trigger = new Trigger();
+		trigger.triggerId = "123456";
+		
+		TriggerListResponse mockResponse = new TriggerListResponse();
+		mockResponse.data = new ArrayList<Trigger>();
+		mockResponse.getData().add(trigger);
+		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		when(restTemplate.postForObject(anyString(), any(), eq(TriggerListResponse.class))).thenReturn(mockResponse);
+
+		// Test
+		ResponseEntity<PiazzaResponse> entity = alertTriggerController.searchTriggers(null, 0, 10, null, null, user);
+		TriggerListResponse response = (TriggerListResponse) entity.getBody();
+
+		// Verify
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(response.getData().get(0).triggerId.equalsIgnoreCase(trigger.triggerId));
+		assertTrue(response.getPagination().getCount().equals(1));
+
+		// Test an Exception
+		when(restTemplate.postForObject(anyString(), any(), eq(TriggerListResponse.class)))
+				.thenThrow(new RestClientException(""));
+		entity = alertTriggerController.searchTriggers(null, 0, 10, null, null, user);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getBody() instanceof ErrorResponse);
+	}	
 }
