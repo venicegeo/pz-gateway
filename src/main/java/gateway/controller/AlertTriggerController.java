@@ -414,6 +414,59 @@ public class AlertTriggerController extends PiazzaRestController {
 	
 	/**
 	 * Proxies an ElasticSearch DSL query to the Pz-Workflow component to return a
+	 * list of Alert items.
+	 * 
+	 * @see TBD
+	 * 
+	 * @return The list of Alert items matching the query.
+	 */
+	@RequestMapping(value = "/alert/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.OK)	
+	@ApiOperation(value = "Query Alerts in Piazza Workflow", notes = "Sends a complex query message to the Piazza Workflow component, that allow users to search for Alerts. Searching is capable of filtering by keywords or other dynamic information.", tags = {
+			"Alert", "Workflow", "Search" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Alert results that match the query string.", response = AlertListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<PiazzaResponse> searchAlerts(
+			@ApiParam(value = "The Query string for the Workflow component.", required = true) @Valid @RequestBody SearchRequest query,
+			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false) Integer perPage,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
+			Principal user) {
+		try {
+			// Log the request
+			logger.log(String.format("User %s sending a complex query for Workflow.", gatewayUtil.getPrincipalName(user)),
+					PiazzaLogger.INFO);
+			
+			// Send the query to the Pz-Workflow component
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<Object> entity = new HttpEntity<Object>(query, headers);
+			
+			String paramPage = (page == null) ? "" : "page=" + page.toString();
+			String paramPerPage = (perPage == null) ? "" : "perPage=" + perPage.toString();
+			String paramOrder = (order == null) ? "" : "order=" + order;
+			String paramSortBy = (sortBy == null) ? "" : "sortBy=" + sortBy;
+			
+			AlertListResponse searchResponse = restTemplate.postForObject(
+					String.format("%s/%s/%s?%s&%s&%s&%s", WORKFLOW_URL, "alert", "query", paramPage, paramPerPage, paramOrder, paramSortBy), entity, AlertListResponse.class);
+			// Respond
+			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}	
+	
+	/**
+	 * Proxies an ElasticSearch DSL query to the Pz-Workflow component to return a
 	 * list of Trigger items.
 	 * 
 	 * @see TBD

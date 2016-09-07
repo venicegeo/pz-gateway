@@ -41,10 +41,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gateway.controller.AlertTriggerController;
 import gateway.controller.util.GatewayUtil;
+import model.response.AlertListResponse;
 import model.response.ErrorResponse;
 import model.response.Pagination;
 import model.response.PiazzaResponse;
 import model.response.TriggerListResponse;
+import model.workflow.Alert;
 import model.workflow.Trigger;
 import util.PiazzaLogger;
 import util.UUIDFactory;
@@ -203,6 +205,38 @@ public class AlertTriggerTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("Alert Error"));
+	}
+
+	/**
+	 * Test POST /alert/query
+	 */
+	@Test
+	public void testQueryAlerts() {
+		// Mock
+		Alert alert = new Alert();
+		alert.alertId = "123456";
+		
+		AlertListResponse mockResponse = new AlertListResponse();
+		mockResponse.data = new ArrayList<Alert>();
+		mockResponse.getData().add(alert);
+		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		when(restTemplate.postForObject(anyString(), any(), eq(AlertListResponse.class))).thenReturn(mockResponse);
+
+		// Test
+		ResponseEntity<PiazzaResponse> entity = alertTriggerController.searchAlerts(null, 0, 10, null, null, user);
+		AlertListResponse response = (AlertListResponse) entity.getBody();
+
+		// Verify
+		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
+		assertTrue(response.getData().get(0).alertId.equalsIgnoreCase(alert.alertId));
+		assertTrue(response.getPagination().getCount().equals(1));
+
+		// Test an Exception
+		when(restTemplate.postForObject(anyString(), any(), eq(AlertListResponse.class)))
+				.thenThrow(new RestClientException(""));
+		entity = alertTriggerController.searchAlerts(null, 0, 10, null, null, user);
+		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
+		assertTrue(entity.getBody() instanceof ErrorResponse);
 	}
 	
 	/**
