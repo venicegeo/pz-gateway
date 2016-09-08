@@ -273,7 +273,7 @@ public class JobController extends PiazzaRestController {
 							HttpStatus.BAD_REQUEST);
 				}
 			} catch (Exception exception) {
-				logger.log(String.format("Attempted to check Service Availability for %s by received error %s. Continued with Job Request.",
+				logger.log(String.format("Attempted to check Service Availability for %s but received an error %s. Continued with Job Request.",
 						job.getData().getServiceId(), exception.getMessage()), PiazzaLogger.WARNING);
 			}
 
