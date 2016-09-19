@@ -347,7 +347,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SORTBY) String sortBy,
 			@ApiParam(value = "The Trigger Id by which to filter results.") @RequestParam(value = "triggerId", required = false) String triggerId,
-			@ApiParam(value = "If this flag is set to true, then Workflow objects otherwise referenced by a single Unique ID will be populated in full.") @RequestParam(value = "inflate", required = false) boolean inflate,
+			@ApiParam(value = "If this flag is set to true, then Workflow objects otherwise referenced by a single Unique ID will be populated in full.") @RequestParam(value = "inflate", required = false) Boolean inflate,
 			Principal user) {
 		try {
 			// Log the request
@@ -364,7 +364,8 @@ public class AlertTriggerController extends PiazzaRestController {
 			try {
 				// Broker the request to Workflow
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&triggerId=%s&inflate=%s", WORKFLOW_URL, "alert",
-						page, perPage, order, sortBy != null ? sortBy : "", triggerId != null ? triggerId : "", inflate);
+						page, perPage, order, sortBy != null ? sortBy : "", triggerId != null ? triggerId : "",
+						inflate != null ? inflate.toString() : false);
 				return new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(
@@ -399,7 +400,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getAlert(
 			@ApiParam(value = "The Id of the Alert to retrieve data for.", required = true) @PathVariable(value = "alertId") String alertId,
-			@ApiParam(value = "If this flag is set to true, then Workflow objects otherwise referenced by a single Unique ID will be populated in full.") @RequestParam(value = "inflate", required = false) boolean inflate,
+			@ApiParam(value = "If this flag is set to true, then Workflow objects otherwise referenced by a single Unique ID will be populated in full.") @RequestParam(value = "inflate", required = false) Boolean inflate,
 			Principal user) {
 		try {
 			// Log the request
@@ -408,8 +409,9 @@ public class AlertTriggerController extends PiazzaRestController {
 
 			try {
 				// Proxy the request to Workflow
-				return new ResponseEntity<String>(
-						restTemplate.getForObject(String.format("%s/%s/%s&inflate=%s", WORKFLOW_URL, "alert", alertId), String.class, inflate), HttpStatus.OK);
+				return new ResponseEntity<String>(restTemplate.getForObject(
+						String.format("%s/%s/%s?inflate=%s", WORKFLOW_URL, "alert", alertId, inflate != null ? inflate.toString() : false),
+						String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(
 						gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")),
@@ -446,7 +448,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false) String order,
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
-			@ApiParam(value = "If this flag is set to true, then Workflow objects otherwise referenced by a single Unique ID will be populated in full.") @RequestParam(value = "inflate", required = false) boolean inflate,
+			@ApiParam(value = "If this flag is set to true, then Workflow objects otherwise referenced by a single Unique ID will be populated in full.") @RequestParam(value = "inflate", required = false) Boolean inflate,
 			Principal user) {
 		try {
 			// Log the request
@@ -463,9 +465,11 @@ public class AlertTriggerController extends PiazzaRestController {
 			String paramOrder = (order == null) ? "" : "order=" + order;
 			String paramSortBy = (sortBy == null) ? "" : "sortBy=" + sortBy;
 
-			AlertListResponse searchResponse = restTemplate.postForObject(
-					String.format("%s/%s/%s?%s&%s&%s&%s&inflate=%s", WORKFLOW_URL, "alert", "query", paramPage, paramPerPage, paramOrder, paramSortBy, inflate),
-					entity, AlertListResponse.class);
+			AlertListResponse searchResponse = restTemplate
+					.postForObject(
+							String.format("%s/%s/%s?%s&%s&%s&%s&inflate=%s", WORKFLOW_URL, "alert", "query", paramPage, paramPerPage,
+									paramOrder, paramSortBy, inflate != null ? inflate.toString() : false),
+							entity, AlertListResponse.class);
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
