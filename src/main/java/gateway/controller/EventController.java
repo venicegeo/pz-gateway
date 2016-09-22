@@ -84,7 +84,8 @@ public class EventController extends PiazzaRestController {
 	private static final String DEFAULT_ORDER = "desc";
 	private static final String DEFAULT_SORTBY = "createdOn";
 
-	private RestTemplate restTemplate = new RestTemplate();
+	@Autowired
+	private RestTemplate restTemplate;
 
 	/**
 	 * Gets all Events from the workflow component.

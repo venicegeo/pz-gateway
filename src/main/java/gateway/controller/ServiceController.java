@@ -82,7 +82,8 @@ public class ServiceController extends PiazzaRestController {
 	@Value("${search.service.endpoint}")
 	private String SEARCH_ENDPOINT;
 
-	private RestTemplate restTemplate = new RestTemplate();
+	@Autowired
+	private RestTemplate restTemplate;
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_SORTBY = "resourceMetadata.createdOn";

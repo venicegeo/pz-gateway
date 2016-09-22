@@ -15,6 +15,30 @@
  **/
 package gateway;
 
+import java.security.Principal;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.web.SpringBootServletInitializer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.web.client.RestTemplate;
+
 import gateway.auth.PiazzaBasicAuthenticationEntryPoint;
 import gateway.auth.PiazzaBasicAuthenticationProvider;
 import io.swagger.annotations.Api;
@@ -27,26 +51,8 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import java.security.Principal;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.web.SpringBootServletInitializer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
-
 /**
- * Spring-boot configuration for the Gateway service. 
+ * Spring-boot configuration for the Gateway service.
  * 
  * @author Patrick.Doody, Russell.Orf
  * 
@@ -55,6 +61,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @EnableSwagger2
 @ComponentScan({ "gateway, util" })
 public class Application extends SpringBootServletInitializer {
+	@Value("${http.max.total}")
+	private int httpMaxTotal;
+	@Value("${http.max.route}")
+	private int httpMaxRoute;
 
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
@@ -73,16 +83,23 @@ public class Application extends SpringBootServletInitializer {
 	}
 
 	@Bean
+	public RestTemplate restTemplate() {
+		RestTemplate restTemplate = new RestTemplate();
+		HttpClient httpClient = HttpClientBuilder.create().setMaxConnTotal(httpMaxTotal).setMaxConnPerRoute(httpMaxRoute).build();
+		restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
+		return restTemplate;
+	}
+
+	@Bean
 	public Docket gatewayApi() {
-		return new Docket(DocumentationType.SWAGGER_2).useDefaultResponseMessages(false).ignoredParameterTypes(Principal.class).groupName("Piazza")
-				.apiInfo(apiInfo()).select().apis(RequestHandlerSelectors.withClassAnnotation(Api.class))
+		return new Docket(DocumentationType.SWAGGER_2).useDefaultResponseMessages(false).ignoredParameterTypes(Principal.class)
+				.groupName("Piazza").apiInfo(apiInfo()).select().apis(RequestHandlerSelectors.withClassAnnotation(Api.class))
 				.paths(PathSelectors.any()).build();
 	}
 
 	private ApiInfo apiInfo() {
 		return new ApiInfoBuilder().title("Gateway API").description("Piazza Core Services API")
-				.contact(new Contact("The VeniceGeo Project", "http://radiantblue.com", "venice@radiantblue.com"))
-				.version("0.1.0").build();
+				.contact(new Contact("The VeniceGeo Project", "http://radiantblue.com", "venice@radiantblue.com")).version("0.1.0").build();
 	}
 
 	@Configuration
@@ -97,22 +114,16 @@ public class Application extends SpringBootServletInitializer {
 		protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 			auth.authenticationProvider(basicAuthProvider);
 		}
-		
+
 		@Override
 		public void configure(WebSecurity web) throws Exception {
-		    web.ignoring().antMatchers("/key").antMatchers("/version").antMatchers("/").antMatchers(HttpMethod.OPTIONS);
+			web.ignoring().antMatchers("/key").antMatchers("/version").antMatchers("/").antMatchers(HttpMethod.OPTIONS);
 		}
-		
+
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http
-				.httpBasic().authenticationEntryPoint(basicEntryPoint)
-				.and()
-				.authorizeRequests().anyRequest().authenticated()
-				.and()
-				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-				.and()
-				.csrf().disable();
+			http.httpBasic().authenticationEntryPoint(basicEntryPoint).and().authorizeRequests().anyRequest().authenticated().and()
+					.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().csrf().disable();
 		}
 	}
 }

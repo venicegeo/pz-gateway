@@ -15,6 +15,7 @@
  **/
 package gateway.auth;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -22,8 +23,7 @@ import org.springframework.web.client.RestTemplate;
 import model.response.AuthenticationResponse;
 
 /**
- * Bean that communicates with the pz-security project for authentication
- * information.
+ * Bean that communicates with the pz-security project for authentication information.
  * 
  * @author Russell.Orf
  * 
@@ -32,10 +32,12 @@ import model.response.AuthenticationResponse;
 public class UserDetailsBean {
 	@Value("${security.url}")
 	private String SECURITY_URL;
+	@Autowired
+	private RestTemplate restTemplate;
 
 	public AuthenticationResponse getAuthenticationDecision(String uuid) {
 		String url = String.format("%s/%s", SECURITY_URL, "/v2/verification");
-		return new RestTemplate().postForEntity(url, new PiazzaVerificationRequest(uuid), AuthenticationResponse.class).getBody();
+		return restTemplate.postForEntity(url, new PiazzaVerificationRequest(uuid), AuthenticationResponse.class).getBody();
 	}
 
 	class PiazzaVerificationRequest {

@@ -83,7 +83,8 @@ public class AlertTriggerController extends PiazzaRestController {
 	private static final String DEFAULT_ORDER = "desc";
 	private static final String DEFAULT_SORTBY = "createdOn";
 
-	private RestTemplate restTemplate = new RestTemplate();
+	@Autowired
+	private RestTemplate restTemplate;
 
 	/**
 	 * Creates a new Trigger

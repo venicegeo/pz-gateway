@@ -73,7 +73,8 @@ public class DeploymentController extends PiazzaRestController {
 	@Value("${SPACE}")
 	private String SPACE;
 
-	private RestTemplate restTemplate = new RestTemplate();
+	@Autowired
+	private RestTemplate restTemplate;
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_ORDER = "desc";
