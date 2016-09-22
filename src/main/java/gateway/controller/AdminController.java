@@ -83,7 +83,8 @@ public class AdminController extends PiazzaRestController {
 	@Value("${release.url}")
 	private String RELEASE_URL;
 
-	private RestTemplate restTemplate = new RestTemplate();
+	@Autowired
+	private RestTemplate restTemplate;
 
 	/**
 	 * Healthcheck required for all Piazza Core Services

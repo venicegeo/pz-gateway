@@ -88,7 +88,8 @@ public class JobController extends PiazzaRestController {
 	@Value("${SPACE}")
 	private String SPACE;
 
-	private RestTemplate restTemplate = new RestTemplate();
+	@Autowired
+	private RestTemplate restTemplate;
 
 	/**
 	 * Returns the Status of a Job.
