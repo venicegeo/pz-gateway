@@ -61,11 +61,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class GatewayUtil {
 	@Autowired
-	private ObjectMapper objectMapper;	
+	private ObjectMapper objectMapper;
 	@Autowired
 	private UUIDFactory uuidFactory;
 	@Autowired
 	PiazzaLogger logger;
+	@Autowired
+	private RestTemplate restTemplate;
+
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
 	@Value("${s3.domain}")
@@ -81,7 +84,6 @@ public class GatewayUtil {
 
 	private Producer<String, String> producer;
 	private AmazonS3 s3Client;
-	private RestTemplate restTemplate = new RestTemplate();
 
 	/**
 	 * Initializing the Kafka Producer on Controller startup.
@@ -228,20 +230,18 @@ public class GatewayUtil {
 		}
 		return null;
 	}
-	
+
 	/**
-	 * Attempts to deserialize JSON content into the ErrorResponse object, 
-	 * constructs a new object if it fails.
+	 * Attempts to deserialize JSON content into the ErrorResponse object, constructs a new object if it fails.
 	 * 
-	 * @param String errorBody
-	 *            The JSON content
+	 * @param String
+	 *            errorBody The JSON content
 	 * @return ErrorResponse object to return to the client
-	 */	
+	 */
 	public ErrorResponse getErrorResponse(String errorBody) {
 		try {
-			return objectMapper.readValue(errorBody, ErrorResponse.class); 
-		}
-		catch(Exception e) {
+			return objectMapper.readValue(errorBody, ErrorResponse.class);
+		} catch (Exception e) {
 			return new ErrorResponse(errorBody, "Gateway");
 		}
 	}
