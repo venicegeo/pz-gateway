@@ -15,32 +15,9 @@
  **/
 package gateway.controller;
 
-import gateway.controller.util.GatewayUtil;
-import gateway.controller.util.PiazzaRestController;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
 import java.security.Principal;
 
 import javax.validation.Valid;
-
-import messaging.job.JobMessageFactory;
-import model.job.metadata.ResourceMetadata;
-import model.job.type.AbortJob;
-import model.job.type.ExecuteServiceJob;
-import model.job.type.RepeatJob;
-import model.request.PiazzaJobRequest;
-import model.response.ErrorResponse;
-import model.response.JobErrorResponse;
-import model.response.JobResponse;
-import model.response.JobStatusResponse;
-import model.response.PiazzaResponse;
-import model.response.ServiceResponse;
-import model.response.SuccessResponse;
-import model.service.metadata.Service;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,8 +38,27 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import gateway.controller.util.GatewayUtil;
+import gateway.controller.util.PiazzaRestController;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import messaging.job.JobMessageFactory;
+import model.job.metadata.ResourceMetadata;
+import model.job.type.AbortJob;
+import model.job.type.ExecuteServiceJob;
+import model.job.type.RepeatJob;
+import model.request.PiazzaJobRequest;
+import model.response.ErrorResponse;
+import model.response.JobErrorResponse;
+import model.response.JobResponse;
+import model.response.JobStatusResponse;
+import model.response.PiazzaResponse;
+import model.response.ServiceResponse;
+import model.response.SuccessResponse;
+import model.service.metadata.Service;
 import util.PiazzaLogger;
 
 /**
@@ -75,8 +71,6 @@ import util.PiazzaLogger;
 @Api
 @RestController
 public class JobController extends PiazzaRestController {
-	@Autowired
-	private ObjectMapper objectMapper;
 	@Autowired
 	private GatewayUtil gatewayUtil;
 	@Autowired
@@ -274,7 +268,8 @@ public class JobController extends PiazzaRestController {
 							HttpStatus.BAD_REQUEST);
 				}
 			} catch (Exception exception) {
-				logger.log(String.format("Attempted to check Service Availability for %s but received an error %s. Continued with Job Request.",
+				logger.log(String.format(
+						"Attempted to check Service Availability for %s but received an error %s. Continued with Job Request.",
 						job.getData().getServiceId(), exception.getMessage()), PiazzaLogger.WARNING);
 			}
 

@@ -121,7 +121,8 @@ public class DataController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			//logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			// logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)),
+			// PiazzaLogger.INFO);
 
 			// Validate params
 			String validationError = null;
