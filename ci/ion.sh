@@ -7,6 +7,8 @@ pushd `dirname $0`/.. > /dev/null
 root=$(pwd -P)
 popd > /dev/null
 
+set +x
+export HISTFILE=/def/null
 [ -z "$IONCHANNEL_SECRET_KEY" ] && { echo "IONCHANNEL_SECRET_KEY not set" >&2; exit 1; }
 [ -z "$IONCHANNEL_ENDPOINT_URL" ] && IONCHANNEL_ENDPOINT_URL=https://api.private.ionchannel.io
 
@@ -45,6 +47,7 @@ else
   ioncmd=ion-connect
 fi
 
+set -x
 $ioncmd dependency resolve-dependencies-in-file --flatten --type maven $pomfile
 
 #$ioncmd vulnerability get-vulnerabilities-for-list \
