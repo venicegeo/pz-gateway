@@ -39,13 +39,9 @@ else
 fi
 
 # Install ion-connect?
-if ! type ion-connect > /dev/null 2>&1; then
-  curl -o $root/tmp/$archive -O https://s3.amazonaws.com/public.ionchannel.io/files/ion-connect/$archive
-  tar -C $root/tmp -xzf $root/tmp/$archive
-  ioncmd=$root/tmp/ion-connect/$os/bin/ion-connect
-else
-  ioncmd=ion-connect
-fi
+curl -o $root/tmp/$archive -O https://s3.amazonaws.com/public.ionchannel.io/files/ion-connect/$archive
+tar -C $root/tmp -xzf $root/tmp/$archive
+ioncmd=$root/tmp/ion-connect/$os/bin/ion-connect
 
 set -x
 $ioncmd --version
