@@ -48,6 +48,7 @@ else
 fi
 
 set -x
+$ioncmd --version
 $ioncmd dependency resolve-dependencies-in-file --flatten --type maven $pomfile
 
 #$ioncmd vulnerability get-vulnerabilities-for-list \
