@@ -13,7 +13,8 @@ export HISTFILE=/def/null
 [ -z "$IONCHANNEL_ENDPOINT_URL" ] && IONCHANNEL_ENDPOINT_URL=https://api.private.ionchannel.io
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')
-pomfile=$root/pom.xml
+srcpom=$root/pom.xml
+pomfile=$root/tmp/pom.xml
 archive=ion-connect-latest.tar.gz
 
 mkdir -p $root/tmp/bin
@@ -38,18 +39,19 @@ else
   jqcmd=jq
 fi
 
+# Remove private repos from the pomfile
+cat $srcpom | perl -000 -ne 'print unless /org.venice.piazza/ && /pz-jobcommon/' > $pomfile
+
 # Install ion-connect?
 curl -o $root/tmp/$archive -O https://s3.amazonaws.com/public.ionchannel.io/files/ion-connect/$archive
 tar -C $root/tmp -xzf $root/tmp/$archive
 ioncmd=$root/tmp/ion-connect/$os/bin/ion-connect
 
-set -x
 $ioncmd --version
-$ioncmd dependency resolve-dependencies-in-file --flatten --type maven $pomfile
 
-#$ioncmd vulnerability get-vulnerabilities-for-list \
-#  $($ioncmd dependency resolve-dependencies-in-file --flatten --type maven $pomfile \
-#      | $jqcmd -c .dependencies)
+$ioncmd vulnerability get-vulnerabilities-for-list \
+  $($ioncmd dependency resolve-dependencies-in-file --flatten --type maven $pomfile \
+      | $jqcmd -c .dependencies)
 
 rm -rf $root/tmp
 
