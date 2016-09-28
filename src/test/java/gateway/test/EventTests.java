@@ -20,22 +20,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import gateway.controller.EventController;
-import gateway.controller.util.GatewayUtil;
 
 import java.security.Principal;
 import java.util.ArrayList;
 
 import javax.management.remote.JMXPrincipal;
 
-import model.response.ErrorResponse;
-import model.response.EventListResponse;
-import model.response.EventTypeListResponse;
-import model.response.Pagination;
-import model.response.PiazzaResponse;
-import model.workflow.Event;
-import model.workflow.EventType;
-
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -48,12 +39,21 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gateway.controller.EventController;
+import gateway.controller.util.GatewayUtil;
+import model.response.ErrorResponse;
+import model.response.EventListResponse;
+import model.response.EventTypeListResponse;
+import model.response.Pagination;
+import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
+import model.workflow.Event;
+import model.workflow.EventType;
 import util.PiazzaLogger;
 import util.UUIDFactory;
 
 /**
- * Unit tests for the EventController.java Rest Controller, which brokers calls
- * to pz-workflow.
+ * Unit tests for the EventController.java Rest Controller, which brokers calls to pz-workflow.
  * 
  * @author Patrick.Doody
  *
@@ -102,8 +102,7 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForEntity(anyString(), eq(String.class)))
-				.thenThrow(new RestClientException("event error"));
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenThrow(new RestClientException("event error"));
 		response = eventController.getEvents(null, null, null, null, 0, 10, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -125,8 +124,7 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
-				new RestClientException("event error"));
+		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(new RestClientException("event error"));
 		response = eventController.fireEvent(new Event(), user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -149,8 +147,7 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(String.class)))
-				.thenThrow(new RestClientException("event error"));
+		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("event error"));
 		response = eventController.getEventInformation("eventId", user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -173,8 +170,7 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(String.class)))
-				.thenThrow(new RestClientException("event error"));
+		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("event error"));
 		response = eventController.getEventTypes(null, null, null, 0, 10, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -184,7 +180,7 @@ public class EventTests {
 	/**
 	 * Test POST /eventType
 	 */
-//	@Test
+	@Test
 	public void testCreateEventType() {
 		// Mock Response
 		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn("OK");
@@ -197,8 +193,7 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
-				new RestClientException("event type error"));
+		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(new RestClientException("event type error"));
 		response = eventController.createEventType(new EventType(), user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -221,14 +216,13 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(
-				new RestClientException("event type error"));
+		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("event type error"));
 		response = eventController.getEventType("eventTypeId", user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("event type error"));
 	}
-	
+
 	/**
 	 * Test POST /event/query
 	 */
@@ -237,7 +231,7 @@ public class EventTests {
 		// Mock
 		Event event = new Event();
 		event.eventId = "123456";
-		
+
 		EventListResponse mockResponse = new EventListResponse();
 		mockResponse.data = new ArrayList<Event>();
 		mockResponse.getData().add(event);
@@ -254,13 +248,12 @@ public class EventTests {
 		assertTrue(response.getPagination().getCount().equals(1));
 
 		// Test an Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(EventListResponse.class)))
-				.thenThrow(new RestClientException(""));
+		when(restTemplate.postForObject(anyString(), any(), eq(EventListResponse.class))).thenThrow(new RestClientException(""));
 		entity = eventController.searchEvents(null, 0, 10, null, null, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
 	}
-	
+
 	/**
 	 * Test POST /eventType/query
 	 */
@@ -269,7 +262,7 @@ public class EventTests {
 		// Mock
 		EventType eventType = new EventType();
 		eventType.eventTypeId = "123456";
-		
+
 		EventTypeListResponse mockResponse = new EventTypeListResponse();
 		mockResponse.data = new ArrayList<EventType>();
 		mockResponse.getData().add(eventType);
@@ -286,10 +279,33 @@ public class EventTests {
 		assertTrue(response.getPagination().getCount().equals(1));
 
 		// Test an Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(EventTypeListResponse.class)))
-				.thenThrow(new RestClientException(""));
+		when(restTemplate.postForObject(anyString(), any(), eq(EventTypeListResponse.class))).thenThrow(new RestClientException(""));
 		entity = eventController.searchEventTypes(null, 0, 10, null, null, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
-	}	
+	}
+
+	/**
+	 * Test DELETE eventType
+	 */
+	@Test
+	public void testDeleteEvent() {
+		// Test
+		ResponseEntity<?> response = eventController.deleteEvent("123456", user);
+
+		// Verify
+		Assert.assertTrue(response.getBody() instanceof SuccessResponse);
+	}
+
+	/**
+	 * Test DELETE event
+	 */
+	@Test
+	public void testDeleteEventType() {
+		// Test
+		ResponseEntity<?> response = eventController.deleteEventType("123456", user);
+
+		// Verify
+		Assert.assertTrue(response.getBody() instanceof SuccessResponse);
+	}
 }

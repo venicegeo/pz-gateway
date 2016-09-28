@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,7 @@ import model.response.AlertListResponse;
 import model.response.ErrorResponse;
 import model.response.Pagination;
 import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
 import model.response.TriggerListResponse;
 import model.workflow.Alert;
 import model.workflow.Trigger;
@@ -93,8 +95,7 @@ public class AlertTriggerTests {
 	@Test
 	public void testCreateTrigger() throws JsonProcessingException {
 		// Mock Response
-		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(
-				any(String.class));
+		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(any(String.class));
 
 		// Test
 		ResponseEntity<?> response = alertTriggerController.createTrigger(new Trigger(), user);
@@ -103,8 +104,7 @@ public class AlertTriggerTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(
-				new RestClientException("Trigger Error"));
+		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(new RestClientException("Trigger Error"));
 		response = alertTriggerController.createTrigger(new Trigger(), user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -127,8 +127,7 @@ public class AlertTriggerTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(
-				new RestClientException("Trigger Error"));
+		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("Trigger Error"));
 		response = alertTriggerController.getTriggers(0, 10, null, "test", user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -151,8 +150,7 @@ public class AlertTriggerTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(
-				new RestClientException("Trigger Error"));
+		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("Trigger Error"));
 		response = alertTriggerController.getTrigger("triggerId", user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -175,8 +173,7 @@ public class AlertTriggerTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(String.class)))
-				.thenThrow(new RestClientException("Alert Error"));
+		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("Alert Error"));
 		response = alertTriggerController.getAlerts(0, 10, null, "test", null, false, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -199,8 +196,7 @@ public class AlertTriggerTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.getForObject(anyString(), eq(String.class)))
-				.thenThrow(new RestClientException("Alert Error"));
+		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("Alert Error"));
 		response = alertTriggerController.getAlert("AlertID", false, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
@@ -215,7 +211,7 @@ public class AlertTriggerTests {
 		// Mock
 		Alert alert = new Alert();
 		alert.alertId = "123456";
-		
+
 		AlertListResponse mockResponse = new AlertListResponse();
 		mockResponse.data = new ArrayList<Alert>();
 		mockResponse.getData().add(alert);
@@ -232,13 +228,12 @@ public class AlertTriggerTests {
 		assertTrue(response.getPagination().getCount().equals(1));
 
 		// Test an Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(AlertListResponse.class)))
-				.thenThrow(new RestClientException(""));
+		when(restTemplate.postForObject(anyString(), any(), eq(AlertListResponse.class))).thenThrow(new RestClientException(""));
 		entity = alertTriggerController.searchAlerts(null, 0, 10, null, null, false, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
 	}
-	
+
 	/**
 	 * Test POST /trigger/query
 	 */
@@ -247,7 +242,7 @@ public class AlertTriggerTests {
 		// Mock
 		Trigger trigger = new Trigger();
 		trigger.triggerId = "123456";
-		
+
 		TriggerListResponse mockResponse = new TriggerListResponse();
 		mockResponse.data = new ArrayList<Trigger>();
 		mockResponse.getData().add(trigger);
@@ -264,10 +259,21 @@ public class AlertTriggerTests {
 		assertTrue(response.getPagination().getCount().equals(1));
 
 		// Test an Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(TriggerListResponse.class)))
-				.thenThrow(new RestClientException(""));
+		when(restTemplate.postForObject(anyString(), any(), eq(TriggerListResponse.class))).thenThrow(new RestClientException(""));
 		entity = alertTriggerController.searchTriggers(null, 0, 10, null, null, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
-	}	
+	}
+
+	/**
+	 * Test deletion of Trigger
+	 */
+	@Test
+	public void deleteTrigger() {
+		// Test
+		ResponseEntity<PiazzaResponse> response = alertTriggerController.deleteTrigger("123456", user);
+
+		// Verify
+		assertTrue(response.getBody() instanceof SuccessResponse);
+	}
 }
