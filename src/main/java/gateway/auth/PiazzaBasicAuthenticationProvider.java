@@ -53,7 +53,6 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 				return new UsernamePasswordAuthenticationToken(response.getUsername(), null, new ArrayList<>());
 			}
 		} catch(Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error retrieving UUID: %s", exception.getMessage());
 			logger.log(error, PiazzaLogger.ERROR);			
 		}
