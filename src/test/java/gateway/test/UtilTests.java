@@ -16,10 +16,10 @@
 package gateway.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import gateway.controller.util.GatewayUtil;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -32,15 +32,23 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import com.amazonaws.services.s3.AmazonS3;
+
+import gateway.controller.util.GatewayUtil;
+import model.job.type.AbortJob;
+import model.request.PiazzaJobRequest;
+import model.response.JobResponse;
+import model.response.PiazzaResponse;
 import util.PiazzaLogger;
 import util.UUIDFactory;
-
-import com.amazonaws.services.s3.AmazonS3;
 
 /**
  * Tests the Gateway Utility class.
@@ -92,4 +100,40 @@ public class UtilTests {
 		assertEquals("UNAUTHENTICATED", gatewayUtil.getPrincipalName(null));
 	}
 
+	/**
+	 * Tests sending a Job Request
+	 */
+	@Test
+	public void testJobRequest() throws Exception {
+		// Mock
+		PiazzaJobRequest mockRequest = new PiazzaJobRequest();
+		mockRequest.createdBy = "tester";
+		mockRequest.jobType = new AbortJob("123456");
+		Mockito.doReturn(new ResponseEntity<PiazzaResponse>(new JobResponse("123456"), HttpStatus.OK)).when(restTemplate)
+				.postForEntity(Mockito.anyString(), Mockito.any(), Mockito.eq(PiazzaResponse.class));
+
+		// Test
+		String jobId = gatewayUtil.sendJobRequest(mockRequest, "123456");
+
+		// Verify
+		assertEquals(jobId, "123456");
+	}
+
+	/**
+	 * Tests input validation for Pagination parameters
+	 */
+	@Test
+	public void testValidateInput() {
+		assertTrue(gatewayUtil.validateInput("order", "asc") == null);
+		assertTrue(gatewayUtil.validateInput("order", "desc") == null);
+		assertTrue(gatewayUtil.validateInput("order", "ascending").isEmpty() == false);
+
+		assertTrue(gatewayUtil.validateInput("perPage", 5) == null);
+		assertTrue(gatewayUtil.validateInput("perPage", 10) == null);
+		assertTrue(gatewayUtil.validateInput("perPage", -50).isEmpty() == false);
+
+		assertTrue(gatewayUtil.validateInput("page", 5) == null);
+		assertTrue(gatewayUtil.validateInput("page", 10) == null);
+		assertTrue(gatewayUtil.validateInput("page", -50).isEmpty() == false);
+	}
 }
