@@ -19,6 +19,8 @@ import java.security.Principal;
 
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -79,6 +81,8 @@ public class DeploymentController extends PiazzaRestController {
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_ORDER = "desc";
 
+	private final static Logger LOGGER = LoggerFactory.getLogger(DeploymentController.class);
+	
 	/**
 	 * Processes a request to create a GIS Server deployment for Piazza data.
 	 * 
@@ -113,9 +117,9 @@ public class DeploymentController extends PiazzaRestController {
 			// Send the response back to the user
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Loading Data for user %s for Id %s of type %s: %s", gatewayUtil.getPrincipalName(user),
 					job.getDataId(), job.getDeploymentType(), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -175,9 +179,9 @@ public class DeploymentController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Listing Deployments by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -217,9 +221,9 @@ public class DeploymentController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error fetching Deployment for Id %s by user %s: %s", deploymentId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -260,9 +264,9 @@ public class DeploymentController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Deleting Deployment by Id %s by user %s: %s", deploymentId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -291,8 +295,8 @@ public class DeploymentController extends PiazzaRestController {
 					.postForEntity(String.format("%s/deployment/group?createdBy=%s", ACCESS_URL, createdBy), null, PiazzaResponse.class)
 					.getBody(), HttpStatus.CREATED);
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error creating DeploymentGroup: %s", exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -331,9 +335,9 @@ public class DeploymentController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
-			String error = String.format("Error Deleting DeploymentGroup %s : %s", deploymentGroupId, gatewayUtil.getPrincipalName(user),
+			String error = String.format("Error Deleting DeploymentGroup %s : %s - exception: %s", deploymentGroupId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}

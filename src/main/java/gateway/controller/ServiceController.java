@@ -40,6 +40,8 @@ import model.response.SuccessResponse;
 import model.service.metadata.Service;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -88,6 +90,8 @@ public class ServiceController extends PiazzaRestController {
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_SORTBY = "resourceMetadata.createdOn";
 	private static final String DEFAULT_ORDER = "desc";
+	
+	private final static Logger LOGGER = LoggerFactory.getLogger(ServiceController.class);
 
 	/**
 	 * Registers an external service with the Piazza Service Controller.
@@ -134,9 +138,9 @@ public class ServiceController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Registering Service by user %s: %s",
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -175,9 +179,9 @@ public class ServiceController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Getting Service %s Info for user %s: %s", serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -220,9 +224,9 @@ public class ServiceController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -270,9 +274,9 @@ public class ServiceController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -348,9 +352,9 @@ public class ServiceController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -428,9 +432,9 @@ public class ServiceController extends PiazzaRestController {
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);

@@ -38,6 +38,8 @@ import model.response.SuccessResponse;
 import model.workflow.Event;
 import model.workflow.EventType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -87,6 +89,8 @@ public class EventController extends PiazzaRestController {
 	@Autowired
 	private RestTemplate restTemplate;
 
+	private final static Logger LOGGER = LoggerFactory.getLogger(EventController.class);
+	
 	/**
 	 * Gets all Events from the workflow component.
 	 * 
@@ -133,9 +137,9 @@ public class EventController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}		
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Querying Events by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -173,7 +177,7 @@ public class EventController extends PiazzaRestController {
 				event.createdBy = gatewayUtil.getPrincipalName(user);
 			} catch (Exception exception) {
 				logger.log(
-						String.format("Failed to set the createdBy field in Event created by User %s: ",
+						String.format("Failed to set the createdBy field in Event created by User %s: - exception: %s",
 								gatewayUtil.getPrincipalName(user), exception.getMessage()), PiazzaLogger.WARNING);
 			}
 			
@@ -184,9 +188,9 @@ public class EventController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}			
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Submitting Event by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -228,9 +232,9 @@ public class EventController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Querying Event %s by user %s: %s", eventId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -283,9 +287,9 @@ public class EventController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Querying EventTypes by user %s: %s",
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -325,7 +329,7 @@ public class EventController extends PiazzaRestController {
 				eventType.createdBy = gatewayUtil.getPrincipalName(user);
 			} catch (Exception exception) {
 				logger.log(
-						String.format("Failed to set the createdBy field in EventType created by User %s: ",
+						String.format("Failed to set the createdBy field in EventType created by User %s: - exception: %s",
 								gatewayUtil.getPrincipalName(user), exception.getMessage()), PiazzaLogger.WARNING);
 			}
 			
@@ -337,9 +341,9 @@ public class EventController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Creating EventType by user %s: %s",
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -380,9 +384,9 @@ public class EventController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Getting EventType Id %s by user %s: %s", eventTypeId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -424,9 +428,9 @@ public class EventController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Deleting EventType Id %s by user %s: %s", eventTypeId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -466,9 +470,9 @@ public class EventController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Deleting Event Id %s by user %s: %s", eventId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -519,9 +523,9 @@ public class EventController extends PiazzaRestController {
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
@@ -572,9 +576,9 @@ public class EventController extends PiazzaRestController {
 			// Respond
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);

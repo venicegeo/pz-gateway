@@ -20,6 +20,8 @@ import java.security.Principal;
 import javax.validation.Valid;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -84,6 +86,8 @@ public class JobController extends PiazzaRestController {
 
 	@Autowired
 	private RestTemplate restTemplate;
+	
+	private final static Logger LOGGER = LoggerFactory.getLogger(JobController.class);
 
 	/**
 	 * Returns the Status of a Job.
@@ -117,8 +121,8 @@ public class JobController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error requesting Job Status for Id %s: %s", jobId, exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -174,8 +178,8 @@ public class JobController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error requesting Job Abort for Id %s: %s", jobId, exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -222,8 +226,8 @@ public class JobController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Repeating Job Id %s: %s", jobId, exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -281,9 +285,9 @@ public class JobController extends PiazzaRestController {
 			String jobId = gatewayUtil.sendJobRequest(request, null);
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			String error = String.format("Error Executing for user %s for Service %s: %s", gatewayUtil.getPrincipalName(user),
 					job.data.getServiceId(), exception.getMessage());
+			LOGGER.error(error);
 			logger.log(error, PiazzaLogger.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}

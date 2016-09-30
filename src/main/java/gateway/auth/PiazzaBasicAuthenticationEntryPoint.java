@@ -17,11 +17,14 @@ package gateway.auth;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
@@ -43,6 +46,8 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 	@Autowired
 	private PiazzaLogger logger;
 
+	private final static Logger LOGGER = LoggerFactory.getLogger(PiazzaBasicAuthenticationEntryPoint.class);
+	
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authEx)
 			throws IOException, ServletException {
@@ -58,7 +63,7 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 		logger.log(String.format("Unable to authenticate a user with Auth Type %s and Header %s", request.getAuthType(),
 				request.getHeader("Authorization").toString()), PiazzaLogger.ERROR);
 		} catch (Exception exception) {
-			exception.printStackTrace();
+			LOGGER.error(Arrays.toString(exception.getStackTrace()));
 		}
 
 		// Write back the response
