@@ -38,9 +38,12 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import gateway.auth.PiazzaBasicAuthenticationEntryPoint;
 import gateway.auth.PiazzaBasicAuthenticationProvider;
+import gateway.controller.util.HttpInterceptor;
 import io.swagger.annotations.Api;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -124,6 +127,17 @@ public class Application extends SpringBootServletInitializer {
 		protected void configure(HttpSecurity http) throws Exception {
 			http.httpBasic().authenticationEntryPoint(basicEntryPoint).and().authorizeRequests().anyRequest().authenticated().and()
 					.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().csrf().disable();
+		}
+	}
+	
+	@Configuration
+	protected static class GatewayConfig extends WebMvcConfigurerAdapter {
+		@Autowired
+		HttpInterceptor httpInterceptor;
+
+		@Override
+		public void addInterceptors(InterceptorRegistry registry) {
+			registry.addInterceptor(httpInterceptor);
 		}
 	}
 }
