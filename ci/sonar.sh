@@ -5,3 +5,4 @@ root=$(pwd -P)
 popd > /dev/null
 
 mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install -Pcoverage-per-test
+mvn sonar:sonar
