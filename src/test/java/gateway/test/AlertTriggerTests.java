@@ -189,7 +189,7 @@ public class AlertTriggerTests {
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn("Alert");
 
 		// Test
-		ResponseEntity<?> response = alertTriggerController.getAlert("AlertID", false, user);
+		ResponseEntity<?> response = alertTriggerController.getAlert("AlertID", user);
 
 		// Verify
 		assertTrue(response.getBody().toString().equals("Alert"));
@@ -197,7 +197,7 @@ public class AlertTriggerTests {
 
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("Alert Error"));
-		response = alertTriggerController.getAlert("AlertID", false, user);
+		response = alertTriggerController.getAlert("AlertID", user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(response.getBody() instanceof ErrorResponse);
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("Alert Error"));
