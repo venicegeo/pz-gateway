@@ -17,6 +17,9 @@ package gateway;
 
 import java.security.Principal;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,9 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import gateway.auth.PiazzaBasicAuthenticationEntryPoint;
 import gateway.auth.PiazzaBasicAuthenticationProvider;
@@ -100,6 +106,20 @@ public class Application extends SpringBootServletInitializer {
 	private ApiInfo apiInfo() {
 		return new ApiInfoBuilder().title("Gateway API").description("Piazza Core Services API")
 				.contact(new Contact("The VeniceGeo Project", "http://radiantblue.com", "venice@radiantblue.com")).version("0.1.0").build();
+	}
+
+	@Configuration
+	protected static class AddCorsHeaders extends WebMvcConfigurerAdapter {
+		@Override
+		public void addInterceptors(InterceptorRegistry registry) {
+			registry.addInterceptor(new HandlerInterceptorAdapter() {
+				@Override
+				public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+					response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+					return true;
+				}
+			});
+		}
 	}
 
 	@Configuration
