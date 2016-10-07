@@ -2,7 +2,7 @@ applications:
 - name: pz-gateway
   host: pz-gateway
   path: pz-gateway.jar
-  buildpack: 'https://github.com/cloudfoundry/java-buildpack.git#v3.7'
+  buildpack: 'https://github.com/cloudfoundry/java-buildpack.git#v3.9'
   memory: 2048M
   instances: 1
   timeout: 80
