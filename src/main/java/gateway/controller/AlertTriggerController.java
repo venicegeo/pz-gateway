@@ -405,7 +405,6 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<?> getAlert(
 			@ApiParam(value = "The Id of the Alert to retrieve data for.", required = true) @PathVariable(value = "alertId") String alertId,
-			@ApiParam(value = "If this flag is set to true, then Workflow objects otherwise referenced by a single Unique ID will be populated in full.") @RequestParam(value = "inflate", required = false) Boolean inflate,
 			Principal user) {
 		try {
 			// Log the request
@@ -415,7 +414,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			try {
 				// Proxy the request to Workflow
 				return new ResponseEntity<String>(restTemplate.getForObject(
-						String.format("%s/%s/%s?inflate=%s", WORKFLOW_URL, "alert", alertId, inflate != null ? inflate.toString() : false),
+						String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId),
 						String.class), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				return new ResponseEntity<PiazzaResponse>(
