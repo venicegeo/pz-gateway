@@ -71,7 +71,7 @@ import util.PiazzaLogger;
  * @author Patrick.Doody
  *
  */
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", maxAge = 3600)
 @Api
 @RestController
 public class DataController extends PiazzaRestController {
