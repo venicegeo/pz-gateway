@@ -15,23 +15,17 @@
  **/
 package gateway.controller.util;
 
+import java.io.IOException;
 import java.security.Principal;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import messaging.job.KafkaClientFactory;
-import model.data.FileRepresentation;
-import model.data.location.FileLocation;
-import model.data.location.S3FileStore;
-import model.job.type.IngestJob;
-import model.request.PiazzaJobRequest;
-import model.response.ErrorResponse;
-import model.response.JobResponse;
-import model.response.PiazzaResponse;
-
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -42,14 +36,26 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import util.PiazzaLogger;
-import util.UUIDFactory;
-
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import exception.PiazzaJobException;
+import messaging.job.KafkaClientFactory;
+import model.data.FileRepresentation;
+import model.data.location.FileLocation;
+import model.data.location.S3FileStore;
+import model.job.type.IngestJob;
+import model.request.PiazzaJobRequest;
+import model.response.ErrorResponse;
+import model.response.JobResponse;
+import model.response.PiazzaResponse;
+import util.PiazzaLogger;
+import util.UUIDFactory;
 
 /**
  * Utility class that defines common procedures for handling requests, responses, and brokered end points to internal
@@ -81,6 +87,8 @@ public class GatewayUtil {
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
+
+	private final static Logger LOGGER = LoggerFactory.getLogger(GatewayUtil.class);
 
 	private Producer<String, String> producer;
 	private AmazonS3 s3Client;
@@ -114,7 +122,7 @@ public class GatewayUtil {
 	 *            The Job Request
 	 * @return The Job Id
 	 */
-	public String sendJobRequest(PiazzaJobRequest request, String jobId) throws Exception {
+	public String sendJobRequest(PiazzaJobRequest request, String jobId) throws PiazzaJobException {
 		try {
 			// Generate a Job Id
 			if (jobId == null) {
@@ -128,12 +136,14 @@ public class GatewayUtil {
 					.postForEntity(String.format("%s/%s?jobId=%s", JOBMANAGER_URL, "requestJob", jobId), entity, PiazzaResponse.class);
 			// Check if the response was an error.
 			if (jobResponse.getBody() instanceof ErrorResponse) {
-				throw new Exception(((ErrorResponse) jobResponse.getBody()).message);
+				throw new PiazzaJobException(((ErrorResponse) jobResponse.getBody()).message);
 			}
 			// Return the Job Id from the response.
 			return ((JobResponse) jobResponse.getBody()).data.getJobId();
 		} catch (Exception exception) {
-			throw new Exception(String.format("Error with Job Manager when Requesting New Piazza Job: %s", exception.getMessage()));
+			String error = String.format("Error with Job Manager when Requesting New Piazza Job: %s", exception.getMessage());
+			LOGGER.error(error, exception);
+			throw new PiazzaJobException(error);
 		}
 	}
 
@@ -146,7 +156,7 @@ public class GatewayUtil {
 	 * @throws Exception
 	 *             Any exceptions encountered with the send.
 	 */
-	public void sendKafkaMessage(ProducerRecord<String, String> message) throws Exception {
+	public void sendKafkaMessage(ProducerRecord<String, String> message) throws InterruptedException, ExecutionException {
 		producer.send(message).get();
 	}
 
@@ -155,11 +165,13 @@ public class GatewayUtil {
 	 * 
 	 * @return UUID
 	 */
-	public String getUuid() throws Exception {
+	public String getUuid() throws PiazzaJobException {
 		try {
 			return uuidFactory.getUUID();
 		} catch (Exception exception) {
-			throw new Exception(String.format("Could not connect to UUID Service for UUID: %s", exception.getMessage()));
+			String error = String.format("Could not connect to UUID Service for UUID: %s", exception.getMessage());
+			LOGGER.error(error, exception);
+			throw new PiazzaJobException(error);
 		}
 	}
 
@@ -186,7 +198,8 @@ public class GatewayUtil {
 	 *            The file to be uploaded
 	 * @return The modified job, with the location of the S3 file added to the metadata
 	 */
-	public IngestJob pushS3File(String jobId, IngestJob job, MultipartFile file) throws Exception {
+	public IngestJob pushS3File(String jobId, IngestJob job, MultipartFile file)
+			throws AmazonServiceException, AmazonClientException, IOException {
 		// The content length must be specified.
 		ObjectMetadata metadata = new ObjectMetadata();
 		metadata.setContentLength(file.getSize());
@@ -241,7 +254,8 @@ public class GatewayUtil {
 	public ErrorResponse getErrorResponse(String errorBody) {
 		try {
 			return objectMapper.readValue(errorBody, ErrorResponse.class);
-		} catch (Exception e) {
+		} catch (Exception exception) {
+			LOGGER.error(String.format("Error Serializing Error Body (%s) into ErrorResponse class.", errorBody), exception);
 			return new ErrorResponse(errorBody, "Gateway");
 		}
 	}
