@@ -177,8 +177,10 @@ public class EventController extends PiazzaRestController {
 				// Attempt to set the createdBy field
 				event.createdBy = gatewayUtil.getPrincipalName(user);
 			} catch (Exception exception) {
-				logger.log(String.format("Failed to set the createdBy field in Event created by User %s: - exception: %s",
-						gatewayUtil.getPrincipalName(user), exception.getMessage()), PiazzaLogger.WARNING);
+				String error = String.format("Failed to set the createdBy field in Event created by User %s: - exception: %s",
+						gatewayUtil.getPrincipalName(user), exception.getMessage());
+				logger.log(error, PiazzaLogger.WARNING);
+				LOGGER.error(error, exception);
 			}
 
 			try {
