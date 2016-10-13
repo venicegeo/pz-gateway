@@ -21,6 +21,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.Charset;
 import java.security.Principal;
 import java.util.ArrayList;
 
@@ -74,6 +75,7 @@ public class EventTests {
 	private EventController eventController;
 
 	private Principal user;
+	private static final String WORKFLOW_ERROR = "{\"statusCode\": 400,\"message\": \"Error\",\"origin\": \"pz-workflow\"}";
 
 	/**
 	 * Initialize mock objects.
@@ -104,10 +106,9 @@ public class EventTests {
 
 		// Test REST Exception
 		when(restTemplate.getForEntity(anyString(), eq(String.class)))
-				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "event error"));
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, WORKFLOW_ERROR));
 		response = eventController.getEvents(null, null, null, null, 0, 10, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(response.getBody() instanceof ErrorResponse);
 
 		// Test General Exception
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenThrow(new RestClientException("event error"));
@@ -139,10 +140,9 @@ public class EventTests {
 
 		// Test REST Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(String.class)))
-				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "event error"));
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, WORKFLOW_ERROR));
 		response = eventController.fireEvent(new Event(), user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(response.getBody() instanceof ErrorResponse);
 
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(new RestClientException("event error"));
@@ -169,10 +169,9 @@ public class EventTests {
 
 		// Test REST Exception
 		when(restTemplate.getForObject(anyString(), eq(String.class)))
-				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "event error"));
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, WORKFLOW_ERROR));
 		response = eventController.getEventInformation("eventId", user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(response.getBody() instanceof ErrorResponse);
 
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("event error"));
@@ -198,12 +197,11 @@ public class EventTests {
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 
 		// Test REST Exception
-		when(restTemplate.getForObject(anyString(), eq(String.class)))
-				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "event error"));
+		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new HttpServerErrorException(
+				HttpStatus.INTERNAL_SERVER_ERROR, WORKFLOW_ERROR, WORKFLOW_ERROR.getBytes(), Charset.defaultCharset()));
 		response = eventController.getEventTypes(null, null, null, 0, 10, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(response.getBody() instanceof ErrorResponse);
-		
+
 		// Test Exception
 		when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("event error"));
 		response = eventController.getEventTypes(null, null, null, 0, 10, user);
