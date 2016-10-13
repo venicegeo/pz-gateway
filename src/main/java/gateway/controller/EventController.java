@@ -134,7 +134,7 @@ public class EventController extends PiazzaRestController {
 						eventTypeId != null ? eventTypeId : "");
 				return new ResponseEntity<String>(restTemplate.getForEntity(url, String.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Querying Events", hee);
+				LOGGER.error(hee.getMessage(), hee);
 				return new ResponseEntity<PiazzaResponse>(
 						gatewayUtil.getErrorResponse(hee.getResponseBodyAsString().replaceAll("}", " ,\"type\":\"error\" }")),
 						hee.getStatusCode());
