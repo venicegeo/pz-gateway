@@ -22,32 +22,12 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import gateway.controller.JobController;
-import gateway.controller.ServiceController;
-import gateway.controller.util.GatewayUtil;
 
 import java.security.Principal;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import javax.management.remote.JMXPrincipal;
-
-import model.job.Job;
-import model.job.JobProgress;
-import model.job.metadata.ResourceMetadata;
-import model.job.type.ExecuteServiceJob;
-import model.job.type.RepeatJob;
-import model.request.PiazzaJobRequest;
-import model.response.ErrorResponse;
-import model.response.JobErrorResponse;
-import model.response.JobResponse;
-import model.response.JobStatusResponse;
-import model.response.PiazzaResponse;
-import model.response.ServiceResponse;
-import model.response.SuccessResponse;
-import model.service.metadata.ExecuteServiceData;
-import model.service.metadata.Service;
-import model.status.StatusUpdate;
 
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -64,6 +44,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import exception.PiazzaJobException;
+import gateway.controller.JobController;
+import gateway.controller.ServiceController;
+import gateway.controller.util.GatewayUtil;
+import model.job.Job;
+import model.job.JobProgress;
+import model.job.metadata.ResourceMetadata;
+import model.job.type.ExecuteServiceJob;
+import model.job.type.RepeatJob;
+import model.request.PiazzaJobRequest;
+import model.response.ErrorResponse;
+import model.response.JobErrorResponse;
+import model.response.JobResponse;
+import model.response.JobStatusResponse;
+import model.response.PiazzaResponse;
+import model.response.ServiceResponse;
+import model.response.SuccessResponse;
+import model.service.metadata.ExecuteServiceData;
+import model.service.metadata.Service;
+import model.status.StatusUpdate;
 import util.PiazzaLogger;
 import util.UUIDFactory;
 
@@ -234,7 +234,7 @@ public class JobTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
-		Mockito.doThrow(new Exception("REST Broke")).when(gatewayUtil)
+		Mockito.doThrow(new PiazzaJobException("REST Broke")).when(gatewayUtil)
 				.sendJobRequest(any(PiazzaJobRequest.class), anyString());
 		entity = jobController.executeService(executeJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));

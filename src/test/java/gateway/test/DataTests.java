@@ -68,6 +68,8 @@ import util.UUIDFactory;
 import com.amazonaws.services.s3.AmazonS3;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import exception.PiazzaJobException;
+
 /**
  * Tests the Data Controller, and various Data Access/Load Jobs.
  * 
@@ -195,7 +197,7 @@ public class DataTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test an Exception
-		when(gatewayUtil.sendJobRequest(any(PiazzaJobRequest.class), anyString())).thenThrow(new Exception());
+		when(gatewayUtil.sendJobRequest(any(PiazzaJobRequest.class), anyString())).thenThrow(new PiazzaJobException("Error"));
 		entity = dataController.ingestData(mockJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 	}

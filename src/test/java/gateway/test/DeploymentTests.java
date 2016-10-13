@@ -48,6 +48,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.amazonaws.services.s3.AmazonS3;
 
+import exception.PiazzaJobException;
 import gateway.controller.DeploymentController;
 import gateway.controller.util.GatewayUtil;
 import model.data.deployment.Deployment;
@@ -141,7 +142,7 @@ public class DeploymentTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
-		Mockito.doThrow(new Exception("Kafka Blows Up")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class), anyString());
+		Mockito.doThrow(new PiazzaJobException("Kafka Blows Up")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class), anyString());
 		entity = deploymentController.createDeployment(accessJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
