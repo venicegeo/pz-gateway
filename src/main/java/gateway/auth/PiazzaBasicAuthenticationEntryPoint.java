@@ -17,7 +17,6 @@ package gateway.auth;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -47,7 +46,7 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 	private PiazzaLogger logger;
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(PiazzaBasicAuthenticationEntryPoint.class);
-	
+
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authEx)
 			throws IOException, ServletException {
@@ -59,11 +58,13 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 		ErrorResponse error = new ErrorResponse("Gateway is unable to authenticate the provided user.", "Gateway");
 
 		try {
-		// Log the request
-		logger.log(String.format("Unable to authenticate a user with Auth Type %s and Header %s", request.getAuthType(),
-				request.getHeader("Authorization").toString()), PiazzaLogger.ERROR);
+			// Log the request
+			logger.log(String.format("Unable to authenticate a user with Auth Type %s and Header %s", request.getAuthType(),
+					request.getHeader("Authorization").toString()), PiazzaLogger.ERROR);
 		} catch (Exception exception) {
-			LOGGER.error(Arrays.toString(exception.getStackTrace()));
+			String errorString = String.format("Exception encountered during Authorization check: %s.", exception.getMessage());
+			LOGGER.error(errorString, exception);
+			logger.log(errorString, PiazzaLogger.ERROR);
 		}
 
 		// Write back the response

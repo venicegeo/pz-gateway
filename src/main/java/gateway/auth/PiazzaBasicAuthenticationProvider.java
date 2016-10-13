@@ -17,6 +17,8 @@ package gateway.auth;
 
 import java.util.ArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,8 +30,8 @@ import model.response.AuthenticationResponse;
 import util.PiazzaLogger;
 
 /**
- * Custom Authentication Provider to authentication the provided username and
- * credential in the 'Authorization' request header field.
+ * Custom Authentication Provider to authentication the provided username and credential in the 'Authorization' request
+ * header field.
  * 
  * @author Russell.Orf
  * 
@@ -41,6 +43,8 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 	@Autowired
 	private UserDetailsBean userDetails;
 
+	private final static Logger LOGGER = LoggerFactory.getLogger(PiazzaBasicAuthenticationProvider.class);
+
 	public PiazzaBasicAuthenticationProvider() {
 		super();
 	}
@@ -49,14 +53,15 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 		try {
 			AuthenticationResponse response = userDetails.getAuthenticationDecision(authentication.getName());
-			if( response.getAuthenticated() ) {
+			if (response.getAuthenticated()) {
 				return new UsernamePasswordAuthenticationToken(response.getUsername(), null, new ArrayList<>());
 			}
-		} catch(Exception exception) {
-			String error = String.format("Error retrieving UUID: %s", exception.getMessage());
-			logger.log(error, PiazzaLogger.ERROR);			
+		} catch (Exception exception) {
+			String error = String.format("Error retrieving UUID: %s.", exception.getMessage());
+			logger.log(error, PiazzaLogger.ERROR);
+			LOGGER.error(error, exception);
 		}
-		return null;		
+		return null;
 	}
 
 	@Override

@@ -20,6 +20,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -44,9 +46,8 @@ import model.response.UUIDResponse;
 import util.PiazzaLogger;
 
 /**
- * REST Controller that defines administrative end points that reference
- * logging, administartion, and debugging information related to the Gateway
- * component.
+ * REST Controller that defines administrative end points that reference logging, administartion, and debugging
+ * information related to the Gateway component.
  * 
  * @author Patrick.Doody
  *
@@ -59,7 +60,7 @@ public class AdminController extends PiazzaRestController {
 	@Autowired
 	private HttpServletRequest request;
 	@Autowired
-	private GatewayUtil gatewayUtil;	
+	private GatewayUtil gatewayUtil;
 	@Value("${vcap.services.pz-kafka.credentials.host}")
 	private String KAFKA_ADDRESS;
 	@Value("${SPACE}")
@@ -88,6 +89,8 @@ public class AdminController extends PiazzaRestController {
 	@Autowired
 	private RestTemplate restTemplate;
 
+	private final static Logger LOGGER = LoggerFactory.getLogger(AdminController.class);
+
 	/**
 	 * Healthcheck required for all Piazza Core Services
 	 * 
@@ -103,7 +106,9 @@ public class AdminController extends PiazzaRestController {
 		try {
 			return new ResponseEntity<String>(restTemplate.getForObject(RELEASE_URL, String.class), HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(String.format("Error retrieving version for Piazza: %s", e.getMessage()), "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			String error = String.format("Error retrieving version for Piazza: %s", e.getMessage());
+			LOGGER.error(error, e);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -134,8 +139,7 @@ public class AdminController extends PiazzaRestController {
 	}
 
 	/**
-	 * Returns a user's UUID for subsequent authentication with pz-gateway
-	 * endpoints.
+	 * Returns a user's UUID for subsequent authentication with pz-gateway endpoints.
 	 * 
 	 * @return Component information
 	 */
@@ -145,17 +149,18 @@ public class AdminController extends PiazzaRestController {
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Authorization", request.getHeader("Authorization"));
 			try {
-				return new ResponseEntity<PiazzaResponse>(
-						new RestTemplate().exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), 
-						HttpStatus.CREATED);
+				return new ResponseEntity<PiazzaResponse>(new RestTemplate()
+						.exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), UUIDResponse.class)
+						.getBody(), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				LOGGER.error(hee.getResponseBodyAsString(), hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error retrieving UUID: %s", exception.getMessage());
+			LOGGER.error(error, exception);
 			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -165,11 +170,10 @@ public class AdminController extends PiazzaRestController {
 	 * @return Error describing the missing GET end point
 	 */
 	/*
-	 * @RequestMapping(value = "/error", method = RequestMethod.GET) public
-	 * ResponseEntity<?> missingEndpoint_GetRequest() { String message =
-	 * "Gateway GET endpoint not defined. Please verify the API for the correct call."
-	 * ; return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
-	 * message, "Gateway"), HttpStatus.BAD_REQUEST); }
+	 * @RequestMapping(value = "/error", method = RequestMethod.GET) public ResponseEntity<?>
+	 * missingEndpoint_GetRequest() { String message =
+	 * "Gateway GET endpoint not defined. Please verify the API for the correct call." ; return new
+	 * ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST); }
 	 */
 
 	/**
@@ -178,10 +182,9 @@ public class AdminController extends PiazzaRestController {
 	 * @return Error describing the missing POST endpoint
 	 */
 	/*
-	 * @RequestMapping(value = "/error", method = RequestMethod.POST) public
-	 * ResponseEntity<?> missingEndpoint_PostRequest() { String message =
-	 * "Gateway POST endpoint not defined. Please verify the API for the correct call."
-	 * ; return new ResponseEntity<PiazzaResponse>(new ErrorResponse(null,
-	 * message, "Gateway"), HttpStatus.BAD_REQUEST); }
+	 * @RequestMapping(value = "/error", method = RequestMethod.POST) public ResponseEntity<?>
+	 * missingEndpoint_PostRequest() { String message =
+	 * "Gateway POST endpoint not defined. Please verify the API for the correct call." ; return new
+	 * ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST); }
 	 */
 }
