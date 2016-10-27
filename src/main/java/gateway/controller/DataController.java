@@ -104,7 +104,7 @@ public class DataController extends PiazzaRestController {
 	/**
 	 * Returns a queried list of Data Resources previously loaded into Piazza.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_data
+	 * @see http://pz-swagger/#!/Data/get_data
 	 * 
 	 * @param user
 	 *            The user making the request
@@ -177,7 +177,7 @@ public class DataController extends PiazzaRestController {
 	/**
 	 * Returns a queried list of Data Resources previously loaded into Piazza that have been loaded by the current user.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_data
+	 * @see http://pz-swagger/#!/Data/get_data
 	 * 
 	 * @param user
 	 *            The user making the request
@@ -205,7 +205,7 @@ public class DataController extends PiazzaRestController {
 	 * Process the request to Ingest data. This endpoint will process an ingest request. If a file is to be specified,
 	 * then the ingestDataFile() endpoint should be called, which is a multipart request.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/post_data
+	 * @see http://pz-swagger/#!/Data/post_data
 	 * 
 	 * @param job
 	 *            The Ingest Job, describing the data to be ingested.
@@ -249,7 +249,7 @@ public class DataController extends PiazzaRestController {
 	/**
 	 * Processes the request to Ingest data as a file.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/post_data_file
+	 * @see http://pz-swagger/#!/Data/post_data_file
 	 * 
 	 * @param job
 	 *            The ingest job, describing the data to be ingested param file The file bytes
@@ -320,7 +320,7 @@ public class DataController extends PiazzaRestController {
 	/**
 	 * Gets the metadata for a Data Resource
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_data
+	 * @see http://pz-swagger/#!/Data/get_data
 	 * 
 	 * @param dataId
 	 *            The Id of the Resource
@@ -404,7 +404,7 @@ public class DataController extends PiazzaRestController {
 	/**
 	 * Update the metadata of a Data Resource
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/post_data
+	 * @see http://pz-swagger/#!/Data/post_data
 	 * 
 	 * @param dataId
 	 *            The Id of the resource
@@ -449,7 +449,7 @@ public class DataController extends PiazzaRestController {
 	/**
 	 * Proxies an ElasticSearch DSL query to the Pz-Search component to return a list of DataResource items.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/post_data_query
+	 * @see http://pz-swagger/#!/Data/post_data_query
 	 * 
 	 * @return The list of DataResource items matching the query.
 	 */
@@ -499,7 +499,7 @@ public class DataController extends PiazzaRestController {
 	/**
 	 * Downloads the bytes of a file that is stored within Piazza.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Data/get_file_dataId
+	 * @see http://pz-swagger/#!/Data/get_file_dataId
 	 * 
 	 * @param dataId
 	 *            The Id of the Data to download

@@ -95,7 +95,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	/**
 	 * Creates a new Trigger
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Trigger/post_trigger"
+	 * @see "http://pz-swagger/#!/Trigger/post_trigger"
 	 * 
 	 * @param trigger
 	 *            The Trigger JSON.
@@ -152,7 +152,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	/**
 	 * Update a Trigger
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Trigger/put_trigger
+	 * @see http://pz-swagger/#!/Trigger/put_trigger
 	 * 
 	 * @param dataId
 	 *            The Id of the resource
@@ -202,7 +202,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	/**
 	 * Gets the list of Triggers
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Trigger/get_trigger"
+	 * @see "http://pz-swagger/#!/Trigger/get_trigger"
 	 * 
 	 * @return The list of Triggers, or an error.
 	 */
@@ -253,7 +253,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	/**
 	 * Gets Trigger by the Id of that Trigger
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Trigger/get_trigger_triggerId"
+	 * @see "http://pz-swagger/#!/Trigger/get_trigger_triggerId"
 	 * 
 	 * @param triggerId
 	 *            The Trigger Id
@@ -299,7 +299,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	/**
 	 * Deletes a Trigger by its Id
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Trigger/delete_trigger_triggerId"
+	 * @see "http://pz-swagger/#!/Trigger/delete_trigger_triggerId"
 	 * 
 	 * @param triggerId
 	 *            The Id of the trigger to delete
@@ -346,7 +346,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	/**
 	 * Gets the list of Alerts
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Alert/get_alert"
+	 * @see "http://pz-swagger/#!/Alert/get_alert"
 	 * 
 	 * @return The list of Alerts, or an error
 	 */
@@ -400,7 +400,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	/**
 	 * Gets Alert
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Alert/get_alert_alertId"
+	 * @see "http://pz-swagger/#!/Alert/get_alert_alertId"
 	 * 
 	 * @param alertId
 	 *            The trigger Id
