@@ -54,7 +54,7 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 		try {
 			AuthenticationResponse response = userDetails.getAuthenticationDecision(authentication.getName());
 			if (response.getAuthenticated()) {
-				return new UsernamePasswordAuthenticationToken(response.getUsername(), null, new ArrayList<>());
+				return new UsernamePasswordAuthenticationToken(response.getProfile().getUsername(), null, new ArrayList<>());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error retrieving UUID: %s.", exception.getMessage());

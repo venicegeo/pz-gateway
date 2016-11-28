@@ -17,6 +17,9 @@ package gateway.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -37,7 +40,10 @@ public class UserDetailsBean {
 
 	public AuthenticationResponse getAuthenticationDecision(String uuid) {
 		String url = String.format("%s/%s", SECURITY_URL, "/v2/verification");
-		return restTemplate.postForEntity(url, new PiazzaVerificationRequest(uuid), AuthenticationResponse.class).getBody();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<PiazzaVerificationRequest> request = new HttpEntity<>(new PiazzaVerificationRequest(uuid), headers);
+		return restTemplate.postForEntity(url, request, AuthenticationResponse.class).getBody();
 	}
 
 	class PiazzaVerificationRequest {
