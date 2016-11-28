@@ -94,7 +94,7 @@ public class JobController extends PiazzaRestController {
 	/**
 	 * Returns the Status of a Job.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/get_job_jobId
+	 * @see http://pz-swagger/#!/Job/get_job_jobId
 	 * 
 	 * @param jobId
 	 *            The Id of the Job.
@@ -134,7 +134,7 @@ public class JobController extends PiazzaRestController {
 	/**
 	 * Cancels a running Job, specified by it's Job Id.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/delete_job_jobId
+	 * @see http://pz-swagger/#!/Job/delete_job_jobId
 	 * 
 	 * @param jobId
 	 *            The Id of the Job to delete.
@@ -192,7 +192,7 @@ public class JobController extends PiazzaRestController {
 	/**
 	 * Repeats a Job that has previously been submitted to Piazza. This will spawn a new Job with new corresponding Id.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Job/put_job_jobId
+	 * @see http://pz-swagger/#!/Job/put_job_jobId
 	 * 
 	 * @param jobId
 	 *            The Id of the Job to repeat.

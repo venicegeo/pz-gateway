@@ -88,7 +88,7 @@ public class DeploymentController extends PiazzaRestController {
 	/**
 	 * Processes a request to create a GIS Server deployment for Piazza data.
 	 * 
-	 * @see http ://pz-swagger.stage.geointservices.io/#!/Deployment/post_deployment
+	 * @see http ://pz-swagger/#!/Deployment/post_deployment
 	 * 
 	 * @param job
 	 *            The job, defining details on the deployment
@@ -130,7 +130,7 @@ public class DeploymentController extends PiazzaRestController {
 	/**
 	 * Returns a list of Deployments held by the Access component
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Deployment/get_deployment"
+	 * @see "http://pz-swagger/#!/Deployment/get_deployment"
 	 * 
 	 * @param user
 	 *            The user making the request
@@ -193,7 +193,7 @@ public class DeploymentController extends PiazzaRestController {
 	/**
 	 * Gets Deployment information for an active deployment, including URL and Data Id.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Deployment/ get_deployment_deploymentId
+	 * @see http://pz-swagger/#!/Deployment/ get_deployment_deploymentId
 	 * 
 	 * @param deploymentId
 	 *            The Id of the deployment to fetch
@@ -236,7 +236,7 @@ public class DeploymentController extends PiazzaRestController {
 	/**
 	 * Deletes Deployment information for an active deployment.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Deployment/ delete_deployment_deploymentId
+	 * @see http://pz-swagger/#!/Deployment/ delete_deployment_deploymentId
 	 * 
 	 * @param deploymentId
 	 *            The Id of the deployment to delete.

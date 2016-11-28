@@ -99,7 +99,7 @@ public class ServiceController extends PiazzaRestController {
 	/**
 	 * Registers an external service with the Piazza Service Controller.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/post_service
+	 * @see http://pz-swagger/#!/Service/post_service
 	 * 
 	 * @param service
 	 *            The service to register.
@@ -154,7 +154,7 @@ public class ServiceController extends PiazzaRestController {
 	/**
 	 * Gets the metadata for a single service.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/get_service
+	 * @see http://pz-swagger/#!/Service/get_service
 	 * 
 	 * @param serviceId
 	 *            The Id of the service to retrieve the data for.
@@ -196,7 +196,7 @@ public class ServiceController extends PiazzaRestController {
 	/**
 	 * De-registers a single service with Piazza.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/delete_service
+	 * @see http://pz-swagger/#!/Service/delete_service
 	 * 
 	 * @param serviceId
 	 *            The Id of the service to delete.
@@ -242,7 +242,7 @@ public class ServiceController extends PiazzaRestController {
 	/**
 	 * Updates an existing service with Piazza's Service Controller.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/put_service
+	 * @see http://pz-swagger/#!/Service/put_service
 	 * 
 	 * @param serviceId
 	 *            The Id of the service to update.
@@ -294,7 +294,7 @@ public class ServiceController extends PiazzaRestController {
 	/**
 	 * Gets the list of all Services held by Piazza.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Service/get_service
+	 * @see http://pz-swagger/#!/Service/get_service
 	 * 
 	 * @param page
 	 *            The start page
@@ -406,7 +406,7 @@ public class ServiceController extends PiazzaRestController {
 	 * list of Service items.
 	 * 
 	 * @see http 
-	 *      ://pz-swagger.stage.geointservices.io/#!/Service/post_service_query
+	 *      ://pz-swagger/#!/Service/post_service_query
 	 * 
 	 * @return The list of Services matching the query.
 	 */

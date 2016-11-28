@@ -95,7 +95,7 @@ public class EventController extends PiazzaRestController {
 	/**
 	 * Gets all Events from the workflow component.
 	 * 
-	 * @see http://pz-swagger.stage.geointservices.io/#!/Event/get_event
+	 * @see http://pz-swagger/#!/Event/get_event
 	 * 
 	 * @param user
 	 *            The user submitting the request
@@ -151,7 +151,7 @@ public class EventController extends PiazzaRestController {
 	/**
 	 * Fires a new Event to the workflow component.
 	 * 
-	 * @see pz-swagger.stage.geointservices.io/#!/Event/post_event_eventTypeId
+	 * @see pz-swagger/#!/Event/post_event_eventTypeId
 	 * 
 	 * @param event
 	 *            The Event to be fired
@@ -205,7 +205,7 @@ public class EventController extends PiazzaRestController {
 	/**
 	 * Gets the specific Event details for a single Event.
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Event/get_event_eventTypeId_eventId"
+	 * @see "http://pz-swagger/#!/Event/get_event_eventTypeId_eventId"
 	 * 
 	 * @param eventType
 	 *            The EventType of the Event
@@ -252,7 +252,7 @@ public class EventController extends PiazzaRestController {
 	/**
 	 * Gets the list of EventTypes.
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Event_Type/get_eventType"
+	 * @see "http://pz-swagger/#!/Event_Type/get_eventType"
 	 * 
 	 * @return The list of EventTypes, or an error.
 	 */
@@ -304,7 +304,7 @@ public class EventController extends PiazzaRestController {
 	/**
 	 * Creates a new EventType.
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Event_Type/post_eventType"
+	 * @see "http://pz-swagger/#!/Event_Type/post_eventType"
 	 * 
 	 * @param eventType
 	 *            The EventType JSON.
@@ -359,7 +359,7 @@ public class EventController extends PiazzaRestController {
 	/**
 	 * Gets EventType by Id
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Event_Type/get_eventType_eventTypeId"
+	 * @see "http://pz-swagger/#!/Event_Type/get_eventType_eventTypeId"
 	 * 
 	 * @param eventTypeId
 	 *            EventType Id
@@ -404,7 +404,7 @@ public class EventController extends PiazzaRestController {
 	/**
 	 * Deletes an EventType
 	 * 
-	 * @see "http://pz-swagger.stage.geointservices.io/#!/Event_Type/delete_eventType_eventTypeId"
+	 * @see "http://pz-swagger/#!/Event_Type/delete_eventType_eventTypeId"
 	 * 
 	 * @param eventTypeId
 	 *            The Id of the EventType to delete
