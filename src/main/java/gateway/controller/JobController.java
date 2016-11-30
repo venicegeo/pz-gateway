@@ -308,7 +308,7 @@ public class JobController extends PiazzaRestController {
 
 			String jobId = gatewayUtil.sendJobRequest(request, null);
 
-			logger.log(String.format("User %s Sent Execute Job for Service %s under Job ID %s.", userName, job.data.getServiceId()),
+			logger.log(String.format("User %s Sent Execute Job for Service %s under Job ID %s.", userName, job.data.getServiceId(), jobId),
 					Severity.INFORMATIONAL, new AuditElement(userName, "completeExecuteServiceJob", jobId));
 
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);

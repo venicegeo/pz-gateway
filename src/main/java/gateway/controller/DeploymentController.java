@@ -275,7 +275,7 @@ public class DeploymentController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
-			logger.log(String.format("User %s requested Deletion for Deployment %s", userName), Severity.INFORMATIONAL,
+			logger.log(String.format("User %s requested Deletion for Deployment %s", userName, deploymentId), Severity.INFORMATIONAL,
 					new AuditElement(userName, "requestDeleteDeployment", deploymentId));
 			// Broker the request to Pz-Access
 			try {
@@ -283,7 +283,7 @@ public class DeploymentController extends PiazzaRestController {
 						restTemplate.exchange(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), HttpMethod.DELETE, null,
 								SuccessResponse.class).getBody(),
 						HttpStatus.OK);
-				logger.log(String.format("User %s successfully deleted for Deployment %s", userName), Severity.INFORMATIONAL,
+				logger.log(String.format("User %s successfully deleted for Deployment %s", userName, deploymentId), Severity.INFORMATIONAL,
 						new AuditElement(userName, "successDeleteDeployment", deploymentId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
