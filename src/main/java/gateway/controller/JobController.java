@@ -53,6 +53,8 @@ import model.job.metadata.ResourceMetadata;
 import model.job.type.AbortJob;
 import model.job.type.ExecuteServiceJob;
 import model.job.type.RepeatJob;
+import model.logger.AuditElement;
+import model.logger.Severity;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
 import model.response.JobErrorResponse;
@@ -113,12 +115,17 @@ public class JobController extends PiazzaRestController {
 			@ApiParam(value = "Id of the Job to Fetch", required = true) @PathVariable(value = "jobId") String jobId, Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Job Status for %s.", gatewayUtil.getPrincipalName(user), jobId), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Job Status for %s.", userName, jobId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestFetchJob", jobId));
 			// Proxy the request to the Job Manager
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
 						.getForEntity(String.format("%s/%s/%s", JOBMANAGER_URL, "job", jobId), JobStatusResponse.class).getBody(),
 						HttpStatus.OK);
+				logger.log(String.format("User %s fetched Job Status for %s.", userName, jobId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "completeFetchJob", jobId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Requesting Job Status", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
@@ -126,7 +133,7 @@ public class JobController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error requesting Job Status for Id %s: %s", jobId, exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -155,18 +162,22 @@ public class JobController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Job Abort for Job Id %s with reason %s", gatewayUtil.getPrincipalName(user), jobId,
-					reason), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Job Abort for Job Id %s with reason %s", userName, jobId, reason),
+					Severity.INFORMATIONAL, new AuditElement(userName, "requestJobCancel", jobId));
 
 			// Create the Request object.
 			PiazzaJobRequest request = new PiazzaJobRequest();
-			request.createdBy = gatewayUtil.getPrincipalName(user);
+			request.createdBy = userName;
 			request.jobType = new AbortJob(jobId, reason);
 
 			// Send the message through Kafka to delete the Job. This message
 			// will get picked up by whatever component is running the Job.
 			ProducerRecord<String, String> abortMessage = JobMessageFactory.getAbortJobMessage(request, gatewayUtil.getUuid(), SPACE);
 			gatewayUtil.sendKafkaMessage(abortMessage);
+
+			logger.log(String.format("User %s cancelled Job %s", userName, jobId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "completeJobCancelRequest", jobId));
 
 			// Proxy the request to the Job Manager, where the Job Table will be
 			// updated.
@@ -184,7 +195,7 @@ public class JobController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error requesting Job Abort for Id %s: %s", jobId, exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -213,7 +224,9 @@ public class JobController extends PiazzaRestController {
 			@ApiParam(value = "Id of the Job to Repeat", required = true) @PathVariable(value = "jobId") String jobId, Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested to Repeat Job %s", gatewayUtil.getPrincipalName(user), jobId), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested to Repeat Job %s", userName, jobId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestRepeatJob", jobId));
 			// Create the Request Object from the input parameters
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.createdBy = gatewayUtil.getPrincipalName(user);
@@ -223,9 +236,12 @@ public class JobController extends PiazzaRestController {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			try {
-				return new ResponseEntity<PiazzaResponse>(
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "repeat"), entity, JobResponse.class).getBody(),
 						HttpStatus.CREATED);
+				logger.log(String.format("User %s Repeated Job %s", userName, jobId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "completeRepeatJob", jobId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Repeating Job", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
@@ -233,7 +249,7 @@ public class JobController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Repeating Job Id %s: %s", jobId, exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -264,8 +280,9 @@ public class JobController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Execute Job for Service %s.", gatewayUtil.getPrincipalName(user),
-					job.data.getServiceId()), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Execute Job for Service %s.", userName, job.data.getServiceId()),
+					Severity.INFORMATIONAL, new AuditElement(userName, "requestExecuteService", job.data.getServiceId()));
 
 			// Check that Service is not offline or unavailable
 			try {
@@ -280,7 +297,7 @@ public class JobController extends PiazzaRestController {
 				String error = String.format(
 						"Attempted to check Service Availability for %s but received an error %s. Continued with Job Request.",
 						job.getData().getServiceId(), exception.getMessage());
-				logger.log(error, PiazzaLogger.WARNING);
+				logger.log(error, Severity.WARNING);
 				LOGGER.error(error, exception);
 			}
 
@@ -290,12 +307,16 @@ public class JobController extends PiazzaRestController {
 			request.createdBy = gatewayUtil.getPrincipalName(user);
 
 			String jobId = gatewayUtil.sendJobRequest(request, null);
+
+			logger.log(String.format("User %s Sent Execute Job for Service %s under Job ID %s.", userName, job.data.getServiceId(), jobId),
+					Severity.INFORMATIONAL, new AuditElement(userName, "completeExecuteServiceJob", jobId));
+
 			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 		} catch (Exception exception) {
 			String error = String.format("Error Executing for user %s for Service %s: %s", gatewayUtil.getPrincipalName(user),
 					job.data.getServiceId(), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

@@ -40,6 +40,7 @@ import org.springframework.web.client.RestTemplate;
 
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
+import model.logger.Severity;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 import model.response.UUIDResponse;
@@ -159,7 +160,7 @@ public class AdminController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error retrieving UUID: %s", exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

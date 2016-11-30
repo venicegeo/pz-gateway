@@ -47,6 +47,8 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import model.job.type.AccessJob;
+import model.logger.AuditElement;
+import model.logger.Severity;
 import model.request.PiazzaJobRequest;
 import model.response.DeploymentGroupResponse;
 import model.response.DeploymentListResponse;
@@ -110,19 +112,26 @@ public class DeploymentController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Deployment of type %s for Data %s", gatewayUtil.getPrincipalName(user),
-					job.getDeploymentType(), job.getDataId()), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(
+					String.format("User %s requested Deployment of type %s for Data %s", userName, job.getDeploymentType(),
+							job.getDataId()),
+					Severity.INFORMATIONAL, new AuditElement(userName, "requestCreateDeploymentJob", job.getDataId()));
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
 			jobRequest.createdBy = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = job;
 			String jobId = gatewayUtil.sendJobRequest(jobRequest, null);
 			// Send the response back to the user
-			return new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
+			ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
+			logger.log(
+					String.format("User %s successfully Deployed Type %s for Data %s", userName, job.getDeploymentType(), job.getDataId()),
+					Severity.INFORMATIONAL, new AuditElement(userName, "successCreateDeploymentJob", jobId));
+			return response;
 		} catch (Exception exception) {
 			String error = String.format("Error Loading Data for user %s for Id %s of type %s: %s", gatewayUtil.getPrincipalName(user),
 					job.getDataId(), job.getDeploymentType(), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -152,7 +161,9 @@ public class DeploymentController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Deployment List query.", gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Deployment List query.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestDeploymentList", ""));
 
 			// Validate params
 			String validationError = null;
@@ -175,8 +186,11 @@ public class DeploymentController extends PiazzaRestController {
 				url = String.format("%s&sortBy=%s", url, sortBy);
 			}
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(url, DeploymentListResponse.class).getBody(),
-						HttpStatus.OK);
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
+						restTemplate.getForEntity(url, DeploymentListResponse.class).getBody(), HttpStatus.OK);
+				logger.log(String.format("User %s Successfully obtained Deployment List query.", userName), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successDeploymentList", ""));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Listing Deployments.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
@@ -185,7 +199,7 @@ public class DeploymentController extends PiazzaRestController {
 			String error = String.format("Error Listing Deployments by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -213,13 +227,17 @@ public class DeploymentController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Deployment Data for %s", gatewayUtil.getPrincipalName(user), deploymentId),
-					PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Deployment Data for %s", userName, deploymentId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestDeploymentData", deploymentId));
 			// Broker the request to Pz-Access
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
 						.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), DeploymentResponse.class)
 						.getBody(), HttpStatus.OK);
+				logger.log(String.format("User %s successfully retrieved Deployment Data for %s", userName, deploymentId),
+						Severity.INFORMATIONAL, new AuditElement(userName, "successDeploymentData", deploymentId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Fetching Deployment.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
@@ -228,7 +246,7 @@ public class DeploymentController extends PiazzaRestController {
 			String error = String.format("Error fetching Deployment for Id %s by user %s: %s", deploymentId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -256,14 +274,18 @@ public class DeploymentController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Deletion for Deployment %s", gatewayUtil.getPrincipalName(user), deploymentId),
-					PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Deletion for Deployment %s", userName, deploymentId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestDeleteDeployment", deploymentId));
 			// Broker the request to Pz-Access
 			try {
-				return new ResponseEntity<PiazzaResponse>(
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.exchange(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), HttpMethod.DELETE, null,
 								SuccessResponse.class).getBody(),
 						HttpStatus.OK);
+				logger.log(String.format("User %s successfully deleted for Deployment %s", userName, deploymentId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successDeleteDeployment", deploymentId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Deleting Deployment.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
@@ -272,7 +294,7 @@ public class DeploymentController extends PiazzaRestController {
 			String error = String.format("Error Deleting Deployment by Id %s by user %s: %s", deploymentId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -294,15 +316,20 @@ public class DeploymentController extends PiazzaRestController {
 		try {
 			// Log the request
 			String createdBy = gatewayUtil.getPrincipalName(user);
-			logger.log(String.format("User %s requested Creation of DeploymentGroup.", createdBy), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Creation of DeploymentGroup.", createdBy), Severity.INFORMATIONAL,
+					new AuditElement(createdBy, "requestDeploymentGroup", ""));
 			// Broker to pz-access
-			return new ResponseEntity<PiazzaResponse>(restTemplate
+			ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
 					.postForEntity(String.format("%s/deployment/group?createdBy=%s", ACCESS_URL, createdBy), null, PiazzaResponse.class)
 					.getBody(), HttpStatus.CREATED);
+			logger.log(String.format("User %s successfully created of DeploymentGroup.", createdBy), Severity.INFORMATIONAL,
+					new AuditElement(createdBy, "successDeploymentGroup",
+							((DeploymentGroupResponse) response.getBody()).data.deploymentGroupId));
+			return response;
 		} catch (Exception exception) {
 			String error = String.format("Error creating DeploymentGroup: %s", exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -327,14 +354,17 @@ public class DeploymentController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(
-					String.format("User %s requested delete of DeploymentGroup %s", gatewayUtil.getPrincipalName(user), deploymentGroupId),
-					PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested delete of DeploymentGroup %s", userName, deploymentGroupId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestDeleteDeploymentGroup", deploymentGroupId));
 			// Broker to access
 			String url = String.format("%s/deployment/group/%s", ACCESS_URL, deploymentGroupId);
 			try {
-				return new ResponseEntity<PiazzaResponse>(
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.exchange(url, HttpMethod.DELETE, null, PiazzaResponse.class).getBody(), HttpStatus.OK);
+				logger.log(String.format("User %s successfully deleted DeploymentGroup %s", userName, deploymentGroupId),
+						Severity.INFORMATIONAL, new AuditElement(userName, "successDeleteDeploymentGroup", deploymentGroupId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Deleting Deployment.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
@@ -343,7 +373,7 @@ public class DeploymentController extends PiazzaRestController {
 			String error = String.format("Error Deleting DeploymentGroup %s : %s - exception: %s", deploymentGroupId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

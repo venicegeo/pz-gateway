@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import model.logger.Severity;
 import model.response.ErrorResponse;
 import util.PiazzaLogger;
 
@@ -60,11 +61,11 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 		try {
 			// Log the request
 			logger.log(String.format("Unable to authenticate a user with Auth Type %s and Header %s", request.getAuthType(),
-					request.getHeader("Authorization").toString()), PiazzaLogger.ERROR);
+					request.getHeader("Authorization").toString()), Severity.ERROR);
 		} catch (Exception exception) {
 			String errorString = String.format("Exception encountered during Authorization check: %s.", exception.getMessage());
 			LOGGER.error(errorString, exception);
-			logger.log(errorString, PiazzaLogger.ERROR);
+			logger.log(errorString, Severity.ERROR);
 		}
 
 		// Write back the response

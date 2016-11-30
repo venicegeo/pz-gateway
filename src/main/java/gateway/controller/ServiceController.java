@@ -15,29 +15,9 @@
  **/
 package gateway.controller;
 
-import gateway.controller.util.GatewayUtil;
-import gateway.controller.util.PiazzaRestController;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
 import java.security.Principal;
 
 import javax.validation.Valid;
-
-import model.job.metadata.ResourceMetadata;
-import model.job.type.RegisterServiceJob;
-import model.request.PiazzaJobRequest;
-import model.request.SearchRequest;
-import model.response.ErrorResponse;
-import model.response.PiazzaResponse;
-import model.response.ServiceIdResponse;
-import model.response.ServiceListResponse;
-import model.response.ServiceResponse;
-import model.response.SuccessResponse;
-import model.service.metadata.Service;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -62,11 +42,30 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import gateway.controller.util.GatewayUtil;
+import gateway.controller.util.PiazzaRestController;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import model.job.metadata.ResourceMetadata;
+import model.job.type.RegisterServiceJob;
+import model.logger.AuditElement;
+import model.logger.Severity;
+import model.request.PiazzaJobRequest;
+import model.request.SearchRequest;
+import model.response.ErrorResponse;
+import model.response.PiazzaResponse;
+import model.response.ServiceIdResponse;
+import model.response.ServiceListResponse;
+import model.response.ServiceResponse;
+import model.response.SuccessResponse;
+import model.service.metadata.Service;
 import util.PiazzaLogger;
 
 /**
- * REST controller that handles requests for interacting with the Piazza Service
- * Controller component.
+ * REST controller that handles requests for interacting with the Piazza Service Controller component.
  * 
  * @author Patrick.Doody
  *
@@ -93,7 +92,7 @@ public class ServiceController extends PiazzaRestController {
 	private static final String DEFAULT_SORTBY = "resourceMetadata.createdOn";
 	private static final String DEFAULT_SERVICE_SORTBY = "service.serviceId";
 	private static final String DEFAULT_ORDER = "desc";
-	
+
 	private final static Logger LOGGER = LoggerFactory.getLogger(ServiceController.class);
 
 	/**
@@ -108,10 +107,9 @@ public class ServiceController extends PiazzaRestController {
 	 * @return The Service Id, or appropriate error.
 	 */
 	@RequestMapping(value = "/service", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseStatus(HttpStatus.CREATED)	
+	@ResponseStatus(HttpStatus.CREATED)
 	@ApiOperation(value = "Register new Service definition", notes = "Creates a new Service with the Piazza Service Controller; that can be invoked through Piazza jobs with Piazza data.", tags = "Service")
-	@ApiResponses(value = {
-			@ApiResponse(code = 201, message = "The Id of the newly created Service", response = ServiceIdResponse.class),
+	@ApiResponses(value = { @ApiResponse(code = 201, message = "The Id of the newly created Service", response = ServiceIdResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -120,8 +118,9 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Service registration.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Service registration.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestServiceRegistration", ""));
 
 			// Populate the authoring field in the Service Metadata
 			if (service.getResourceMetadata() == null) {
@@ -136,18 +135,23 @@ public class ServiceController extends PiazzaRestController {
 			jobRequest.jobType = new RegisterServiceJob(service);
 			// Proxy the request to the Service Controller
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest, ServiceIdResponse.class).getBody(), HttpStatus.CREATED);
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
+						restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest,
+								ServiceIdResponse.class).getBody(),
+						HttpStatus.CREATED);
+				logger.log(String.format("User %s Registered Service.", userName), Severity.INFORMATIONAL, new AuditElement(userName,
+						"completeServiceRegistration", ((ServiceIdResponse) response.getBody()).data.getServiceId()));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Registering Service", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			String error = String.format("Error Registering Service by user %s: %s",
-					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			String error = String.format("Error Registering Service by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -164,8 +168,7 @@ public class ServiceController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Retrieve Service information", notes = "Gets a Service by its Id", tags = "Service")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The Service object.", response = ServiceResponse.class),
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Service object.", response = ServiceResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -174,22 +177,27 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested Service metadata for %s",
-					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested Service metadata for %s", gatewayUtil.getPrincipalName(user), serviceId),
+					Severity.INFORMATIONAL, new AuditElement(userName, "requestServiceMetadataFetch", serviceId));
 			// Proxy the request to the Service Controller instance
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), ServiceResponse.class).getBody(), HttpStatus.OK);
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
+						.getForEntity(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), ServiceResponse.class)
+						.getBody(), HttpStatus.OK);
+				logger.log(String.format("User %s Retrieved Service metadata for %s", gatewayUtil.getPrincipalName(user), serviceId),
+						Severity.INFORMATIONAL, new AuditElement(userName, "completeServiceMetadataFetch", serviceId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Getting Service Info", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			String error = String.format("Error Getting Service %s Info for user %s: %s", serviceId,
-					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			String error = String.format("Error Getting Service %s Info for user %s: %s", serviceId, gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -206,8 +214,7 @@ public class ServiceController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Unregister a Service", notes = "Unregisters a Service by its Id.", tags = "Service")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Confirmation of Deleted.", response = SuccessResponse.class),
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of Deleted.", response = SuccessResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -217,25 +224,29 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested Service deletion of %s",
-					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested Service deletion of %s", userName, serviceId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestServiceDelete", serviceId));
 
 			// Proxy the request to the Service Controller instance
 			String url = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
 			url = (softDelete) ? (String.format("%s?softDelete=%s", url, softDelete)) : (url);
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(url, HttpMethod.DELETE, null, SuccessResponse.class).getBody(), HttpStatus.OK);
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
+						restTemplate.exchange(url, HttpMethod.DELETE, null, SuccessResponse.class).getBody(), HttpStatus.OK);
+				logger.log(String.format("User %s has Deleted Service %s", userName, serviceId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "completeServiceDelete", serviceId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Deleting Service", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId,
-					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId, gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -254,9 +265,8 @@ public class ServiceController extends PiazzaRestController {
 	 */
 	@RequestMapping(value = "/service/{serviceId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Update Service Information", notes = "Updates Service Metadata, to the Service specified by Id.", tags = "Service")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Confirmation of Update.", response = SuccessResponse.class),
-			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),		
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Confirmation of Update.", response = SuccessResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -266,8 +276,9 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user),
-					serviceId), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested Service update of %s", serviceId, serviceId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestUpdateService", serviceId));
 
 			// Proxy the request to the Service Controller instance
 			HttpHeaders theHeaders = new HttpHeaders();
@@ -275,18 +286,23 @@ public class ServiceController extends PiazzaRestController {
 			theHeaders.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<Service> request = new HttpEntity<Service>(serviceData, theHeaders);
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), HttpMethod.PUT, request, SuccessResponse.class).getBody(), HttpStatus.OK);
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
+						restTemplate.exchange(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), HttpMethod.PUT,
+								request, SuccessResponse.class).getBody(),
+						HttpStatus.OK);
+				logger.log(String.format("User %s has Updated Service %s", serviceId, serviceId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "completeUpdateService", serviceId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Updating Service", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId,
-					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId, gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 
 		}
 	}
@@ -325,17 +341,18 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
-			
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Service List.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestServiceList", ""));
+
 			// Validate params
 			String validationError = null;
-			if( (order != null && (validationError = gatewayUtil.validateInput("order", order)) != null) || 
-				(page != null && (validationError = gatewayUtil.validateInput("page", page)) != null) ||
-				(perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null) ) {
+			if ((order != null && (validationError = gatewayUtil.validateInput("order", order)) != null)
+					|| (page != null && (validationError = gatewayUtil.validateInput("page", page)) != null)
+					|| (perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null)) {
 				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, "Gateway"), HttpStatus.BAD_REQUEST);
 			}
-			
+
 			// Proxy the request to the Service Controller
 			String url = String.format("%s/%s?page=%s&perPage=%s", SERVICECONTROLLER_URL, "service", page, perPage);
 			// Attach keywords if specified
@@ -354,7 +371,11 @@ public class ServiceController extends PiazzaRestController {
 				url = String.format("%s&sortBy=%s", url, sortBy);
 			}
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(url, ServiceListResponse.class).getBody(), HttpStatus.OK);
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
+						restTemplate.getForEntity(url, ServiceListResponse.class).getBody(), HttpStatus.OK);
+				logger.log(String.format("User %s Retrieved Service List.", userName), Severity.INFORMATIONAL,
+						new AuditElement(userName, "completeServiceList", ""));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Querying Services", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
@@ -363,9 +384,8 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -402,16 +422,14 @@ public class ServiceController extends PiazzaRestController {
 	}
 
 	/**
-	 * Proxies an ElasticSearch DSL query to the Pz-Search component to return a
-	 * list of Service items.
+	 * Proxies an ElasticSearch DSL query to the Pz-Search component to return a list of Service items.
 	 * 
-	 * @see http 
-	 *      ://pz-swagger/#!/Service/post_service_query
+	 * @see http ://pz-swagger/#!/Service/post_service_query
 	 * 
 	 * @return The list of Services matching the query.
 	 */
 	@RequestMapping(value = "/service/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseStatus(HttpStatus.OK)	
+	@ResponseStatus(HttpStatus.OK)
 	@ApiOperation(value = "Query Metadata in Piazza Services", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for registered Services. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
 			"Search", "Service" })
 	@ApiResponses(value = {
@@ -428,24 +446,26 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(
-					String.format("User %s sending a complex query for Search Services.",
-							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s sending a complex query for Search Services.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestServiceQuery", ""));
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<Object> entity = new HttpEntity<Object>(query, headers);
 			ServiceListResponse searchResponse = restTemplate.postForObject(
-					String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s", SEARCH_URL, SEARCH_ENDPOINT, page, perPage, order, sortBy), entity, ServiceListResponse.class);
+					String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s", SEARCH_URL, SEARCH_ENDPOINT, page, perPage, order, sortBy),
+					entity, ServiceListResponse.class);
 			// Respond
+			logger.log(String.format("User %s Executed Query for Search Services.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "completeServiceQuery", ""));
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }

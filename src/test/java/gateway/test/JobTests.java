@@ -224,7 +224,7 @@ public class JobTests {
 		service.getResourceMetadata().availability = "ONLINE";
 		serviceResponse.data = service;
 
-		Mockito.doNothing().when(logger).log(anyString(), anyString());
+		Mockito.doNothing().when(logger).log(anyString(), any());
 		when(serviceController.getService("654321", user)).thenReturn(new ResponseEntity<PiazzaResponse>(serviceResponse, HttpStatus.OK));
 
 		// Test
