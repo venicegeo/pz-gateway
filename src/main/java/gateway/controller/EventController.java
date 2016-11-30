@@ -49,6 +49,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import model.logger.AuditElement;
 import model.logger.Severity;
 import model.request.SearchRequest;
 import model.response.ErrorResponse;
@@ -116,7 +117,9 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s queried for Events.", gatewayUtil.getPrincipalName(user)), Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s queried for Events.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestQueryEvents", ""));
 
 			// Validate params
 			String validationError = null;
@@ -131,7 +134,11 @@ public class EventController extends PiazzaRestController {
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&eventTypeName=%s&eventTypeId=%s", WORKFLOW_URL,
 						"event", page, perPage, order, sortBy != null ? sortBy : "", eventTypeName != null ? eventTypeName : "",
 						eventTypeId != null ? eventTypeId : "");
-				return new ResponseEntity<String>(restTemplate.getForEntity(url, String.class).getBody(), HttpStatus.OK);
+				logger.log(String.format("User %s retrieved Querying Events.", userName), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successQueryEvents", ""));
+				ResponseEntity<String> response = new ResponseEntity<String>(restTemplate.getForEntity(url, String.class).getBody(),
+						HttpStatus.OK);
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error(hee.getMessage(), hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -170,7 +177,9 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has fired an event.", gatewayUtil.getPrincipalName(user)), Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested to fire an event.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestEventCreation", ""));
 
 			try {
 				// Attempt to set the createdBy field
@@ -184,8 +193,12 @@ public class EventController extends PiazzaRestController {
 
 			try {
 				// Broker the request to Workflow
-				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"),
-						objectMapper.writeValueAsString(event), String.class), HttpStatus.CREATED);
+				ResponseEntity<String> response = new ResponseEntity<String>(restTemplate
+						.postForObject(String.format("%s/%s", WORKFLOW_URL, "event"), objectMapper.writeValueAsString(event), String.class),
+						HttpStatus.CREATED);
+				logger.log(String.format("User %s has created an event.", userName), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successEventCreation", response.getBody()));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Submitting Event.", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -226,13 +239,17 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the message
-			logger.log(String.format("User %s requesting information on Event %s", gatewayUtil.getPrincipalName(user), eventId),
-					Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requesting information on Event %s", userName, eventId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestEventMetadata", eventId));
 
 			try {
 				// Broker the request to pz-workflow
-				return new ResponseEntity<String>(
+				ResponseEntity<String> response = new ResponseEntity<String>(
 						restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "event", eventId), String.class), HttpStatus.OK);
+				logger.log(String.format("User %s retrieved metadata on Event %s", userName, eventId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successEventMetadata", eventId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Querying Event.", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -270,7 +287,9 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested a list of EventTypes.", gatewayUtil.getPrincipalName(user)), Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested a list of EventTypes.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestQueryEventTypes", ""));
 
 			// Validate params
 			String validationError = null;
@@ -284,7 +303,10 @@ public class EventController extends PiazzaRestController {
 				// Broker the request to Workflow
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&name=%s", WORKFLOW_URL, "eventType", page, perPage,
 						order, sortBy != null ? sortBy : "", name != null ? name : "");
-				return new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
+				ResponseEntity<String> response = new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
+				logger.log(String.format("User %s has retrieved a list of EventTypes.", userName), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successQueryEventTypes", ""));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Querying EventTypes", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -323,8 +345,9 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the message
-			logger.log(String.format("User %s has requested a new EventType to be created.", gatewayUtil.getPrincipalName(user)),
-					Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested a new EventType to be created.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestEventTypeCreate", ""));
 
 			try {
 				// Attempt to set the createdBy field
@@ -338,8 +361,13 @@ public class EventController extends PiazzaRestController {
 
 			try {
 				// Proxy the request to Workflow
-				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "eventType"),
-						objectMapper.writeValueAsString(eventType), String.class), HttpStatus.CREATED);
+				ResponseEntity<String> response = new ResponseEntity<String>(
+						restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "eventType"),
+								objectMapper.writeValueAsString(eventType), String.class),
+						HttpStatus.CREATED);
+				logger.log(String.format("User %s has created a new EventType.", userName), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successEventTypeCreate", response.getBody()));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Creating EventType", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -377,14 +405,18 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested information for EventType %s", gatewayUtil.getPrincipalName(user), eventTypeId),
-					Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested information for EventType %s", userName, eventTypeId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestEventTypeMetadata", eventTypeId));
 
 			try {
 				// Proxy the request to Workflow
-				return new ResponseEntity<String>(
+				ResponseEntity<String> response = new ResponseEntity<String>(
 						restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "eventType", eventTypeId), String.class),
 						HttpStatus.OK);
+				logger.log(String.format("User %s has retrieved metadata for EventType %s", userName, eventTypeId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successEventTypeMetadata", eventTypeId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Getting EventType", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -423,14 +455,18 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested deletion of EventType %s", gatewayUtil.getPrincipalName(user), eventTypeId),
-					Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested deletion of EventType %s", userName, eventTypeId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestDeleteEventType", eventTypeId));
 
 			try {
 				// Proxy the request to Workflow
 				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "eventType", eventTypeId));
-				return new ResponseEntity<PiazzaResponse>(
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						new SuccessResponse("EventType " + eventTypeId + " was deleted successfully", "Gateway"), HttpStatus.OK);
+				logger.log(String.format("User %s has deleted EventType %s", userName, eventTypeId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successDeleteEventType", eventTypeId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Deleting EventType", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -467,14 +503,18 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested deletion of Event %s", gatewayUtil.getPrincipalName(user), eventId),
-					Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested deletion of Event %s", userName, eventId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestDeleteEvent", eventId));
 
 			try {
 				// Proxy the request to Workflow
 				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "event", eventId));
-				return new ResponseEntity<PiazzaResponse>(new SuccessResponse("Event " + eventId + " was deleted successfully", "Gateway"),
-						HttpStatus.OK);
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
+						new SuccessResponse("Event " + eventId + " was deleted successfully", "Gateway"), HttpStatus.OK);
+				logger.log(String.format("User %s has deleted Event %s", userName, eventId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successDeleteEvent", eventId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Deleting Event", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -515,8 +555,9 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s sending a complex query for Workflow.", gatewayUtil.getPrincipalName(user)),
-					Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s sending a complex query for Workflow Events.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestEventQuery", ""));
 
 			// Send the query to the Pz-Workflow component
 			HttpHeaders headers = new HttpHeaders();
@@ -532,6 +573,8 @@ public class EventController extends PiazzaRestController {
 					String.format("%s/%s/%s?%s&%s&%s&%s", WORKFLOW_URL, "event", "query", paramPage, paramPerPage, paramOrder, paramSortBy),
 					entity, EventListResponse.class);
 			// Respond
+			logger.log(String.format("User %s retrieved a query for Workflow Events.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "successEventQuery", ""));
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
@@ -566,8 +609,9 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s sending a complex query for Workflow.", gatewayUtil.getPrincipalName(user)),
-					Severity.INFORMATIONAL);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s sending a complex query for Workflow Event types.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestEventTypeQuery", ""));
 
 			// Send the query to the Pz-Workflow component
 			HttpHeaders headers = new HttpHeaders();
@@ -582,6 +626,8 @@ public class EventController extends PiazzaRestController {
 			EventTypeListResponse searchResponse = restTemplate.postForObject(String.format("%s/%s/%s?%s&%s&%s&%s", WORKFLOW_URL,
 					"eventType", "query", paramPage, paramPerPage, paramOrder, paramSortBy), entity, EventTypeListResponse.class);
 			// Respond
+			logger.log(String.format("User %s retrieved complex query for Workflow Event Types.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "successEventTypeQuery", ""));
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
