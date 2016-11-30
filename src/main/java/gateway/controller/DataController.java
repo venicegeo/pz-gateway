@@ -502,7 +502,8 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
-			logger.log(String.format("User %s sending a complex query for Search.", userName), Severity.INFORMATIONAL);
+			logger.log(String.format("User %s sending a complex query for Search.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestDataQuery", ""));
 
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();
@@ -518,7 +519,10 @@ public class DataController extends PiazzaRestController {
 					String.format("%s/%s?%s&%s&%s&%s", SEARCH_URL, SEARCH_ENDPOINT, paramPage, paramPerPage, paramOrder, paramSortBy),
 					entity, DataResourceListResponse.class);
 			// Respond
-			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+			ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+			logger.log(String.format("User %s successfully got a complex query for Searching Data", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "successDataQuery", ""));
+			return response;
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
@@ -550,8 +554,9 @@ public class DataController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
+			String userName = gatewayUtil.getPrincipalName(user);
 			logger.log(String.format("User %s requested file download for Data %s", gatewayUtil.getPrincipalName(user), dataId),
-					Severity.INFORMATIONAL);
+					Severity.INFORMATIONAL, new AuditElement(userName, "requestDownloadFile", dataId));
 
 			// Get the bytes of the Data
 			String url = String.format("%s/file/%s.json", ACCESS_URL, dataId);
@@ -563,7 +568,10 @@ public class DataController extends PiazzaRestController {
 			// Proxy the request to Ingest
 			try {
 				// Stream the bytes back
-				return restTemplate.getForEntity(url, byte[].class);
+				ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
+				logger.log(String.format("User %s successfully downloaded file download for Data %s", gatewayUtil.getPrincipalName(user),
+						dataId), Severity.INFORMATIONAL, new AuditElement(userName, "successDownloadFile", dataId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Downloading File.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
