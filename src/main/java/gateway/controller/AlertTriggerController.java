@@ -19,24 +19,6 @@ import java.security.Principal;
 
 import javax.validation.Valid;
 
-import gateway.controller.util.GatewayUtil;
-import gateway.controller.util.PiazzaRestController;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import model.request.SearchRequest;
-import model.response.AlertListResponse;
-import model.response.ErrorResponse;
-import model.response.PiazzaResponse;
-import model.response.SuccessResponse;
-import model.response.TriggerListResponse;
-import model.response.TriggerResponse;
-import model.workflow.Alert;
-import model.workflow.Trigger;
-import model.workflow.TriggerUpdate;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +43,25 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gateway.controller.util.GatewayUtil;
+import gateway.controller.util.PiazzaRestController;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import model.logger.AuditElement;
+import model.logger.Severity;
+import model.request.SearchRequest;
+import model.response.AlertListResponse;
+import model.response.ErrorResponse;
+import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
+import model.response.TriggerListResponse;
+import model.response.TriggerResponse;
+import model.workflow.Alert;
+import model.workflow.Trigger;
+import model.workflow.TriggerUpdate;
 import util.PiazzaLogger;
 
 /**
@@ -115,24 +116,30 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the message
+			String userName = gatewayUtil.getPrincipalName(user);
 			logger.log(String.format("User %s has requested a new Trigger to be created.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL, new AuditElement(userName, "requestCreateTrigger", ""));
 			try {
 				// Attempt to set the username of the Job in the Trigger to the
 				// submitting username
-				trigger.job.createdBy = gatewayUtil.getPrincipalName(user);
-				trigger.createdBy = gatewayUtil.getPrincipalName(user);
+				trigger.job.createdBy = userName;
+				trigger.createdBy = userName;
 			} catch (Exception exception) {
-				String message = String.format("Failed to set the username field in Trigger created by User %s: - exception: %s",
-						gatewayUtil.getPrincipalName(user), exception.getMessage());
+				String message = String.format("Failed to set the username field in Trigger created by User %s: - exception: %s", userName,
+						exception.getMessage());
 				LOGGER.warn(message, exception);
-				logger.log(message, PiazzaLogger.WARNING);
+				logger.log(message, Severity.WARNING);
 			}
 
 			try {
 				// Proxy the request to Workflow
-				return new ResponseEntity<String>(restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "trigger"),
-						objectMapper.writeValueAsString(trigger), String.class), HttpStatus.CREATED);
+				ResponseEntity<String> response = new ResponseEntity<String>(
+						restTemplate.postForObject(String.format("%s/%s", WORKFLOW_URL, "trigger"),
+								objectMapper.writeValueAsString(trigger), String.class),
+						HttpStatus.CREATED);
+				logger.log(String.format("Successful Trigger Creation for user %s: %s", userName, response.getBody()),
+						Severity.INFORMATIONAL, new AuditElement(userName, "successCreateTrigger", response.getBody()));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error(String.format("Received Code %s with Message %s while creating a Trigger.", hee.getStatusCode().toString(),
 						hee.getMessage()), hee);
@@ -144,7 +151,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Creating Trigger by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -175,15 +182,19 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Update of information for %s.", gatewayUtil.getPrincipalName(user), triggerId),
-					PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s requested Update of information for %s.", userName, triggerId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestUpdateTriggerMetadata", triggerId));
 
 			// Proxy the request to Ingest
 			try {
-				return new ResponseEntity<PiazzaResponse>(
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.exchange(String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId), HttpMethod.PUT,
 								new HttpEntity<TriggerUpdate>(triggerUpdate), SuccessResponse.class).getBody(),
 						HttpStatus.OK);
+				logger.log(String.format("Successful Updating of Trigger %s by User %s", triggerId, userName), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successUpdateTriggerMetadata", triggerId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Updating Trigger.", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -194,7 +205,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Updating information for item %s by user %s: %s", triggerId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -220,7 +231,9 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested a list of Triggers.", gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested a list of Triggers.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestListTriggers", ""));
 
 			// Validate params
 			String validationError = null;
@@ -234,7 +247,10 @@ public class AlertTriggerController extends PiazzaRestController {
 				// Broker the request to Workflow
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s", WORKFLOW_URL, "trigger", page, perPage, order,
 						sortBy != null ? sortBy : "");
-				return new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
+				ResponseEntity<String> response = new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
+				logger.log(String.format("User %s successfully got a list of Triggers.", userName), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successListTriggers", ""));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error querying Trigger.", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -245,7 +261,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Querying Triggers by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -273,14 +289,18 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested information for Trigger %s", gatewayUtil.getPrincipalName(user), triggerId),
-					PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested information for Trigger %s", userName, triggerId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestTriggerMetadata", triggerId));
 
 			try {
 				// Proxy the request to Workflow
-				return new ResponseEntity<String>(
+				ResponseEntity<String> response = new ResponseEntity<String>(
 						restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId), String.class),
 						HttpStatus.OK);
+				logger.log(String.format("User %s successfully got metadata for Trigger %s", userName, triggerId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successTriggerMetadata", triggerId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error getting Trigger.", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -291,7 +311,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Getting Trigger Id %s by user %s: %s", triggerId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -320,12 +340,15 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
+			String userName = gatewayUtil.getPrincipalName(user);
 			logger.log(String.format("User %s has requested deletion of Trigger %s", gatewayUtil.getPrincipalName(user), triggerId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL, new AuditElement(userName, "requestDeleteTrigger", triggerId));
 
 			try {
 				// Proxy the request to Workflow
 				restTemplate.delete(String.format("%s/%s/%s", WORKFLOW_URL, "trigger", triggerId));
+				logger.log(String.format("User %s successfully Deleted Trigger %s", userName, triggerId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successDeleteTrigger", triggerId));
 				return new ResponseEntity<PiazzaResponse>(
 						new SuccessResponse("Trigger " + triggerId + " was deleted successfully", "Gateway"), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
@@ -338,7 +361,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Deleting Trigger Id %s by user %s: %s", triggerId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -366,7 +389,9 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested a list of Alerts.", gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested a list of Alerts.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestAlertList", ""));
 
 			// Validate params
 			String validationError = null;
@@ -381,7 +406,10 @@ public class AlertTriggerController extends PiazzaRestController {
 				String url = String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s&triggerId=%s&inflate=%s", WORKFLOW_URL, "alert",
 						page, perPage, order, sortBy != null ? sortBy : "", triggerId != null ? triggerId : "",
 						inflate != null ? inflate.toString() : false);
-				return new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
+				ResponseEntity<String> response = new ResponseEntity<String>(restTemplate.getForObject(url, String.class), HttpStatus.OK);
+				logger.log(String.format("User %s successfully retrieved list of Alerts.", userName), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successAlertList", ""));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error querying Alerts.", hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -392,7 +420,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error querying Alerts by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -419,13 +447,17 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested information for Alert %s", gatewayUtil.getPrincipalName(user), alertId),
-					PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested information for Alert %s", userName, alertId), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestAlertMetadata", alertId));
 
 			try {
 				// Proxy the request to Workflow
-				return new ResponseEntity<String>(
+				ResponseEntity<String> response = new ResponseEntity<String>(
 						restTemplate.getForObject(String.format("%s/%s/%s", WORKFLOW_URL, "alert", alertId), String.class), HttpStatus.OK);
+				logger.log(String.format("User %s Successfully got Metadata for Alert %s", userName, alertId), Severity.INFORMATIONAL,
+						new AuditElement(userName, "successAlertMetadata", alertId));
+				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Getting Alert " + alertId, hee);
 				return new ResponseEntity<PiazzaResponse>(
@@ -436,7 +468,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			String error = String.format("Error Getting Alert Id %s by user %s: %s", alertId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -467,8 +499,9 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s sending a complex query for Workflow.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s sending a complex query for Workflow.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestQueryAlerts", ""));
 
 			// Send the query to the Pz-Workflow component
 			HttpHeaders headers = new HttpHeaders();
@@ -486,11 +519,12 @@ public class AlertTriggerController extends PiazzaRestController {
 									paramOrder, paramSortBy, inflate != null ? inflate.toString() : false),
 							entity, AlertListResponse.class);
 			// Respond
-			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+			ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+			return response;
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -520,8 +554,9 @@ public class AlertTriggerController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s sending a complex query for Workflow.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s sending a complex query for Workflow.", userName), Severity.INFORMATIONAL,
+					new AuditElement(userName, "requestQueryTriggers", ""));
 
 			// Send the query to the Pz-Workflow component
 			HttpHeaders headers = new HttpHeaders();
@@ -540,7 +575,7 @@ public class AlertTriggerController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

@@ -26,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
+import model.logger.Severity;
 import model.response.AuthenticationResponse;
 import util.PiazzaLogger;
 
@@ -58,7 +59,7 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error retrieving UUID: %s.", exception.getMessage());
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			LOGGER.error(error, exception);
 		}
 		return null;

@@ -15,29 +15,9 @@
  **/
 package gateway.controller;
 
-import gateway.controller.util.GatewayUtil;
-import gateway.controller.util.PiazzaRestController;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
 import java.security.Principal;
 
 import javax.validation.Valid;
-
-import model.job.metadata.ResourceMetadata;
-import model.job.type.RegisterServiceJob;
-import model.request.PiazzaJobRequest;
-import model.request.SearchRequest;
-import model.response.ErrorResponse;
-import model.response.PiazzaResponse;
-import model.response.ServiceIdResponse;
-import model.response.ServiceListResponse;
-import model.response.ServiceResponse;
-import model.response.SuccessResponse;
-import model.service.metadata.Service;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -62,6 +42,25 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import gateway.controller.util.GatewayUtil;
+import gateway.controller.util.PiazzaRestController;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import model.job.metadata.ResourceMetadata;
+import model.job.type.RegisterServiceJob;
+import model.logger.Severity;
+import model.request.PiazzaJobRequest;
+import model.request.SearchRequest;
+import model.response.ErrorResponse;
+import model.response.PiazzaResponse;
+import model.response.ServiceIdResponse;
+import model.response.ServiceListResponse;
+import model.response.ServiceResponse;
+import model.response.SuccessResponse;
+import model.service.metadata.Service;
 import util.PiazzaLogger;
 
 /**
@@ -121,7 +120,7 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Service registration.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 
 			// Populate the authoring field in the Service Metadata
 			if (service.getResourceMetadata() == null) {
@@ -145,7 +144,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Registering Service by user %s: %s",
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -175,7 +174,7 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested Service metadata for %s",
-					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
+					gatewayUtil.getPrincipalName(user), serviceId), Severity.INFORMATIONAL);
 			// Proxy the request to the Service Controller instance
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.getForEntity(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), ServiceResponse.class).getBody(), HttpStatus.OK);
@@ -187,7 +186,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Getting Service %s Info for user %s: %s", serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -218,7 +217,7 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested Service deletion of %s",
-					gatewayUtil.getPrincipalName(user), serviceId), PiazzaLogger.INFO);
+					gatewayUtil.getPrincipalName(user), serviceId), Severity.INFORMATIONAL);
 
 			// Proxy the request to the Service Controller instance
 			String url = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
@@ -233,7 +232,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -267,7 +266,7 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested Service update of %s", gatewayUtil.getPrincipalName(user),
-					serviceId), PiazzaLogger.INFO);
+					serviceId), Severity.INFORMATIONAL);
 
 			// Proxy the request to the Service Controller instance
 			HttpHeaders theHeaders = new HttpHeaders();
@@ -284,7 +283,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -326,7 +325,7 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Service List.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 			
 			// Validate params
 			String validationError = null;
@@ -363,7 +362,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -430,7 +429,7 @@ public class ServiceController extends PiazzaRestController {
 			// Log the request
 			logger.log(
 					String.format("User %s sending a complex query for Search Services.",
-							gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+							gatewayUtil.getPrincipalName(user)), Severity.INFORMATIONAL);
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
@@ -443,7 +442,7 @@ public class ServiceController extends PiazzaRestController {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}

@@ -56,6 +56,7 @@ import io.swagger.annotations.ApiResponses;
 import model.data.FileRepresentation;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.IngestJob;
+import model.logger.Severity;
 import model.request.PiazzaJobRequest;
 import model.request.SearchRequest;
 import model.response.DataResourceListResponse;
@@ -129,7 +130,7 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			// logger.log(String.format("User %s requested Data List query.", gatewayUtil.getPrincipalName(user)),
-			// PiazzaLogger.INFO);
+			// Severity.INFORMATIONAL);
 
 			// Validate params
 			String validationError = null;
@@ -169,7 +170,7 @@ public class DataController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -227,7 +228,7 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Data Load Job of type %s.", gatewayUtil.getPrincipalName(user),
-					job.getData().getDataType().getClass().getName()), PiazzaLogger.INFO);
+					job.getData().getDataType().getClass().getName()), Severity.INFORMATIONAL);
 			// Ensure the user isn't trying to hack a dataId into their request.
 			job.getData().setDataId(null);
 			PiazzaJobRequest request = new PiazzaJobRequest();
@@ -241,7 +242,7 @@ public class DataController extends PiazzaRestController {
 			String error = String.format("Error Loading Data for user %s of type %s:  %s", gatewayUtil.getPrincipalName(user),
 					job.getData().getDataType(), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -287,7 +288,7 @@ public class DataController extends PiazzaRestController {
 			}
 			// Log the request
 			logger.log(String.format("User %s requested Data Load Job of type %s with file: %s", gatewayUtil.getPrincipalName(user),
-					job.getData().getDataType().getClass().getName(), file.getOriginalFilename()), PiazzaLogger.INFO);
+					job.getData().getDataType().getClass().getName(), file.getOriginalFilename()), Severity.INFORMATIONAL);
 
 			// Validate the Job inputs to ensure we are able to process the file
 			// and attach it to the job metadata.
@@ -312,7 +313,7 @@ public class DataController extends PiazzaRestController {
 			String error = String.format("Error Loading Data File for user %s of type %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -341,7 +342,7 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Resource Metadata for %s.", gatewayUtil.getPrincipalName(user), dataId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 			// Proxy the request to Pz-Access
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate
@@ -355,7 +356,7 @@ public class DataController extends PiazzaRestController {
 			String error = String.format("Error Loading Metadata for item %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -382,7 +383,7 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Delete of Data Id %s.", gatewayUtil.getPrincipalName(user), dataId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 			// Proxy the request to Pz-ingest
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate
@@ -396,7 +397,7 @@ public class DataController extends PiazzaRestController {
 			String error = String.format("Error Deleting Data for item %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -427,7 +428,7 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Update of Metadata for %s.", gatewayUtil.getPrincipalName(user), dataId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 			// Proxy the request to Ingest
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate
@@ -441,7 +442,7 @@ public class DataController extends PiazzaRestController {
 			String error = String.format("Error Updating Metadata for item %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -471,7 +472,7 @@ public class DataController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(String.format("User %s sending a complex query for Search.", gatewayUtil.getPrincipalName(user)), Severity.INFORMATIONAL);
 
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();
@@ -491,7 +492,7 @@ public class DataController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -520,7 +521,7 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested file download for Data %s", gatewayUtil.getPrincipalName(user), dataId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 
 			// Get the bytes of the Data
 			String url = String.format("%s/file/%s.json", ACCESS_URL, dataId);
@@ -541,7 +542,7 @@ public class DataController extends PiazzaRestController {
 			String error = String.format("Error downloading file for Data %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.INFO);
+			logger.log(error, Severity.INFORMATIONAL);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

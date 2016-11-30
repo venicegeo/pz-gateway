@@ -15,28 +15,9 @@
  **/
 package gateway.controller;
 
-import gateway.controller.util.GatewayUtil;
-import gateway.controller.util.PiazzaRestController;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
 import java.security.Principal;
 
 import javax.validation.Valid;
-
-import model.request.SearchRequest;
-import model.response.ErrorResponse;
-import model.response.EventListResponse;
-import model.response.EventResponse;
-import model.response.EventTypeListResponse;
-import model.response.EventTypeResponse;
-import model.response.PiazzaResponse;
-import model.response.SuccessResponse;
-import model.workflow.Event;
-import model.workflow.EventType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +42,24 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gateway.controller.util.GatewayUtil;
+import gateway.controller.util.PiazzaRestController;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import model.logger.Severity;
+import model.request.SearchRequest;
+import model.response.ErrorResponse;
+import model.response.EventListResponse;
+import model.response.EventResponse;
+import model.response.EventTypeListResponse;
+import model.response.EventTypeResponse;
+import model.response.PiazzaResponse;
+import model.response.SuccessResponse;
+import model.workflow.Event;
+import model.workflow.EventType;
 import util.PiazzaLogger;
 
 /**
@@ -117,7 +116,7 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s queried for Events.", gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(String.format("User %s queried for Events.", gatewayUtil.getPrincipalName(user)), Severity.INFORMATIONAL);
 
 			// Validate params
 			String validationError = null;
@@ -143,7 +142,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Querying Events by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -171,7 +170,7 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has fired an event.", gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has fired an event.", gatewayUtil.getPrincipalName(user)), Severity.INFORMATIONAL);
 
 			try {
 				// Attempt to set the createdBy field
@@ -179,7 +178,7 @@ public class EventController extends PiazzaRestController {
 			} catch (Exception exception) {
 				String error = String.format("Failed to set the createdBy field in Event created by User %s: - exception: %s",
 						gatewayUtil.getPrincipalName(user), exception.getMessage());
-				logger.log(error, PiazzaLogger.WARNING);
+				logger.log(error, Severity.WARNING);
 				LOGGER.error(error, exception);
 			}
 
@@ -197,7 +196,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Submitting Event by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -228,7 +227,7 @@ public class EventController extends PiazzaRestController {
 		try {
 			// Log the message
 			logger.log(String.format("User %s requesting information on Event %s", gatewayUtil.getPrincipalName(user), eventId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 
 			try {
 				// Broker the request to pz-workflow
@@ -244,7 +243,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Querying Event %s by user %s: %s", eventId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -271,7 +270,7 @@ public class EventController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s has requested a list of EventTypes.", gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(String.format("User %s has requested a list of EventTypes.", gatewayUtil.getPrincipalName(user)), Severity.INFORMATIONAL);
 
 			// Validate params
 			String validationError = null;
@@ -296,7 +295,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Querying EventTypes by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -325,7 +324,7 @@ public class EventController extends PiazzaRestController {
 		try {
 			// Log the message
 			logger.log(String.format("User %s has requested a new EventType to be created.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 
 			try {
 				// Attempt to set the createdBy field
@@ -333,7 +332,7 @@ public class EventController extends PiazzaRestController {
 			} catch (Exception exception) {
 				String error = String.format("Failed to set the createdBy field in EventType created by User %s: - exception: %s",
 						gatewayUtil.getPrincipalName(user), exception.getMessage());
-				logger.log(error, PiazzaLogger.WARNING);
+				logger.log(error, Severity.WARNING);
 				LOGGER.error(error, exception);
 			}
 
@@ -351,7 +350,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Creating EventType by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -379,7 +378,7 @@ public class EventController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested information for EventType %s", gatewayUtil.getPrincipalName(user), eventTypeId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 
 			try {
 				// Proxy the request to Workflow
@@ -396,7 +395,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Getting EventType Id %s by user %s: %s", eventTypeId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -425,7 +424,7 @@ public class EventController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested deletion of EventType %s", gatewayUtil.getPrincipalName(user), eventTypeId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 
 			try {
 				// Proxy the request to Workflow
@@ -442,7 +441,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Deleting EventType Id %s by user %s: %s", eventTypeId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -469,7 +468,7 @@ public class EventController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s has requested deletion of Event %s", gatewayUtil.getPrincipalName(user), eventId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 
 			try {
 				// Proxy the request to Workflow
@@ -486,7 +485,7 @@ public class EventController extends PiazzaRestController {
 			String error = String.format("Error Deleting Event Id %s by user %s: %s", eventId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -517,7 +516,7 @@ public class EventController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s sending a complex query for Workflow.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 
 			// Send the query to the Pz-Workflow component
 			HttpHeaders headers = new HttpHeaders();
@@ -537,7 +536,7 @@ public class EventController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -568,7 +567,7 @@ public class EventController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s sending a complex query for Workflow.", gatewayUtil.getPrincipalName(user)),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 
 			// Send the query to the Pz-Workflow component
 			HttpHeaders headers = new HttpHeaders();
@@ -587,7 +586,7 @@ public class EventController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

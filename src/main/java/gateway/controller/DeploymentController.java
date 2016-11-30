@@ -47,6 +47,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import model.job.type.AccessJob;
+import model.logger.Severity;
 import model.request.PiazzaJobRequest;
 import model.response.DeploymentGroupResponse;
 import model.response.DeploymentListResponse;
@@ -111,7 +112,7 @@ public class DeploymentController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Deployment of type %s for Data %s", gatewayUtil.getPrincipalName(user),
-					job.getDeploymentType(), job.getDataId()), PiazzaLogger.INFO);
+					job.getDeploymentType(), job.getDataId()), Severity.INFORMATIONAL);
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
 			jobRequest.createdBy = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = job;
@@ -122,7 +123,7 @@ public class DeploymentController extends PiazzaRestController {
 			String error = String.format("Error Loading Data for user %s for Id %s of type %s: %s", gatewayUtil.getPrincipalName(user),
 					job.getDataId(), job.getDeploymentType(), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -152,7 +153,7 @@ public class DeploymentController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			logger.log(String.format("User %s requested Deployment List query.", gatewayUtil.getPrincipalName(user)), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Deployment List query.", gatewayUtil.getPrincipalName(user)), Severity.INFORMATIONAL);
 
 			// Validate params
 			String validationError = null;
@@ -185,7 +186,7 @@ public class DeploymentController extends PiazzaRestController {
 			String error = String.format("Error Listing Deployments by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -214,7 +215,7 @@ public class DeploymentController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Deployment Data for %s", gatewayUtil.getPrincipalName(user), deploymentId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 			// Broker the request to Pz-Access
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate
@@ -228,7 +229,7 @@ public class DeploymentController extends PiazzaRestController {
 			String error = String.format("Error fetching Deployment for Id %s by user %s: %s", deploymentId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -257,7 +258,7 @@ public class DeploymentController extends PiazzaRestController {
 		try {
 			// Log the request
 			logger.log(String.format("User %s requested Deletion for Deployment %s", gatewayUtil.getPrincipalName(user), deploymentId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 			// Broker the request to Pz-Access
 			try {
 				return new ResponseEntity<PiazzaResponse>(
@@ -272,7 +273,7 @@ public class DeploymentController extends PiazzaRestController {
 			String error = String.format("Error Deleting Deployment by Id %s by user %s: %s", deploymentId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -294,7 +295,7 @@ public class DeploymentController extends PiazzaRestController {
 		try {
 			// Log the request
 			String createdBy = gatewayUtil.getPrincipalName(user);
-			logger.log(String.format("User %s requested Creation of DeploymentGroup.", createdBy), PiazzaLogger.INFO);
+			logger.log(String.format("User %s requested Creation of DeploymentGroup.", createdBy), Severity.INFORMATIONAL);
 			// Broker to pz-access
 			return new ResponseEntity<PiazzaResponse>(restTemplate
 					.postForEntity(String.format("%s/deployment/group?createdBy=%s", ACCESS_URL, createdBy), null, PiazzaResponse.class)
@@ -302,7 +303,7 @@ public class DeploymentController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error creating DeploymentGroup: %s", exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -329,7 +330,7 @@ public class DeploymentController extends PiazzaRestController {
 			// Log the request
 			logger.log(
 					String.format("User %s requested delete of DeploymentGroup %s", gatewayUtil.getPrincipalName(user), deploymentGroupId),
-					PiazzaLogger.INFO);
+					Severity.INFORMATIONAL);
 			// Broker to access
 			String url = String.format("%s/deployment/group/%s", ACCESS_URL, deploymentGroupId);
 			try {
@@ -343,7 +344,7 @@ public class DeploymentController extends PiazzaRestController {
 			String error = String.format("Error Deleting DeploymentGroup %s : %s - exception: %s", deploymentGroupId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
-			logger.log(error, PiazzaLogger.ERROR);
+			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
