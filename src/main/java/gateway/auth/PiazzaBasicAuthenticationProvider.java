@@ -52,10 +52,7 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-		PiazzaDetails details = (PiazzaDetails)authentication.getDetails();
-		
-		System.out.println("********************************************** Method: " + details.getRequest().getMethod());
-		
+		ExtendedRequestDetails details = (ExtendedRequestDetails) authentication.getDetails();
 		try {
 			AuthenticationResponse response = userDetails.getAuthenticationDecision(authentication.getName());
 			if (response.getAuthenticated()) {

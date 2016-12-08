@@ -46,9 +46,9 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
+import gateway.auth.ExtendedRequestDetails;
 import gateway.auth.PiazzaBasicAuthenticationEntryPoint;
 import gateway.auth.PiazzaBasicAuthenticationProvider;
-import gateway.auth.PiazzaDetails;
 import io.swagger.annotations.Api;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -144,19 +144,19 @@ public class Application extends SpringBootServletInitializer {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.httpBasic().authenticationEntryPoint(basicEntryPoint)
-					.authenticationDetailsSource(authenticationDetailsSource()).and().authorizeRequests().anyRequest()
-					.authenticated().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-					.and().csrf().disable();
+			http.httpBasic().authenticationEntryPoint(basicEntryPoint).authenticationDetailsSource(authenticationDetailsSource()).and()
+					.authorizeRequests().anyRequest().authenticated().and().sessionManagement()
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().csrf().disable();
 		}
 
-		private AuthenticationDetailsSource<HttpServletRequest, PiazzaDetails> authenticationDetailsSource() {
-
-			return new AuthenticationDetailsSource<HttpServletRequest, PiazzaDetails>() {
-
+		/**
+		 * Defines the Details that should be passed into the AuthenticationProvider details object.
+		 */
+		private AuthenticationDetailsSource<HttpServletRequest, ExtendedRequestDetails> authenticationDetailsSource() {
+			return new AuthenticationDetailsSource<HttpServletRequest, ExtendedRequestDetails>() {
 				@Override
-				public PiazzaDetails buildDetails(HttpServletRequest request) {
-					return new PiazzaDetails(request);
+				public ExtendedRequestDetails buildDetails(HttpServletRequest request) {
+					return new ExtendedRequestDetails(request);
 				}
 			};
 		}
