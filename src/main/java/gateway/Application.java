@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -47,6 +48,7 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import gateway.auth.PiazzaBasicAuthenticationEntryPoint;
 import gateway.auth.PiazzaBasicAuthenticationProvider;
+import gateway.auth.PiazzaDetails;
 import io.swagger.annotations.Api;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -142,8 +144,21 @@ public class Application extends SpringBootServletInitializer {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.httpBasic().authenticationEntryPoint(basicEntryPoint).and().authorizeRequests().anyRequest().authenticated().and()
-					.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().csrf().disable();
+			http.httpBasic().authenticationEntryPoint(basicEntryPoint)
+					.authenticationDetailsSource(authenticationDetailsSource()).and().authorizeRequests().anyRequest()
+					.authenticated().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+					.and().csrf().disable();
+		}
+
+		private AuthenticationDetailsSource<HttpServletRequest, PiazzaDetails> authenticationDetailsSource() {
+
+			return new AuthenticationDetailsSource<HttpServletRequest, PiazzaDetails>() {
+
+				@Override
+				public PiazzaDetails buildDetails(HttpServletRequest request) {
+					return new PiazzaDetails(request);
+				}
+			};
 		}
 	}
 }
