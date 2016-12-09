@@ -25,7 +25,7 @@ import org.springframework.web.client.RestTemplate;
 
 import model.logger.AuditElement;
 import model.logger.Severity;
-import model.response.AuthenticationResponse;
+import model.response.AuthResponse;
 import util.PiazzaLogger;
 
 /**
@@ -43,14 +43,14 @@ public class UserDetailsBean {
 	@Autowired
 	private PiazzaLogger logger;
 
-	public AuthenticationResponse getAuthenticationDecision(String uuid) {
+	public AuthResponse getAuthenticationDecision(String uuid) {
 		String url = String.format("%s/%s", SECURITY_URL, "/v2/verification");
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		HttpEntity<PiazzaVerificationRequest> request = new HttpEntity<>(new PiazzaVerificationRequest(uuid), headers);
-		AuthenticationResponse response = restTemplate.postForEntity(url, request, AuthenticationResponse.class).getBody();
-		String actionName = response.getAuthenticated() ? "keyVerified" : "keyDeclined";
-		logger.log(String.format("Checked Verification for API Key %s with verified = %s", uuid, response.getAuthenticated()),
+		AuthResponse response = restTemplate.postForEntity(url, request, AuthResponse.class).getBody();
+		String actionName = response.getIsAuthSuccess() ? "keyVerified" : "keyDeclined";
+		logger.log(String.format("Checked Verification for API Key %s with verified = %s", uuid, response.getIsAuthSuccess()),
 				Severity.INFORMATIONAL, new AuditElement(uuid, actionName, ""));
 		return response;
 	}
