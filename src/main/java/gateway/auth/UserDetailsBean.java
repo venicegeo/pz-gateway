@@ -44,14 +44,14 @@ public class UserDetailsBean {
 	private PiazzaLogger logger;
 
 	public AuthResponse getAuthenticationDecision(String uuid) {
-		String url = String.format("%s/%s", SECURITY_URL, "/v2/verification");
+		String url = String.format("%s/%s", SECURITY_URL, "/authn");
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		HttpEntity<PiazzaVerificationRequest> request = new HttpEntity<>(new PiazzaVerificationRequest(uuid), headers);
 		AuthResponse response = restTemplate.postForEntity(url, request, AuthResponse.class).getBody();
 		String actionName = response.getIsAuthSuccess() ? "keyVerified" : "keyDeclined";
-		logger.log(String.format("Checked Verification for API Key %s with verified = %s", uuid, response.getIsAuthSuccess()),
-				Severity.INFORMATIONAL, new AuditElement(uuid, actionName, ""));
+		logger.log(String.format("Checked Verification for API Key with verified = %s", response.getIsAuthSuccess()),
+				Severity.INFORMATIONAL, new AuditElement("gateway", actionName, ""));
 		return response;
 	}
 
