@@ -56,7 +56,7 @@ public class UserDetailsBean {
 	 * @return The Auth response, containing details and success/failure information.
 	 */
 	public AuthResponse getFullAuthorizationDecision(String apiKey, ExtendedRequestDetails requestDetails) {
-		String url = String.format("%s/%s", SECURITY_URL, "/auth");
+		String url = String.format("%s/%s", SECURITY_URL, "/authz");
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		// Create the Authorization Check based on the Request Details
