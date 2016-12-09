@@ -55,7 +55,7 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 		ExtendedRequestDetails details = (ExtendedRequestDetails) authentication.getDetails();
 		try {
 			// Form the AuthN+AuthZ request to pz-idam.
-			AuthResponse response = userDetails.getAuthenticationDecision(authentication.getName());
+			AuthResponse response = userDetails.getFullAuthorizationDecision(authentication.getName(), details);
 			if (response.getIsAuthSuccess()) {
 				return new UsernamePasswordAuthenticationToken(response.getUserProfile().getUsername(), null, new ArrayList<>());
 			}
