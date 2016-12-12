@@ -326,6 +326,12 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s successfully Loaded File %s for Job %s", userName, file.getOriginalFilename(), jobId),
 					Severity.INFORMATIONAL, new AuditElement(userName, "successLoadFile", jobId));
 			return response;
+		} catch (InvalidInputException invalidInputException) {
+			String error = String.format("Invalid Inputs for Loading Data File for user %s of type %s", gatewayUtil.getPrincipalName(user),
+					invalidInputException.getMessage());
+			LOGGER.error(error, invalidInputException);
+			logger.log(error, Severity.INFORMATIONAL);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.BAD_REQUEST);
 		} catch (Exception exception) {
 			String error = String.format("Error Loading Data File for user %s of type %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
