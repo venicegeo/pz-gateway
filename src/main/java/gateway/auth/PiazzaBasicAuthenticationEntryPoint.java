@@ -60,8 +60,7 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 
 		try {
 			// Log the request
-			logger.log(String.format("Unable to authenticate a user with Auth Type %s and Header %s", request.getAuthType(),
-					request.getHeader("Authorization").toString()), Severity.ERROR);
+			logger.log(String.format("Unable to authenticate a user with Auth Type %s.", request.getAuthType()), Severity.ERROR);
 		} catch (Exception exception) {
 			String errorString = String.format("Exception encountered during Authorization check: %s.", exception.getMessage());
 			LOGGER.error(errorString, exception);

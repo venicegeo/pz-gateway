@@ -104,7 +104,7 @@ public class UserDetailsBean {
 		}
 		// Log
 		logger.log(
-				String.format("Checked Authentication for Username %s API Key with verified = %s", userName, response.getIsAuthSuccess()),
+				String.format("Checked Authentication for Username's %s API Key with verified = %s", userName, response.getIsAuthSuccess()),
 				Severity.INFORMATIONAL, new AuditElement(userName != null ? userName : "gateway", actionName, ""));
 		return response;
 	}
