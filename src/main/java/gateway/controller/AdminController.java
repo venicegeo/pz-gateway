@@ -140,25 +140,44 @@ public class AdminController extends PiazzaRestController {
 	}
 
 	/**
-	 * Returns a user's UUID for subsequent authentication with pz-gateway endpoints.
+	 * Generates a new API Key for a user based on their credentials. Accepts username/password or PKI Cert for GeoAxis.
 	 * 
-	 * @return Component information
+	 * @return API Key Response information
 	 */
 	@RequestMapping(value = "/key", method = RequestMethod.GET)
-	public ResponseEntity<PiazzaResponse> getUUIDForUser() {
+	public ResponseEntity<PiazzaResponse> getNewApiKeyV1() {
+		return generateNewApiKey();
+	}
+
+	/**
+	 * Generates a new API Key for a user based on their credentials. Accepts username/password or PKI Cert for GeoAxis.
+	 * 
+	 * @return API Key Response information
+	 */
+	@RequestMapping(value = "/v2/key", method = RequestMethod.POST)
+	public ResponseEntity<PiazzaResponse> getNewApiKeyV2() {
+		return generateNewApiKey();
+	}
+
+	/**
+	 * Gets the existing API Key for the user.
+	 * 
+	 * @return API Key information
+	 */
+	@RequestMapping(value = "/v2/key", method = RequestMethod.GET)
+	public ResponseEntity<PiazzaResponse> getExistingApiKeyV2() {
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Authorization", request.getHeader("Authorization"));
 			try {
-				return new ResponseEntity<PiazzaResponse>(new RestTemplate()
-						.exchange(SECURITY_URL + "/key", HttpMethod.GET, new HttpEntity<String>("parameters", headers), UUIDResponse.class)
-						.getBody(), HttpStatus.CREATED);
+				return new ResponseEntity<PiazzaResponse>(new RestTemplate().exchange(SECURITY_URL + "/v2/key", HttpMethod.GET,
+						new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error(hee.getResponseBodyAsString(), hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
-			String error = String.format("Error retrieving UUID: %s", exception.getMessage());
+			String error = String.format("Error retrieving API Key: %s", exception.getMessage());
 			LOGGER.error(error, exception);
 			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -166,26 +185,26 @@ public class AdminController extends PiazzaRestController {
 	}
 
 	/**
-	 * Error handling for missing GET request
+	 * Generates the API Key from the Pz-Idam endpoint.
 	 * 
-	 * @return Error describing the missing GET end point
+	 * @return API Key response information.
 	 */
-	/*
-	 * @RequestMapping(value = "/error", method = RequestMethod.GET) public ResponseEntity<?>
-	 * missingEndpoint_GetRequest() { String message =
-	 * "Gateway GET endpoint not defined. Please verify the API for the correct call." ; return new
-	 * ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST); }
-	 */
-
-	/**
-	 * Error handling for missing POST request
-	 * 
-	 * @return Error describing the missing POST endpoint
-	 */
-	/*
-	 * @RequestMapping(value = "/error", method = RequestMethod.POST) public ResponseEntity<?>
-	 * missingEndpoint_PostRequest() { String message =
-	 * "Gateway POST endpoint not defined. Please verify the API for the correct call." ; return new
-	 * ResponseEntity<PiazzaResponse>(new ErrorResponse(null, message, "Gateway"), HttpStatus.BAD_REQUEST); }
-	 */
+	private ResponseEntity<PiazzaResponse> generateNewApiKey() {
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Authorization", request.getHeader("Authorization"));
+			try {
+				return new ResponseEntity<PiazzaResponse>(new RestTemplate().exchange(SECURITY_URL + "/v2/key", HttpMethod.POST,
+						new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), HttpStatus.CREATED);
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				LOGGER.error(hee.getResponseBodyAsString(), hee);
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
+			}
+		} catch (Exception exception) {
+			String error = String.format("Error retrieving API Key: %s", exception.getMessage());
+			LOGGER.error(error, exception);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 }
