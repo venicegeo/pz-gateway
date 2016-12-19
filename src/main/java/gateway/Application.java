@@ -139,7 +139,7 @@ public class Application extends SpringBootServletInitializer {
 
 		@Override
 		public void configure(WebSecurity web) throws Exception {
-			web.ignoring().antMatchers("/key").antMatchers("/version").antMatchers("/").antMatchers(HttpMethod.OPTIONS);
+			web.ignoring().antMatchers("/key").antMatchers("/version").antMatchers("/").antMatchers(HttpMethod.OPTIONS).antMatchers("/v2/key");
 		}
 
 		@Override
