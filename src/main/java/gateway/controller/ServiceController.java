@@ -16,6 +16,7 @@
 package gateway.controller;
 
 import java.security.Principal;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -58,10 +59,12 @@ import model.request.SearchRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 import model.response.ServiceIdResponse;
+import model.response.ServiceJobResponse;
 import model.response.ServiceListResponse;
 import model.response.ServiceResponse;
 import model.response.SuccessResponse;
 import model.service.metadata.Service;
+import model.status.StatusUpdate;
 import util.PiazzaLogger;
 
 /**
@@ -277,7 +280,7 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
-			logger.log(String.format("User %s has requested Service update of %s", serviceId, serviceId), Severity.INFORMATIONAL,
+			logger.log(String.format("User %s has requested Service update of %s", userName, serviceId), Severity.INFORMATIONAL,
 					new AuditElement(userName, "requestUpdateService", serviceId));
 
 			// Proxy the request to the Service Controller instance
@@ -290,7 +293,7 @@ public class ServiceController extends PiazzaRestController {
 						restTemplate.exchange(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), HttpMethod.PUT,
 								request, SuccessResponse.class).getBody(),
 						HttpStatus.OK);
-				logger.log(String.format("User %s has Updated Service %s", serviceId, serviceId), Severity.INFORMATIONAL,
+				logger.log(String.format("User %s has Updated Service %s", userName, serviceId), Severity.INFORMATIONAL,
 						new AuditElement(userName, "completeUpdateService", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
@@ -463,6 +466,118 @@ public class ServiceController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
+			LOGGER.error(error, exception);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Gets the next Job in the Service ID queue.
+	 * 
+	 * @param serviceId
+	 *            The ID of the service.
+	 * @return The Job information (perhaps null, if no jobs available) or an Error.
+	 */
+	@RequestMapping(value = { "/service/{serviceId}/task" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Get Next Job in Service's Job Queue", notes = "For the specified Service, assuming it was registed as a Task-Managed Service, this will retrieve the next Job off of that Service's Jobs Queue.", tags = {
+			"Service" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The payload containing the Job information, including input and Id.", response = ServiceJobResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<PiazzaResponse> getNextJobInQueue(
+			@ApiParam(value = "The Id of the Service whose Queue to retrieve a Job from.") @PathVariable(value = "serviceId") String serviceId,
+			Principal user) {
+		try {
+			// Log the request
+			String userName = gatewayUtil.getPrincipalName(user);
+			logger.log(String.format("User %s has requested Retrieve Task-Managed Service Job for Service %s", userName, serviceId),
+					Severity.INFORMATIONAL, new AuditElement(userName, "requestRetrieveTaskManagedJob", serviceId));
+
+			// Proxy the request to the Service Controller instance
+			HttpHeaders theHeaders = new HttpHeaders();
+			theHeaders.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity request = new HttpEntity(theHeaders);
+			try {
+				String url = String.format("%s/service/%s/task?userName=%s", SERVICECONTROLLER_URL, serviceId, userName);
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
+						restTemplate.exchange(url, HttpMethod.POST, request, ServiceJobResponse.class).getBody(), HttpStatus.OK);
+				logger.log(String.format("User %s has Retrieve Service Job information for Service %s", userName, serviceId),
+						Severity.INFORMATIONAL, new AuditElement(userName, "completeRetrieveTaskManagedJob", serviceId));
+				return response;
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				LOGGER.error("Error Fetching Job from Task Managed Service Queue.", hee);
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
+			}
+		} catch (Exception exception) {
+			String error = String.format("Error Retrieving Task-Managed Service's Job by user %s: %s", gatewayUtil.getPrincipalName(user),
+					exception.getMessage());
+			LOGGER.error(error, exception);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Updates Job Status for a Job on a Task-Managed Service
+	 * 
+	 * @param serviceId
+	 *            The Service ID
+	 * @param jobId
+	 *            The Job ID
+	 * @param statusUpdate
+	 *            The contents of the Update
+	 * @param user
+	 *            The user requesting the Update
+	 * @return OK if updated, Error if not.
+	 */
+	@RequestMapping(value = {
+			"/service/{serviceId}/task/{jobId}" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Update Job information for the specified Service.", notes = "Allows for updating of Status (including Results) for Jobs handled by a Task-Managed User Service", tags = {
+			"Service" })
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "OK message stating the update succeeded", response = ServiceJobResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<PiazzaResponse> updateServiceJobStatus(
+			@ApiParam(value = "The Id of the Service whose Job to Update.") @PathVariable(value = "serviceId") String serviceId,
+			@ApiParam(value = "The Id of the Job whose Status to Update.") @PathVariable(value = "jobId") String jobId,
+			@ApiParam(value = "The contents of the Status Update.") @RequestBody StatusUpdate statusUpdate, Principal user) {
+		try {
+
+		} catch (Exception exception) {
+			String error = String.format("Error Updating Job Status for Job %s in Service %s by User %s : %s", jobId, serviceId,
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
+			LOGGER.error(error, exception);
+			logger.log(error, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Gets Metadata for a specific Task-Managed Service.
+	 * 
+	 * @param serviceId
+	 *            The ID of the Service
+	 * @return Map containing information regarding the Task-Managed Service
+	 */
+	@RequestMapping(value = {
+			"/service/{serviceId}/task/metadata" }, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Get Task-Managed Service Metadata", notes = "Returns specific metadata on the current Job Queue for a Task-Managed Service, such as the number of jobs currently in the queue.", tags = {
+			"Service" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Metadata information", response = ServiceJobResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<?> getServiceQueueData(@PathVariable(value = "serviceId") String serviceId, Principal user) {
+		try {
+
+		} catch (Exception exception) {
+			String error = String.format("Error Retrieving Task-Managed Service Metadata Information user %s: %s",
+					gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
 			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
