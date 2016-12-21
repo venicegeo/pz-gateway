@@ -555,6 +555,8 @@ public class ServiceController extends PiazzaRestController {
 			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+		
+		return new ResponseEntity<PiazzaResponse>(new SuccessResponse("success", "Gateway"), HttpStatus.OK);
 	}
 
 	/**
@@ -582,5 +584,7 @@ public class ServiceController extends PiazzaRestController {
 			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+		
+		return new ResponseEntity<PiazzaResponse>(new SuccessResponse("success", "Gateway"), HttpStatus.OK);
 	}
 }
