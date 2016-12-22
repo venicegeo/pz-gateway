@@ -606,7 +606,7 @@ public class ServiceController extends PiazzaRestController {
 			try {
 				String url = String.format("%s/service/%s/task/metadata?userName=%s", SERVICECONTROLLER_URL, serviceId, userName);
 				ResponseEntity<Map<String, Object>> response = new ResponseEntity<>(
-						restTemplate.exchange(url, HttpMethod.POST, request, HashMap.class).getBody(), HttpStatus.OK);
+						restTemplate.exchange(url, HttpMethod.GET, request, HashMap.class).getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s has Retrieve Service Job information for Service %s", userName, serviceId),
 						Severity.INFORMATIONAL, new AuditElement(userName, "completeRetrieveTaskManagedMetadata", serviceId));
 				return response;
