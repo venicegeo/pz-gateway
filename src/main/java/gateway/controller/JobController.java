@@ -288,7 +288,7 @@ public class JobController extends PiazzaRestController {
 			try {
 				Service service = ((ServiceResponse) serviceController.getService(job.data.getServiceId(), user).getBody()).data;
 				if ((service != null) && (service.getResourceMetadata() != null)
-						&& (service.getResourceMetadata().getAvailability().equals(ResourceMetadata.STATUS_TYPE.OFFLINE.toString()))) {
+						&& ResourceMetadata.STATUS_TYPE.OFFLINE.toString().equals(service.getResourceMetadata().getAvailability())) {
 					return new ResponseEntity<PiazzaResponse>(
 							new ErrorResponse("Cannot Execute Service with Service Availability set as Offline.", "Gateway"),
 							HttpStatus.BAD_REQUEST);
