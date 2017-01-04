@@ -545,7 +545,7 @@ public class ServiceController extends PiazzaRestController {
 	public ResponseEntity<PiazzaResponse> updateServiceJobStatus(
 			@ApiParam(value = "The Id of the Service whose Job to Update.") @PathVariable(value = "serviceId") String serviceId,
 			@ApiParam(value = "The Id of the Job whose Status to Update.") @PathVariable(value = "jobId") String jobId,
-			@ApiParam(value = "The contents of the Status Update.") @RequestBody StatusUpdate statusUpdate, Principal user) {
+			@ApiParam(value = "The contents of the Status Update.") @Valid @RequestBody StatusUpdate statusUpdate, Principal user) {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
