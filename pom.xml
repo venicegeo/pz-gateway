@@ -56,7 +56,7 @@
 		<dependency>
 			<groupId>org.venice.piazza</groupId>
 			<artifactId>pz-jobcommon</artifactId>
-			<version>Sprint06-280-g82c35c9</version>
+			<version>Sprint06-281-g5e93cff</version>
 		</dependency>
 
 		<dependency>
