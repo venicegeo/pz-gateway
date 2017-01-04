@@ -538,8 +538,7 @@ public class ServiceController extends PiazzaRestController {
 			"/service/{serviceId}/task/{jobId}" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Update Job information for the specified Service.", notes = "Allows for updating of Status (including Results) for Jobs handled by a Task-Managed User Service", tags = {
 			"Service" })
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "OK message stating the update succeeded", response = ServiceJobResponse.class),
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "OK message stating the update succeeded", response = SuccessResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
@@ -560,7 +559,7 @@ public class ServiceController extends PiazzaRestController {
 			try {
 				String url = String.format("%s/service/%s/task/%s?userName=%s", SERVICECONTROLLER_URL, serviceId, jobId, userName);
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
-						restTemplate.exchange(url, HttpMethod.POST, request, ServiceJobResponse.class).getBody(), HttpStatus.OK);
+						restTemplate.exchange(url, HttpMethod.POST, request, SuccessResponse.class).getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s has Updated Service Job %s information for Service %s", userName, jobId, serviceId),
 						Severity.INFORMATIONAL, new AuditElement(userName, "completeUpdatedTaskManagedJob", jobId));
 				return response;
