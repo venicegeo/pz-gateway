@@ -171,7 +171,7 @@ public class AdminController extends PiazzaRestController {
 			headers.set("Authorization", request.getHeader("Authorization"));
 			try {
 				return new ResponseEntity<PiazzaResponse>(new RestTemplate().exchange(SECURITY_URL + "/v2/key", HttpMethod.GET,
-						new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), HttpStatus.CREATED);
+						new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error(hee.getResponseBodyAsString(), hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
