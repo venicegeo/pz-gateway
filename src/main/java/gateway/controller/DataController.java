@@ -29,6 +29,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -131,8 +132,9 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s requested Data List query.", userName), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestDataList", ""));
+					new AuditElement(dn, "requestDataList", ""));
 
 			// Validate params
 			String validationError = null;
@@ -166,7 +168,7 @@ public class DataController extends PiazzaRestController {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.getForEntity(url, DataResourceListResponse.class).getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s successfully retrieved Data List.", userName), Severity.INFORMATIONAL,
-						new AuditElement(userName, "successDataList", ""));
+						new AuditElement(dn, "successDataList", ""));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error querying data.", hee);
@@ -233,10 +235,11 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(
 					String.format("User %s requested Data Load Job of type %s.", userName,
 							job.getData().getDataType().getClass().getName()),
-					Severity.INFORMATIONAL, new AuditElement(userName, "requestDataLoadJob", ""));
+					Severity.INFORMATIONAL, new AuditElement(dn, "requestDataLoadJob", ""));
 			// Ensure the user isn't trying to hack a dataId into their request.
 			job.getData().setDataId(null);
 			PiazzaJobRequest request = new PiazzaJobRequest();
@@ -247,7 +250,7 @@ public class DataController extends PiazzaRestController {
 			// Return the Job Id of the newly created Job
 			ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 			logger.log(String.format("User %s successfully loaded Data %s", userName, jobId), Severity.INFORMATIONAL,
-					new AuditElement(userName, "successDataLoadJob", jobId));
+					new AuditElement(dn, "successDataLoadJob", jobId));
 			return response;
 		} catch (Exception exception) {
 			String error = String.format("Error Loading Data for user %s of type %s:  %s", gatewayUtil.getPrincipalName(user),
@@ -283,6 +286,7 @@ public class DataController extends PiazzaRestController {
 		try {
 			IngestJob job;
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			try {
 				// Serialize the JSON payload of the multipart request
 				job = new ObjectMapper().readValue(data, IngestJob.class);
@@ -302,7 +306,7 @@ public class DataController extends PiazzaRestController {
 			logger.log(
 					String.format("User %s requested Data Load Job of type %s with file: %s", userName,
 							job.getData().getDataType().getClass().getName(), file.getOriginalFilename()),
-					Severity.INFORMATIONAL, new AuditElement(userName, "requestLoadFile", file.getOriginalFilename()));
+					Severity.INFORMATIONAL, new AuditElement(dn, "requestLoadFile", file.getOriginalFilename()));
 
 			// Validate the Job inputs to ensure we are able to process the file
 			// and attach it to the job metadata.
@@ -324,7 +328,7 @@ public class DataController extends PiazzaRestController {
 			// Return the Job Id of the newly created Job
 			ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(new JobResponse(jobId), HttpStatus.CREATED);
 			logger.log(String.format("User %s successfully Loaded File %s for Job %s", userName, file.getOriginalFilename(), jobId),
-					Severity.INFORMATIONAL, new AuditElement(userName, "successLoadFile", jobId));
+					Severity.INFORMATIONAL, new AuditElement(dn, "successLoadFile", jobId));
 			return response;
 		} catch (InvalidInputException invalidInputException) {
 			String error = String.format("Invalid Inputs for Loading Data File for user %s of type %s", gatewayUtil.getPrincipalName(user),
@@ -365,15 +369,16 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s requested Resource Metadata for %s.", userName, dataId), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestGetData", dataId));
+					new AuditElement(dn, "requestGetData", dataId));
 			// Proxy the request to Pz-Access
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
 						.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "data", dataId), DataResourceResponse.class).getBody(),
 						HttpStatus.OK);
 				logger.log(String.format("User %s successfully got Resource Metadata for Data %s", userName, dataId),
-						Severity.INFORMATIONAL, new AuditElement(userName, "successGetData", dataId));
+						Severity.INFORMATIONAL, new AuditElement(dn, "successGetData", dataId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Getting Data Id " + dataId, hee);
@@ -410,15 +415,16 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s requested Delete of Data Id %s.", userName, dataId), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestDeleteData", dataId));
+					new AuditElement(dn, "requestDeleteData", dataId));
 			// Proxy the request to Pz-ingest
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
 						.exchange(String.format("%s/%s/%s", INGEST_URL, "data", dataId), HttpMethod.DELETE, null, SuccessResponse.class)
 						.getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s successfully deleted Data Id %s", userName, dataId), Severity.INFORMATIONAL,
-						new AuditElement(userName, "successDeleteData", dataId));
+						new AuditElement(dn, "successDeleteData", dataId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Deleting Data Id " + dataId, hee);
@@ -459,15 +465,16 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s requested Update of Metadata for %s.", userName, dataId), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestUpdateDataMetadata", dataId));
+					new AuditElement(dn, "requestUpdateDataMetadata", dataId));
 			// Proxy the request to Ingest
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
 						.postForEntity(String.format("%s/%s/%s", INGEST_URL, "data", dataId), metadata, SuccessResponse.class).getBody(),
 						HttpStatus.OK);
 				logger.log(String.format("User %s successfully Updated of Metadata for %s.", userName, dataId), Severity.INFORMATIONAL,
-						new AuditElement(userName, "successUpdateDataMetadata", dataId));
+						new AuditElement(dn, "successUpdateDataMetadata", dataId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Updating Metadata.", hee);
@@ -508,8 +515,9 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s sending a complex query for Search.", userName), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestDataQuery", ""));
+					new AuditElement(dn, "requestDataQuery", ""));
 
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();
@@ -527,7 +535,7 @@ public class DataController extends PiazzaRestController {
 			// Respond
 			ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 			logger.log(String.format("User %s successfully got a complex query for Searching Data", userName), Severity.INFORMATIONAL,
-					new AuditElement(userName, "successDataQuery", ""));
+					new AuditElement(dn, "successDataQuery", ""));
 			return response;
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
@@ -561,8 +569,9 @@ public class DataController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s requested file download for Data %s", gatewayUtil.getPrincipalName(user), dataId),
-					Severity.INFORMATIONAL, new AuditElement(userName, "requestDownloadFile", dataId));
+					Severity.INFORMATIONAL, new AuditElement(dn, "requestDownloadFile", dataId));
 
 			// Get the bytes of the Data
 			String url = String.format("%s/file/%s.json", ACCESS_URL, dataId);
@@ -576,7 +585,7 @@ public class DataController extends PiazzaRestController {
 				// Stream the bytes back
 				ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
 				logger.log(String.format("User %s successfully downloaded file download for Data %s", gatewayUtil.getPrincipalName(user),
-						dataId), Severity.INFORMATIONAL, new AuditElement(userName, "successDownloadFile", dataId));
+						dataId), Severity.INFORMATIONAL, new AuditElement(dn, "successDownloadFile", dataId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Downloading File.", hee);

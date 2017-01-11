@@ -32,6 +32,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -123,8 +124,9 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s requested Service registration.", userName), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestServiceRegistration", ""));
+					new AuditElement(dn, "requestServiceRegistration", ""));
 
 			// Populate the authoring field in the Service Metadata
 			if (service.getResourceMetadata() == null) {
@@ -143,7 +145,7 @@ public class ServiceController extends PiazzaRestController {
 						restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest,
 								ServiceIdResponse.class).getBody(),
 						HttpStatus.CREATED);
-				logger.log(String.format("User %s Registered Service.", userName), Severity.INFORMATIONAL, new AuditElement(userName,
+				logger.log(String.format("User %s Registered Service.", userName), Severity.INFORMATIONAL, new AuditElement(dn,
 						"completeServiceRegistration", ((ServiceIdResponse) response.getBody()).data.getServiceId()));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
@@ -182,15 +184,16 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s has requested Service metadata for %s", gatewayUtil.getPrincipalName(user), serviceId),
-					Severity.INFORMATIONAL, new AuditElement(userName, "requestServiceMetadataFetch", serviceId));
+					Severity.INFORMATIONAL, new AuditElement(dn, "requestServiceMetadataFetch", serviceId));
 			// Proxy the request to the Service Controller instance
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
 						.getForEntity(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), ServiceResponse.class)
 						.getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s Retrieved Service metadata for %s", gatewayUtil.getPrincipalName(user), serviceId),
-						Severity.INFORMATIONAL, new AuditElement(userName, "completeServiceMetadataFetch", serviceId));
+						Severity.INFORMATIONAL, new AuditElement(dn, "completeServiceMetadataFetch", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Getting Service Info", hee);
@@ -229,8 +232,9 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s has requested Service deletion of %s", userName, serviceId), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestServiceDelete", serviceId));
+					new AuditElement(dn, "requestServiceDelete", serviceId));
 
 			// Proxy the request to the Service Controller instance
 			String url = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
@@ -239,7 +243,7 @@ public class ServiceController extends PiazzaRestController {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.exchange(url, HttpMethod.DELETE, null, SuccessResponse.class).getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s has Deleted Service %s", userName, serviceId), Severity.INFORMATIONAL,
-						new AuditElement(userName, "completeServiceDelete", serviceId));
+						new AuditElement(dn, "completeServiceDelete", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Deleting Service", hee);
@@ -281,8 +285,9 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s has requested Service update of %s", userName, serviceId), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestUpdateService", serviceId));
+					new AuditElement(dn, "requestUpdateService", serviceId));
 
 			// Proxy the request to the Service Controller instance
 			HttpHeaders theHeaders = new HttpHeaders();
@@ -295,7 +300,7 @@ public class ServiceController extends PiazzaRestController {
 								request, SuccessResponse.class).getBody(),
 						HttpStatus.OK);
 				logger.log(String.format("User %s has Updated Service %s", userName, serviceId), Severity.INFORMATIONAL,
-						new AuditElement(userName, "completeUpdateService", serviceId));
+						new AuditElement(dn, "completeUpdateService", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Updating Service", hee);
@@ -346,8 +351,9 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s requested Service List.", userName), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestServiceList", ""));
+					new AuditElement(dn, "requestServiceList", ""));
 
 			// Validate params
 			String validationError = null;
@@ -378,7 +384,7 @@ public class ServiceController extends PiazzaRestController {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.getForEntity(url, ServiceListResponse.class).getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s Retrieved Service List.", userName), Severity.INFORMATIONAL,
-						new AuditElement(userName, "completeServiceList", ""));
+						new AuditElement(dn, "completeServiceList", ""));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Querying Services", hee);
@@ -451,8 +457,9 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s sending a complex query for Search Services.", userName), Severity.INFORMATIONAL,
-					new AuditElement(userName, "requestServiceQuery", ""));
+					new AuditElement(dn, "requestServiceQuery", ""));
 			// Send the query to the Pz-Search component
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
@@ -462,7 +469,7 @@ public class ServiceController extends PiazzaRestController {
 					entity, ServiceListResponse.class);
 			// Respond
 			logger.log(String.format("User %s Executed Query for Search Services.", userName), Severity.INFORMATIONAL,
-					new AuditElement(userName, "completeServiceQuery", ""));
+					new AuditElement(dn, "completeServiceQuery", ""));
 			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
@@ -494,8 +501,9 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s has requested Retrieve Task-Managed Service Job for Service %s", userName, serviceId),
-					Severity.INFORMATIONAL, new AuditElement(userName, "requestRetrieveTaskManagedJob", serviceId));
+					Severity.INFORMATIONAL, new AuditElement(dn, "requestRetrieveTaskManagedJob", serviceId));
 
 			// Proxy the request to the Service Controller instance
 			HttpHeaders theHeaders = new HttpHeaders();
@@ -506,7 +514,7 @@ public class ServiceController extends PiazzaRestController {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.exchange(url, HttpMethod.POST, request, ServiceJobResponse.class).getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s has Retrieve Service Job information for Service %s", userName, serviceId),
-						Severity.INFORMATIONAL, new AuditElement(userName, "completeRetrieveTaskManagedJob", serviceId));
+						Severity.INFORMATIONAL, new AuditElement(dn, "completeRetrieveTaskManagedJob", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Fetching Job from Task Managed Service Queue.", hee);
@@ -549,8 +557,9 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s has requested Update Task-Managed Service Job for Job %s", userName, jobId),
-					Severity.INFORMATIONAL, new AuditElement(userName, "requestUpdateTaskManagedJob", jobId));
+					Severity.INFORMATIONAL, new AuditElement(dn, "requestUpdateTaskManagedJob", jobId));
 
 			// Proxy the request to the Service Controller instance
 			HttpHeaders theHeaders = new HttpHeaders();
@@ -561,7 +570,7 @@ public class ServiceController extends PiazzaRestController {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.exchange(url, HttpMethod.POST, request, SuccessResponse.class).getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s has Updated Service Job %s information for Service %s", userName, jobId, serviceId),
-						Severity.INFORMATIONAL, new AuditElement(userName, "completeUpdatedTaskManagedJob", jobId));
+						Severity.INFORMATIONAL, new AuditElement(dn, "completeUpdatedTaskManagedJob", jobId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Updating Job from Task Managed Service Queue.", hee);
@@ -595,8 +604,9 @@ public class ServiceController extends PiazzaRestController {
 		try {
 			// Log the Request
 			String userName = gatewayUtil.getPrincipalName(user);
+			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s has requested Task-Managed Service Metadata for Service %s", userName, serviceId),
-					Severity.INFORMATIONAL, new AuditElement(userName, "requestTaskManagedMetadata", serviceId));
+					Severity.INFORMATIONAL, new AuditElement(dn, "requestTaskManagedMetadata", serviceId));
 
 			// Proxy the request to the Service Controller instance
 			HttpHeaders theHeaders = new HttpHeaders();
@@ -607,7 +617,7 @@ public class ServiceController extends PiazzaRestController {
 				ResponseEntity<Map<String, Object>> response = new ResponseEntity<>(
 						restTemplate.exchange(url, HttpMethod.GET, request, HashMap.class).getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s has Retrieve Service Job information for Service %s", userName, serviceId),
-						Severity.INFORMATIONAL, new AuditElement(userName, "completeRetrieveTaskManagedMetadata", serviceId));
+						Severity.INFORMATIONAL, new AuditElement(dn, "completeRetrieveTaskManagedMetadata", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOGGER.error("Error Fetching Job from Task Managed Service Queue.", hee);
