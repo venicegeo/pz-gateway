@@ -32,6 +32,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,6 +46,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import exception.PiazzaJobException;
+import gateway.auth.PiazzaAuthenticationToken;
 import messaging.job.KafkaClientFactory;
 import model.data.FileRepresentation;
 import model.data.location.FileLocation;
@@ -196,6 +198,23 @@ public class GatewayUtil {
 	 */
 	public String getPrincipalName(Principal user) {
 		return user != null ? user.getName() : "UNAUTHENTICATED";
+	}
+
+	/**
+	 * Gets the Distinguished Name (DN) for a request from the Authentication Token that was returned by the
+	 * Authentication Provider. This assumes the Authentication token is a PiazzaAuthenticationToken as created by the
+	 * PiazzaBasicAuthenticationProvider. If unable to get, returns null.
+	 * 
+	 * @param authentication
+	 *            Authentication Token
+	 * @return DN of the Authentication Token, or null
+	 */
+	public String getDistinguishedName(Authentication authentication) {
+		if (authentication instanceof PiazzaAuthenticationToken) {
+			return ((PiazzaAuthenticationToken) authentication).getDistinguishedName();
+		} else {
+			return null;
+		}
 	}
 
 	/**

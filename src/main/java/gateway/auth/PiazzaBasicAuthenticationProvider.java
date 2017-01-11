@@ -57,7 +57,10 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 			// Form the AuthN+AuthZ request to pz-idam.
 			AuthResponse response = userDetails.getFullAuthorizationDecision(authentication.getName(), details);
 			if (response.getIsAuthSuccess()) {
-				return new UsernamePasswordAuthenticationToken(response.getUserProfile().getUsername(), null, new ArrayList<>());
+				PiazzaAuthenticationToken authToken = new PiazzaAuthenticationToken(response.getUserProfile().getUsername(), null,
+						new ArrayList<>());
+				authToken.setDistinguishedName(response.getUserProfile().getDistinguishedName());
+				return authToken;
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error retrieving Api Key: %s.", exception.getMessage());
