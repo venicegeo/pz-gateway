@@ -19,7 +19,6 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.joda.time.DateTime;
@@ -45,8 +44,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
@@ -505,13 +502,6 @@ public class ServiceController extends PiazzaRestController {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
 			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
-			
-			HttpServletRequest hsr = ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
-			logger.log("X-FORWARDED-FOR: " + hsr.getHeader("X-FORWARDED-FOR"), Severity.INFORMATIONAL);
-			logger.log("RemoteAddr: " + hsr.getRemoteAddr(), Severity.INFORMATIONAL);
-			logger.log("RemoteHost: " + hsr.getRemoteHost(), Severity.INFORMATIONAL);
-			logger.log("RemotePort: " + hsr.getRemotePort(), Severity.INFORMATIONAL);
-
 			logger.log(String.format("User %s has requested Retrieve Task-Managed Service Job for Service %s", userName, serviceId),
 					Severity.INFORMATIONAL, new AuditElement(dn, "requestRetrieveTaskManagedJob", serviceId));
 
