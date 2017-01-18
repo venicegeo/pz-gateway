@@ -9,5 +9,6 @@ applications:
   services:
     - pz-kafka
     - pz-blobstore
+	- pz-elasticsearch
   env:
     SPRING_PROFILES_ACTIVE: cloud,secure
