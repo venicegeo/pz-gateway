@@ -17,12 +17,8 @@
 
 	<repositories>
 		<repository>
-			<id>spring-releases</id>
-			<url>https://repo.spring.io/libs-release</url>
-		</repository>
-		<repository>
 			<id>nexus</id>
-			<url>https://nexus.devops.geointservices.io/content/repositories/Piazza/</url>
+			<url>https://nexus.devops.geointservices.io/content/repositories/Piazza-Group/</url>
 		</repository>
 	</repositories>
 
@@ -136,13 +132,6 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-releases</id>
-			<url>https://repo.spring.io/libs-release</url>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<profiles>
 		<profile>
