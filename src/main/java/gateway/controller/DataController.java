@@ -181,6 +181,33 @@ public class DataController extends PiazzaRestController {
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+ 	/**
+	 * Returns a queried list of Data Resources previously loaded into Piazza that have been loaded by the current user.
+	 * 
+	 * @see http://pz-swagger/#!/Data/get_data
+	 * 
+	 * @param user
+	 *            The user making the request
+	 * @return The list of results, with pagination information included. ErrorResponse if something goes wrong.
+	 */
+	@RequestMapping(value = "/data/me", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Query Piazza Data", notes = "Sends a simple GET Query for fetching lists of Piazza Data for the authenticated user.", tags = "Data", response = DataResourceListResponse.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
+			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
+	public ResponseEntity<PiazzaResponse> getDataForCurrentUser(
+			@ApiParam(value = "A general keyword search to apply to all Datasets.") @RequestParam(value = "keyword", required = false) String keyword,
+			@ApiParam(value = "Filter datasets that were created by a specific Job Id.") @RequestParam(value = "createdByJobId", required = false) String createdByJobId,
+			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
+			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
+			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
+			Principal user) {
+		return getData(keyword, createdByJobId, page, perPage, order, sortBy, gatewayUtil.getPrincipalName(user), user);
+	}
 
 	/**
 	 * Process the request to Ingest data. This endpoint will process an ingest request. If a file is to be specified,
