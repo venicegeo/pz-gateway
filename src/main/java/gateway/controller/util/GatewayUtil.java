@@ -80,7 +80,7 @@ public class GatewayUtil {
 	private RestTemplate restTemplate;
 
 	@Value("${vcap.services.pz-kafka.credentials.host}")
-	private String KAFKA_ADDRESS;
+	private String KAFKA_HOSTS;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
 	@Value("${vcap.services.pz-blobstore.credentials.access_key_id:}")
@@ -103,9 +103,9 @@ public class GatewayUtil {
 	@PostConstruct
 	public void init() {
 		// Kafka Producer.
-		producer = KafkaClientFactory.getProducer(KAFKA_ADDRESS.split(":")[0], KAFKA_ADDRESS.split(":")[1]);
+		producer = KafkaClientFactory.getProducer(KAFKA_HOSTS);
 		logger.log("Connecting to Kafka Cluster", Severity.INFORMATIONAL,
-				new AuditElement("gateway", "connectedToKafkaCluster", KAFKA_ADDRESS));
+				new AuditElement("gateway", "connectedToKafkaCluster", KAFKA_HOSTS));
 		// Connect to S3 Bucket. Only apply credentials if they are present.
 		if ((AMAZONS3_ACCESS_KEY.isEmpty()) && (AMAZONS3_PRIVATE_KEY.isEmpty())) {
 			s3Client = new AmazonS3Client();
