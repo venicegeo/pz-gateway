@@ -107,10 +107,12 @@ public class AdminController extends PiazzaRestController {
 	 * @return String
 	 */
 	@RequestMapping(value = "/", method = RequestMethod.GET)
+	@ApiOperation(hidden = true, value = "Health Check")
 	public String getHealthCheck() {
 		return "Hello, Health Check here for pz-gateway.";
 	}
 
+	@ApiOperation(hidden = true, value = "Version")
 	@RequestMapping(value = "/version", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> getVersion() {
 		try {
@@ -127,6 +129,7 @@ public class AdminController extends PiazzaRestController {
 	 * 
 	 * @return Component information
 	 */
+	@ApiOperation(hidden = true, value = "Administrative Statistics")
 	@RequestMapping(value = "/admin/stats", method = RequestMethod.GET)
 	public ResponseEntity<Map<String, Object>> getAdminStats() {
 		Map<String, Object> stats = new HashMap<String, Object>();
@@ -153,6 +156,7 @@ public class AdminController extends PiazzaRestController {
 	 * 
 	 * @return API Key Response information
 	 */
+	@ApiOperation(hidden = true, value = "Legacy API Key Generation")
 	@RequestMapping(value = "/key", method = RequestMethod.GET)
 	public ResponseEntity<PiazzaResponse> getNewApiKeyV1() {
 		return generateNewApiKey();
