@@ -42,7 +42,10 @@ import org.springframework.web.client.RestTemplate;
 
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import model.logger.AuditElement;
 import model.logger.Severity;
 import model.response.ErrorResponse;
@@ -60,6 +63,7 @@ import util.PiazzaLogger;
  */
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
+@Api
 public class AdminController extends PiazzaRestController {
 	@Autowired
 	private PiazzaLogger logger;
@@ -161,6 +165,9 @@ public class AdminController extends PiazzaRestController {
 	 */
 	@ApiOperation(value = "Create new API Key", notes = "Creates a new Piazza API Key based on the Authentication block. This creates a new Key and overrides any previous keys.", tags = "User")
 	@RequestMapping(value = "/v2/key", method = RequestMethod.POST)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "API Key information.", response = UUIDResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getNewApiKeyV2() {
 		return generateNewApiKey();
 	}
@@ -172,6 +179,9 @@ public class AdminController extends PiazzaRestController {
 	 */
 	@ApiOperation(value = "Get Current API Key", notes = "Gets the current API Key based on the provided Authentication block. Will not create a new key.", tags = "User")
 	@RequestMapping(value = "/v2/key", method = RequestMethod.GET)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "API Key information.", response = UUIDResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getExistingApiKeyV2() {
 		try {
 			HttpHeaders headers = new HttpHeaders();
@@ -198,6 +208,9 @@ public class AdminController extends PiazzaRestController {
 	 */
 	@ApiOperation(value = "Get Current User Profile", notes = "Gets the User Profile for the user based on provided API Key from Authentication block.", tags = "User")
 	@RequestMapping(value = "/profile", method = RequestMethod.GET)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "User Profile information.", response = UserProfileResponse.class),
+			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
+			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> getUserProfile(Principal user) {
 		try {
 			// Audit Request
