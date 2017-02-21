@@ -181,8 +181,8 @@ public class DataController extends PiazzaRestController {
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
- 	/**
+
+	/**
 	 * Returns a queried list of Data Resources previously loaded into Piazza that have been loaded by the current user.
 	 * 
 	 * @see http://pz-swagger/#!/Data/get_data
@@ -529,14 +529,19 @@ public class DataController extends PiazzaRestController {
 			String paramOrder = (order == null) ? "" : "order=" + order;
 			String paramSortBy = (sortBy == null) ? "" : "sortBy=" + sortBy;
 
-			DataResourceListResponse searchResponse = restTemplate.postForObject(
-					String.format("%s/%s?%s&%s&%s&%s", SEARCH_URL, SEARCH_ENDPOINT, paramPage, paramPerPage, paramOrder, paramSortBy),
-					entity, DataResourceListResponse.class);
-			// Respond
-			ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
-			logger.log(String.format("User %s successfully got a complex query for Searching Data", userName), Severity.INFORMATIONAL,
-					new AuditElement(dn, "successDataQuery", ""));
-			return response;
+			try {
+				DataResourceListResponse searchResponse = restTemplate.postForObject(
+						String.format("%s/%s?%s&%s&%s&%s", SEARCH_URL, SEARCH_ENDPOINT, paramPage, paramPerPage, paramOrder, paramSortBy),
+						entity, DataResourceListResponse.class);
+				// Respond
+				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
+				logger.log(String.format("User %s successfully got a complex query for Searching Data", userName), Severity.INFORMATIONAL,
+						new AuditElement(dn, "successDataQuery", ""));
+				return response;
+			} catch (HttpClientErrorException | HttpServerErrorException hee) {
+				LOGGER.error("Error Querying Data.", hee);
+				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
+			}
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOGGER.error(error, exception);
