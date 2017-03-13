@@ -95,7 +95,7 @@ public class ServiceController extends PiazzaRestController {
 	private static final String DEFAULT_PAGE_SIZE = "10";
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_SORTBY = "resourceMetadata.createdOn";
-	private static final String DEFAULT_SERVICE_SORTBY = "service.serviceId";
+	private static final String DEFAULT_SERVICE_SORTBY = "service.resourceMetadata.createdOn";
 	private static final String DEFAULT_ORDER = "desc";
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(ServiceController.class);
@@ -452,7 +452,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
-			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SORTBY) String sortBy,
+			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SERVICE_SORTBY) String sortBy,
 			Principal user) {
 		try {
 			// Log the request
