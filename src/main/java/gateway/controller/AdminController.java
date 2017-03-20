@@ -15,12 +15,15 @@
  **/
 package gateway.controller;
 
+import java.io.File;
+import java.io.InputStream;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,10 +115,34 @@ public class AdminController extends PiazzaRestController {
 		return "Hello, Health Check here for pz-gateway.";
 	}
 
+	/**
+	 * This will first attempt to locate the version number from local pz-release.json file. If this file does not
+	 * exist, then it will point to the pz-release running application.
+	 * 
+	 * @return Version information for Gateway and all sub-components
+	 */
 	@ApiOperation(hidden = true, value = "Version")
 	@RequestMapping(value = "/version", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> getVersion() {
 		try {
+			// Check for local file
+			InputStream templateStream = null;
+			String localVersionJson = null;
+			try {
+				templateStream = getClass().getClassLoader().getResourceAsStream("pz-release.json");
+				localVersionJson = IOUtils.toString(templateStream);
+				return new ResponseEntity<String>(localVersionJson, HttpStatus.OK);
+			} catch (Exception exception) {
+				LOGGER.info("Could not find local version. Delegating to pz-release endpoint.", exception);
+			} finally {
+				try {
+					templateStream.close();
+				} catch (Exception exception) {
+					LOGGER.error("Error closing Local Version Number Input Stream.", exception);
+				}
+			}
+
+			LOGGER.info("Returning release information from pz-release endpoint.");
 			return new ResponseEntity<String>(restTemplate.getForObject(RELEASE_URL, String.class), HttpStatus.OK);
 		} catch (Exception e) {
 			String error = String.format("Error retrieving version for Piazza: %s", e.getMessage());
