@@ -40,8 +40,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3EncryptionClient;
+import com.amazonaws.services.s3.model.CryptoConfiguration;
+import com.amazonaws.services.s3.model.KMSEncryptionMaterialsProvider;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -91,6 +96,8 @@ public class GatewayUtil {
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
+	@Value("${s3.kms.cmk.id}")
+	private String S3_KMS_CMK_ID;
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(GatewayUtil.class);
 
@@ -111,7 +118,10 @@ public class GatewayUtil {
 			s3Client = new AmazonS3Client();
 		} else {
 			BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
-			s3Client = new AmazonS3Client(credentials);
+			// Set up encryption using the KMS CMK Key
+			KMSEncryptionMaterialsProvider materialProvider = new KMSEncryptionMaterialsProvider(S3_KMS_CMK_ID);
+			s3Client = new AmazonS3EncryptionClient(credentials, materialProvider,
+					new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1)).withRegion(Region.getRegion(Regions.US_EAST_1));
 		}
 	}
 
@@ -219,7 +229,8 @@ public class GatewayUtil {
 
 	/**
 	 * Handles the uploaded file from the data/file endpoint. This will push the file to S3, and then modify the content
-	 * of the job to reference the new S3 location of the file.
+	 * of the job to reference the new S3 location of the file. This push will encrypt the file locally and push the
+	 * encrypted bytes - This process uses KMS encryption.
 	 * 
 	 * @param jobId
 	 *            The Id of the Job, used for generating a unique S3 bucket file name.
