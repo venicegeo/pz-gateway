@@ -44,6 +44,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import exception.InvalidInputException;
@@ -330,6 +331,13 @@ public class DataController extends PiazzaRestController {
 			logger.log(String.format("User %s successfully Loaded File %s for Job %s", userName, file.getOriginalFilename(), jobId),
 					Severity.INFORMATIONAL, new AuditElement(dn, "successLoadFile", jobId));
 			return response;
+		} catch (AmazonServiceException amazonException) {
+			String systemError = String.format("Error Loading Data File for user %s with error: %s", gatewayUtil.getPrincipalName(user),
+					amazonException.getMessage());
+			String userError = "There was an issue pushing the file to Piazza S3 Bucket. Please contact a Piazza administrator for details.";
+			LOGGER.error(systemError, amazonException);
+			logger.log(systemError, Severity.ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(userError, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (InvalidInputException invalidInputException) {
 			String error = String.format("Invalid Inputs for Loading Data File for user %s of type %s", gatewayUtil.getPrincipalName(user),
 					invalidInputException.getMessage());
