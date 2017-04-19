@@ -26,8 +26,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
+import model.logger.AuditElement;
 import model.logger.Severity;
 import model.response.AuthResponse;
+import model.security.authz.UserProfile;
 import util.PiazzaLogger;
 
 /**
@@ -57,9 +59,13 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 			// Form the AuthN+AuthZ request to pz-idam.
 			AuthResponse response = userDetails.getFullAuthorizationDecision(authentication.getName(), details);
 			if (response.getIsAuthSuccess()) {
-				PiazzaAuthenticationToken authToken = new PiazzaAuthenticationToken(response.getUserProfile().getUsername(), null,
-						new ArrayList<>());
-				authToken.setDistinguishedName(response.getUserProfile().getDistinguishedName());
+				final UserProfile userProfile = response.getUserProfile();
+				this.auditLogUserProfile(userProfile);
+				
+				final PiazzaAuthenticationToken authToken = 
+						new PiazzaAuthenticationToken(userProfile.getUsername(), null, new ArrayList<>());
+				
+				authToken.setDistinguishedName(userProfile.getDistinguishedName());
 				return authToken;
 			}
 		} catch (Exception exception) {
@@ -73,5 +79,15 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 	@Override
 	public boolean supports(Class<?> authentication) {
 		return authentication.equals(UsernamePasswordAuthenticationToken.class);
+	}
+	
+	private void auditLogUserProfile(final UserProfile userProfile) {
+		
+		final String dn = userProfile.getDistinguishedName();
+		final String username = userProfile.getUsername();
+		
+		logger.log(String.format("%s requested restricted access to the Piazza Gateway", userProfile), 
+				Severity.INFORMATIONAL,
+				new AuditElement(dn, "requestPiazzaGatewayAccess", username));
 	}
 }
