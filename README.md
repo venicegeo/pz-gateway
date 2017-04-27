@@ -1,1 +1,13 @@
-Please refer to the [Venice Wiki Page](https://github.com/venicegeo/venice/wiki/Pz-Gateway) for full documentation.  
+## Running pz-gateway locally
+
+To run the Gateway service locally (without Vagrant), perhaps through Eclipse or through CLI, navigate to the project directory and run
+
+    mvn clean install -U spring-boot:run
+
+	With optional parameters:
+	java -jar target/piazza-gateway-1.0.0.jar --search.url=http://localhost:8581 --jobmanager.prefix=localhost --servicecontroller.port=8088 --servicecontroller.prefix=localhost --servicecontroller.protocol=http --logger.url=http://192.168.46.46:14600 --workflow.url=http://192.168.50.50:14400 --ingest.url=http://localhost:8084 --access.url=http://localhost:8085
+	
+This will run a Tomcat server locally with the Gateway service running on port 8081.
+
+Check the `application.properties` file if any port or host information needs to change for certain components. Since the Gateway proxies to all internal Piazza components, then depending on what you are attempting to debug locally, you may need to set one or many of these parameters. For example, if you are debugging `pz-ingest` as well, then you would change the `ingest.url` property in `application.properties` to your own local machine.
+
