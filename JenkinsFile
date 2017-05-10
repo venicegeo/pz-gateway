@@ -14,7 +14,7 @@ node {
   stage('Archive') {
     sh "${mvn}/bin/mvn clean package -U"
     mavenPush {
-      mavenArtifact 'target/piazza-gateway*.jar'
+      mavenArtifact = 'target/piazza-gateway*.jar'
     }
   }
 
