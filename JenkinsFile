@@ -14,7 +14,7 @@ node {
   stage('Archive') {
     sh """
       ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
-      mv target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
+      cp target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
     """
     mavenPush()
   }
@@ -33,6 +33,9 @@ node {
   }
 
   stage('CI Deploy') {
+    sh """
+      cp target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
+    """
     cfPush()
 //    zap()
     cfBgDeploy()
