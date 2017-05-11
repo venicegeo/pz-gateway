@@ -20,7 +20,7 @@ node {
   }
 
   stage('Scans') {
-//    dependencyCheck()
+    dependencyCheck()
     ionConnect()
     sh """
       mkdir -p ${root}/.m2/repository
@@ -37,7 +37,7 @@ node {
       cp target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
     """
     cfPush()
-//    zap()
+    zap()
     cfBgDeploy()
   }
 
