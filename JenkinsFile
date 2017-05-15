@@ -21,7 +21,7 @@ node {
 
   stage('Scans') {
     dependencyCheck {
-      threadfixId = env.THREADFIX_ID ? env.THREADFIX_ID : '115',
+      threadfixId = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
     }
     ionConnect()
     sh """
@@ -40,7 +40,7 @@ node {
     """
     cfPush()
     zap {
-      threadfixId = env.THREADFIX_ID ? env.THREADFIX_ID : '115',
+      threadfixId = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
     }
     cfBgDeploy()
   }
@@ -72,7 +72,7 @@ node {
       ${mvn}/bin/mvn install:install-file -Dmaven.repo.local=${root} -Dfile=pom.xml -DpomFile=pom.xml
     """
     fortify {
-      threadfixId = env.THREADFIX_ID ? env.THREADFIX_ID : '115',
+      threadfixId = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
     }
   }
 
