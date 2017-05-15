@@ -1,5 +1,7 @@
 @Library('pipelib@master') _
 
+def THREADFIX_ID = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
+
 node {
   def mvn = tool 'M3'
   def root = pwd()
@@ -21,7 +23,7 @@ node {
 
   stage('Scans') {
     dependencyCheck {
-      threadfixId = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
+      threadfixId = THREADFIX_ID
     }
     ionConnect()
     sh """
@@ -40,7 +42,7 @@ node {
     """
     cfPush()
     zap {
-      threadfixId = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
+      threadfixId = THREADFIX_ID
     }
     cfBgDeploy()
   }
@@ -72,7 +74,7 @@ node {
       ${mvn}/bin/mvn install:install-file -Dmaven.repo.local=${root} -Dfile=pom.xml -DpomFile=pom.xml
     """
     fortify {
-      threadfixId = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
+      threadfixId = THREADFIX_ID
     }
   }
 
