@@ -252,7 +252,7 @@ public class AdminController extends PiazzaRestController {
 			// Broker to IDAM
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
-						.getForEntity(String.format("%s/%s/%s", SECURITY_URL, "profile", username), UserProfileResponse.class).getBody(),
+						.getForEntity(String.format("%s/%s/%s.json", SECURITY_URL, "profile", username), UserProfileResponse.class).getBody(),
 						HttpStatus.OK);
 				logger.log(String.format("User %s successfully retrieved User Profile.", username), Severity.INFORMATIONAL,
 						new AuditElement(dn, "successUserProfile", username));
