@@ -42,7 +42,7 @@ node {
       sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml https://threadfix.gs.mil/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"  
     }
     
-    //ionConnect()
+    // TODO: ionConnect()
     sh """
       mkdir -p ${root}/.m2/repository
       ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
@@ -50,18 +50,36 @@ node {
         -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
         -DdataFile=target/jacoco.exec
     """
-    sonar()
+    // TODO: sonar()
   }
 
   stage('CI Deploy') {
     sh """
-      cp target/piazza-gateway-1.0.0.jar ${root}/${archiveName}
+      cp target/${targetName} ${root}/${archiveName}
     """
-    cfPush()
-    zap {
-      threadfixId = THREADFIX_ID
+    if(!fileExists('.cf')) {
+      sh "mkdir -p .cf"
     }
-    cfBgDeploy()
+    withEnv(['CF_HOME=.cf']) {
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
+        sh "cf api http://api.system.geointservices.io"
+        sh "cf auth ${CFUSER} ${CFPASS}"
+        sh "cf target -o Optimus -s ${env.PCF_SPACE}"
+        sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PCF_DOMAIN} --no-start"   
+        sh "cf set-env SPACE ${env.PCF_SPACE}"
+        sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
+        sh "cf start"
+      }
+    }
+    withCredentials([[$class: 'StringBinding', credentialsId: '978C467A-2B26-47AE-AD2F-4AFD5A4AF695', variable: 'THREADFIX_KEY']]) {
+      sh """${env.ZAPROXY_HOME}/zap.sh -cmd \
+        -quickout ${root}/out/zap.xml \
+        -quickurl https://${artifactId}-${appvers}.${env.PCF_DOMAIN} \
+      """
+      cat ${root}/out/zap.xml
+      // Do we have to explicitly upload this to Threadfix or something?
+    }
+    // DO B/G DEPLOY HERE
   }
 
   stage('Integration Testing') {
@@ -69,16 +87,24 @@ node {
   }
 
   stage('Reset') {
-    git([
-      url: env.GIT_URL ? env.GIT_URL : 'https://github.com/venicegeo/pz-gateway',
-      branch: "master"
-    ])
+    git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
   }
 
   stage('Staging Deploy') {
-    cfPush {
-      cfDomain  = 'stage.geointservices.io'
-      cfSpace   = 'stage'
+    withEnv([
+      'CF_HOME=.cf',
+      'PCF_SPACE=stage',
+      'PCF_DOMAIN=stage.geointservices.io'
+    ]) {
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
+        sh "cf api http://api.system.geointservices.io"
+        sh "cf auth ${CFUSER} ${CFPASS}"
+        sh "cf target -o Optimus -s ${env.PCF_SPACE}"
+        sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PCF_DOMAIN} --no-start"   
+        sh "cf set-env SPACE ${env.PCF_SPACE}"
+        sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
+        sh "cf start"
+      }
     }
     cfBgDeploy {
       cfDomain  = 'stage.geointservices.io'
@@ -93,20 +119,14 @@ node {
   }
 
   stage('Reset') {
-    /*git([
-      url: env.GIT_URL ? env.GIT_URL : 'https://github.com/venicegeo/pz-gateway',
-      branch: "master"
-    ])*/
     git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
   }
 
   stage('Final Scans') {
     sh """
-      ${mvn}/bin/mvn install:install-file -Dmaven.repo.local=${root} -Dfile=pom.xml -DpomFile=pom.xml
+      ${mvn}/bin/mvn install:install-file -Dmaven.repo.local=${root}/.m2/repository -Dfile=pom.xml -DpomFile=pom.xml
     """
-    /*fortify {
-      threadfixId = THREADFIX_ID
-    }*/
+    /* fortify */
     sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER} src/main/java/{*.java,**/*.java}"
     sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER}  -scan -Xmx1G -f fortifyResults-${env.BUILD_NUMBER}.fpr"
     sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@fortifyResults-${env.BUILD_NUMBER}.fpr https://threadfix.gs.mil/rest/applications/${THREADFIX_ID}/upload?apiKey=$THREADFIX_KEY"
