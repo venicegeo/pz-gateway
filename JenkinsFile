@@ -32,7 +32,6 @@ node {
       -DartifactId=${artifactId} \
       -Dversion=${appvers}
     """
-    // mavenPush()
   }
 
   stage('Scans') {
@@ -42,7 +41,17 @@ node {
       sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"  
     }
     
-    // TODO: ionConnect()
+    // ionConnect
+    def pomFile = "${root}/pom.xml"
+    def ioncmd = "ion-connect"
+    def jqcmd = "${env.JQ1_5_HOME}/jq"
+    sh """
+      resp=$($ioncmd dependency resolve-dependencies-in-file --flatten --type maven $pomfile)
+      deps=$(echo $resp | $jqcmd .dependencies)
+      $ioncmd vulnerability get-vulnerabilities-for-list "${deps}"
+    """
+
+
     sh """
       mkdir -p ${root}/.m2/repository
       ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
@@ -50,7 +59,30 @@ node {
         -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
         -DdataFile=target/jacoco.exec
     """
-    // TODO: sonar()
+
+    // sonar
+    sh """
+      ${env.SONAR_HOME}/bin/sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
+      -Dsonar.binaries=target/classes \
+      -Dsonar.language=java \
+      -Dsonar.links.scm=${env.GIT_URL} \
+      -Dsonar.links.scm_dev=${env.GIT_URL}.git \
+      -Dsonar.links.issue= \
+      -Dsonar.links.homepage= \
+      -Dsonar.links.ci=${env.JOB_URL} \
+      -Dsonar.projectKey=venicegeo:piazza:${artifactId} \
+      -Dsonar.projectName=venicegeo:piazza:${artifactId} \
+      -Dsonar.projectBaseDir=$root \
+      -Dsonar.projectVersion=${appvers} \
+      -Dsonar.redmine.url= \
+      -Dsonar.redmine.api-access-key= \
+      -Dsonar.redmine.project-key= \
+      -Dsonar.sourceEncoding=utf-8 \
+      -Dsonar.sources=src/main/java \
+      -Dsonar.exclusions= \
+      -Dsonar.tests=src/test/java
+    """
+
   }
 
   stage('CI Deploy') {
@@ -62,9 +94,9 @@ node {
     }
     withEnv(['CF_HOME=.cf']) {
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
-        sh "cf api http://api.system.geointservices.io"
+        sh "cf api ${env.PCF_API_ENDPOINT}"
         sh "cf auth ${CFUSER} ${CFPASS}"
-        sh "cf target -o Optimus -s ${env.PCF_SPACE}"
+        sh "cf target -o ${env.PCF_ORG} -s ${env.PCF_SPACE}"
         sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PCF_DOMAIN} --no-start"   
         sh "cf set-env SPACE ${env.PCF_SPACE}"
         sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
@@ -79,7 +111,7 @@ node {
       cat ${root}/out/zap.xml
       // Do we have to explicitly upload this to Threadfix or something?
     }
-    // DO B/G DEPLOY HERE
+    // TODO: BG DEPLOY
   }
 
   stage('Integration Testing') {
@@ -97,9 +129,9 @@ node {
       'PCF_DOMAIN=stage.geointservices.io'
     ]) {
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
-        sh "cf api http://api.system.geointservices.io"
+        sh "cf api ${env.PCF_API_ENDPOINT}"
         sh "cf auth ${CFUSER} ${CFPASS}"
-        sh "cf target -o Optimus -s ${env.PCF_SPACE}"
+        sh "cf target -o ${env.PCF_ORG} -s ${env.PCF_SPACE}"
         sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PCF_DOMAIN} --no-start"   
         sh "cf set-env SPACE ${env.PCF_SPACE}"
         sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
