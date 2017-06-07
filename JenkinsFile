@@ -1,16 +1,22 @@
-@Library('pipelib@master') _
-
 def THREADFIX_ID = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
 
 node {
   def mvn = tool 'M3'
   def root = pwd()
+  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
+
+  def artifactId = "pz-gateway"
+  def packaging = "jar"
+  def archiveName = "${artifactId}.${packaging}"
+
 
   stage('Setup') {
-    git([
+    deleteDir()
+    /*git([
       url: env.GIT_URL ? env.GIT_URL : 'https://github.com/venicegeo/pz-gateway',
       branch: "master"
-    ])
+    ])*/
+    git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
   }
 
   stage('Archive') {
@@ -18,14 +24,31 @@ node {
       ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
       cp target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
     """
-    mavenPush()
+
+    sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
+      -DrepositoryId=nexus \
+      -Durl="${env.ARTIFACT_STORAGE_URL}" \
+      -DgroupId="org.piazza" \
+      -DgeneratePom=false \
+      -Dpackaging=${packaging} \
+      -Dmaven.repo.local="${root}/.m2/repository" \
+      -DartifactId=${artifactId} \
+      -Dversion=${appvers}
+    """
+    // mavenPush()
   }
 
   stage('Scans') {
-    dependencyCheck {
+    /*dependencyCheck {
       threadfixId = THREADFIX_ID
+    }*/
+    withCredentials([[$class: 'StringBinding', credentialsId: '978C467A-2B26-47AE-AD2F-4AFD5A4AF695', variable: 'THREADFIX_KEY']]) {
+      sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --version"   
+      sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project '${artifactId}' --scan '.'' --format 'XML' --enableExperimental --disableBundleAudit"
+      sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml https://threadfix.gs.mil/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"  
     }
-    ionConnect()
+    
+    //ionConnect()
     sh """
       mkdir -p ${root}/.m2/repository
       ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
@@ -38,7 +61,7 @@ node {
 
   stage('CI Deploy') {
     sh """
-      cp target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
+      cp target/piazza-gateway-1.0.0.jar ${root}/${archiveName}
     """
     cfPush()
     zap {
@@ -76,19 +99,23 @@ node {
   }
 
   stage('Reset') {
-    git([
+    /*git([
       url: env.GIT_URL ? env.GIT_URL : 'https://github.com/venicegeo/pz-gateway',
       branch: "master"
-    ])
+    ])*/
+    git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
   }
 
   stage('Final Scans') {
     sh """
       ${mvn}/bin/mvn install:install-file -Dmaven.repo.local=${root} -Dfile=pom.xml -DpomFile=pom.xml
     """
-    fortify {
+    /*fortify {
       threadfixId = THREADFIX_ID
-    }
+    }*/
+    sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER} src/main/java/{*.java,**/*.java}"
+    sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER}  -scan -Xmx1G -f fortifyResults-${env.BUILD_NUMBER}.fpr"
+    sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@fortifyResults-${env.BUILD_NUMBER}.fpr https://threadfix.gs.mil/rest/applications/${THREADFIX_ID}/upload?apiKey=$THREADFIX_KEY"
   }
 
   stage('Cleanup') {
