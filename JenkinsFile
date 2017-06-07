@@ -5,6 +5,7 @@ node {
   def root = pwd()
   def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
 
+  def targetName = "piazza-gateway-1.0.0.jar"
   def artifactId = "pz-gateway"
   def packaging = "jar"
   def archiveName = "${artifactId}.${packaging}"
@@ -12,17 +13,13 @@ node {
 
   stage('Setup') {
     deleteDir()
-    /*git([
-      url: env.GIT_URL ? env.GIT_URL : 'https://github.com/venicegeo/pz-gateway',
-      branch: "master"
-    ])*/
     git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
   }
 
   stage('Archive') {
     sh """
-      ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
-      cp target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
+      ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}/.m2/repository
+      cp target/${targetName} ${root}/${archiveName}
     """
 
     sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
@@ -39,12 +36,9 @@ node {
   }
 
   stage('Scans') {
-    /*dependencyCheck {
-      threadfixId = THREADFIX_ID
-    }*/
     withCredentials([[$class: 'StringBinding', credentialsId: '978C467A-2B26-47AE-AD2F-4AFD5A4AF695', variable: 'THREADFIX_KEY']]) {
       sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --version"   
-      sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project '${artifactId}' --scan '.'' --format 'XML' --enableExperimental --disableBundleAudit"
+      sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project '${artifactId}' --scan '.' --format 'XML' --enableExperimental --disableBundleAudit"
       sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml https://threadfix.gs.mil/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"  
     }
     
