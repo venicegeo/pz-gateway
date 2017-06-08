@@ -25,7 +25,7 @@ node {
   stage('Archive') {
       sh """
         env
-        ${mvn}/bin/mvn -X clean package -U -Dmaven.repo.local=${root}
+        ${mvn}/bin/mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
         cp target/${targetName} ${root}/${archiveName}
       """
 
