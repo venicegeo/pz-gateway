@@ -25,11 +25,12 @@ node {
   stage('Archive') {
       sh """
         env
+        export ARTIFACT_STORAGE_URL=https://nexus.devops.geointservices.io/content/repositories/Piazza-Group/
         ${mvn}/bin/mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
         cp target/${targetName} ${root}/${archiveName}
       """
 
-      sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
+     /* sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
         -DrepositoryId=nexus \
         -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
         -DgroupId="org.piazza" \
@@ -38,7 +39,7 @@ node {
         -Dmaven.repo.local="${root}/.m2/repository" \
         -DartifactId=${artifactId} \
         -Dversion=${appvers}
-      """
+      """  */
   }
 
   stage('Scans') {
