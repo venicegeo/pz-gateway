@@ -26,7 +26,7 @@ node {
     withEnv(["HOME=${WORKSPACE}"]) {
       sh """
         env
-        ${mvn}/bin/mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
+        ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
         cp target/${targetName} ${root}/${archiveName}
       """
     }
