@@ -109,7 +109,7 @@ node {
         sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
         sh "cf start"
 
-        def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print $4}'", returnStdout: true)
+        def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print \$4}'", returnStdout: true)
         sh "cf map-route ${appName} ${env.PCF_DOMAIN} --hostname ${artifactId}"
         def appExists = sh(script: "cf target ${legacyAppName}", returnStatus: true) == 0
         if (appExists) {
@@ -157,7 +157,7 @@ node {
         sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
         sh "cf start"
 
-        def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print $4}'", returnStdout: true)
+        def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print \$4}'", returnStdout: true)
         sh "cf map-route ${appName} ${env.PCF_DOMAIN} --hostname ${artifactId}"
         def appExists = sh(script: "cf target ${legacyAppName}", returnStatus: true) == 0
         if (appExists) {
