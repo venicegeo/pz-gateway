@@ -24,7 +24,7 @@ node {
 
   stage('Archive') {
       sh """
-        mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
+        mvn -DARTIFACT_STORAGE_URL=https://nexus.devops.geointservices.io/content/repositories/Piazza-Group/ -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
         cp target/${targetName} ${root}/${archiveName}
       """
 
