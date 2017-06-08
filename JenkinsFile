@@ -23,10 +23,7 @@ node {
   def appName = "${artifactId}-${appvers}"
 
   stage('Archive') {
-      sh """
-        env
-        export ARTIFACT_STORAGE_URL=https://nexus.devops.geointservices.io/content/repositories/Piazza-Group/
-        ${mvn}/bin/mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
+      sh """mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
         cp target/${targetName} ${root}/${archiveName}
       """
 
