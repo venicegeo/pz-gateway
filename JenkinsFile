@@ -3,7 +3,6 @@ def THREADFIX_ID = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
 node {
   def mvn = tool 'M3'
   def root = pwd()
-  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
 
   def targetName = "piazza-gateway-1.0.0.jar"
   def artifactId = "pz-gateway"
@@ -13,32 +12,40 @@ node {
 
   stage('Setup') {
     deleteDir()
-    git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
+    if(env.GITLAB_CREDS) {                                                      
+      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GITLAB_CREDS}"
+    } else {
+      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
+    }
   }
 
-  stage('Archive') {
-    sh """
-      ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}/.m2/repository
-      cp target/${targetName} ${root}/${archiveName}
-    """
+  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
+  def appName = "${artifactId}-${appvers}"
 
-    sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
-      -DrepositoryId=nexus \
-      -Durl="${env.ARTIFACT_STORAGE_URL}" \
-      -DgroupId="org.piazza" \
-      -DgeneratePom=false \
-      -Dpackaging=${packaging} \
-      -Dmaven.repo.local="${root}/.m2/repository" \
-      -DartifactId=${artifactId} \
-      -Dversion=${appvers}
-    """
+  stage('Archive') {
+      sh """
+        ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}/.m2/repository
+        cp target/${targetName} ${root}/${archiveName}
+      """
+
+      sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
+        -DrepositoryId=nexus \
+        -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
+        -DgroupId="org.piazza" \
+        -DgeneratePom=false \
+        -Dpackaging=${packaging} \
+        -Dmaven.repo.local="${root}/.m2/repository" \
+        -DartifactId=${artifactId} \
+        -Dversion=${appvers}
+      """
+    //}
   }
 
   stage('Scans') {
     withCredentials([[$class: 'StringBinding', credentialsId: '978C467A-2B26-47AE-AD2F-4AFD5A4AF695', variable: 'THREADFIX_KEY']]) {
       sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --version"   
       sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project '${artifactId}' --scan '.' --format 'XML' --enableExperimental --disableBundleAudit"
-      sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"  
+      //sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
     }
     
     // ionConnect
@@ -46,9 +53,9 @@ node {
     def ioncmd = "ion-connect"
     def jqcmd = "${env.JQ1_5_HOME}/jq"
     sh """
-      resp=$($ioncmd dependency resolve-dependencies-in-file --flatten --type maven $pomfile)
-      deps=$(echo $resp | $jqcmd .dependencies)
-      $ioncmd vulnerability get-vulnerabilities-for-list "${deps}"
+      resp=\$(${ioncmd} dependency resolve-dependencies-in-file --flatten --type maven ${pomfile})
+      deps=\$(echo ${resp} | ${jqcmd} .dependencies)
+      ${ioncmd} vulnerability get-vulnerabilities-for-list "${deps}"
     """
 
 
@@ -72,7 +79,7 @@ node {
       -Dsonar.links.ci=${env.JOB_URL} \
       -Dsonar.projectKey=venicegeo:piazza:${artifactId} \
       -Dsonar.projectName=venicegeo:piazza:${artifactId} \
-      -Dsonar.projectBaseDir=$root \
+      -Dsonar.projectBaseDir=${root} \
       -Dsonar.projectVersion=${appvers} \
       -Dsonar.redmine.url= \
       -Dsonar.redmine.api-access-key= \
@@ -101,6 +108,15 @@ node {
         sh "cf set-env SPACE ${env.PCF_SPACE}"
         sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
         sh "cf start"
+
+        def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print $4}'", returnStdout: true)
+        sh "cf map-route ${appName} ${env.PCF_DOMAIN} --hostname ${artifactId}"
+        def appExists = sh(script: "cf target ${legacyAppName}", returnStatus: true) == 0
+        if (appExists) {
+          // Delete old app. Do we have to unmap the routes?
+            sh "cf delete ${legacyAppName} -f"
+        }
+
       }
     }
     withCredentials([[$class: 'StringBinding', credentialsId: '978C467A-2B26-47AE-AD2F-4AFD5A4AF695', variable: 'THREADFIX_KEY']]) {
@@ -115,11 +131,15 @@ node {
   }
 
   stage('Integration Testing') {
-    postman()
+    //postman()
   }
 
   stage('Reset') {
-    git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
+    if(env.GITLAB_CREDS) {
+      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GITLAB_CREDS}"
+    } else {
+      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
+    }
   }
 
   stage('Staging Deploy') {
@@ -136,22 +156,35 @@ node {
         sh "cf set-env SPACE ${env.PCF_SPACE}"
         sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
         sh "cf start"
+
+        def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print $4}'", returnStdout: true)
+        sh "cf map-route ${appName} ${env.PCF_DOMAIN} --hostname ${artifactId}"
+        def appExists = sh(script: "cf target ${legacyAppName}", returnStatus: true) == 0
+        if (appExists) {
+          // Delete old app. Do we have to unmap the routes?
+            sh "cf delete ${legacyAppName} -f"
+        }
+
       }
     }
-    cfBgDeploy {
+    /*cfBgDeploy {
       cfDomain  = 'stage.geointservices.io'
       cfSpace   = 'stage'
-    }
+    }*/
   }
 
   stage ('Stage: Integration Testing') {
-    postman {
+    /*postman {
       cfSpace = 'stage'
-    }
+    }*/
   }
 
   stage('Reset') {
-    git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
+    if(env.GITLAB_CREDS) {
+      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GITLAB_CREDS}"
+    } else {
+      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
+    }
   }
 
   stage('Final Scans') {
@@ -161,7 +194,7 @@ node {
     /* fortify */
     sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER} src/main/java/{*.java,**/*.java}"
     sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER}  -scan -Xmx1G -f fortifyResults-${env.BUILD_NUMBER}.fpr"
-    sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@fortifyResults-${env.BUILD_NUMBER}.fpr ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=$THREADFIX_KEY"
+    //sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@fortifyResults-${env.BUILD_NUMBER}.fpr ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=$THREADFIX_KEY"
   }
 
   stage('Cleanup') {
