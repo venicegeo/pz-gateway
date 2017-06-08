@@ -23,7 +23,8 @@ node {
   def appName = "${artifactId}-${appvers}"
 
   stage('Archive') {
-      sh """mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
+      sh """
+        mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
         cp target/${targetName} ${root}/${archiveName}
       """
 
@@ -47,7 +48,7 @@ node {
     }
     
     // ionConnect
-    def pomFile = "${root}/pom.xml"
+    /* def pomFile = "${root}/pom.xml"
     def ioncmd = "ion-connect"
     def jqcmd = "${env.JQ1_5_HOME}/jq"
     sh """
@@ -55,7 +56,7 @@ node {
       deps=\$(echo ${resp} | ${jqcmd} .dependencies)
       ${ioncmd} vulnerability get-vulnerabilities-for-list "${deps}"
     """
-
+    */
 
     sh """
       mkdir -p ${root}/.m2/repository
@@ -97,7 +98,7 @@ node {
     if(!fileExists('.cf')) {
       sh "mkdir -p .cf"
     }
-    withEnv(['CF_HOME=.cf']) {
+    /*withEnv(['CF_HOME=.cf']) {
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
         sh "cf api ${env.PCF_API_ENDPOINT}"
         sh "cf auth ${CFUSER} ${CFPASS}"
@@ -116,7 +117,7 @@ node {
         }
 
       }
-    }
+    }*/
     withCredentials([[$class: 'StringBinding', credentialsId: '978C467A-2B26-47AE-AD2F-4AFD5A4AF695', variable: 'THREADFIX_KEY']]) {
       sh """${env.ZAPROXY_HOME}/zap.sh -cmd \
         -quickout ${root}/out/zap.xml \
@@ -125,7 +126,6 @@ node {
       cat ${root}/out/zap.xml
       // Do we have to explicitly upload this to Threadfix or something?
     }
-    // TODO: BG DEPLOY
   }
 
   stage('Integration Testing') {
@@ -140,10 +140,8 @@ node {
     }
   }
 
-  stage('Staging Deploy') {
-    withEnv([
-      'CF_HOME=.cf'
-    ]) {
+  /*stage('Staging Deploy') {
+    withEnv(['CF_HOME=.cf']) {
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
         sh "cf api ${env.PCF_API_ENDPOINT}"
         sh "cf auth ${CFUSER} ${CFPASS}"
@@ -162,10 +160,6 @@ node {
         }
 
       }
-    }
-    /*cfBgDeploy {
-      cfDomain  = 'stage.geointservices.io'
-      cfSpace   = 'stage'
     }*/
   }
 
