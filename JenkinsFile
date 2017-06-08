@@ -23,10 +23,12 @@ node {
   def appName = "${artifactId}-${appvers}"
 
   stage('Archive') {
+    withEnv(["HOME=${WORKSPACE}"]) {
       sh """
         ${mvn}/bin/mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
         cp target/${targetName} ${root}/${archiveName}
       """
+    }
 
       sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
         -DrepositoryId=nexus \
@@ -38,7 +40,6 @@ node {
         -DartifactId=${artifactId} \
         -Dversion=${appvers}
       """
-    //}
   }
 
   stage('Scans') {
