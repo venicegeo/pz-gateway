@@ -24,8 +24,7 @@ node {
 
   stage('Archive') {
       sh """
-        echo \$ARTIFACT_STORAGE_URL
-        ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}/.m2/repository
+        ${mvn}/bin/mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
         cp target/${targetName} ${root}/${archiveName}
       """
 
