@@ -103,14 +103,14 @@ node {
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
         sh "cf api ${env.PCF_API_ENDPOINT}"
         sh "cf auth ${CFUSER} ${CFPASS}"
-        sh "cf target -o ${env.PCF_ORG} -s ${env.PCF_SPACE}"
-        sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PCF_DOMAIN} --no-start"   
-        sh "cf set-env SPACE ${env.PCF_SPACE}"
-        sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
+        sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_ONE_PCF_SPACE}"
+        sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PHASE_ONE_PCF_DOMAIN} --no-start"
+        sh "cf set-env SPACE ${env.PHASE_ONE_PCF_SPACE}"
+        sh "cf set-env DOMAIN ${env.PHASE_ONE_PCF_DOMAIN}"
         sh "cf start"
 
         def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print \$4}'", returnStdout: true)
-        sh "cf map-route ${appName} ${env.PCF_DOMAIN} --hostname ${artifactId}"
+        sh "cf map-route ${appName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname ${artifactId}"
         def appExists = sh(script: "cf target ${legacyAppName}", returnStatus: true) == 0
         if (appExists) {
           // Delete old app. Do we have to unmap the routes?
@@ -122,7 +122,7 @@ node {
     withCredentials([[$class: 'StringBinding', credentialsId: '978C467A-2B26-47AE-AD2F-4AFD5A4AF695', variable: 'THREADFIX_KEY']]) {
       sh """${env.ZAPROXY_HOME}/zap.sh -cmd \
         -quickout ${root}/out/zap.xml \
-        -quickurl https://${artifactId}-${appvers}.${env.PCF_DOMAIN} \
+        -quickurl https://${artifactId}-${appvers}.${env.PHASE_ONE_PCF_DOMAIN} \
       """
       cat ${root}/out/zap.xml
       // Do we have to explicitly upload this to Threadfix or something?
@@ -144,21 +144,19 @@ node {
 
   stage('Staging Deploy') {
     withEnv([
-      'CF_HOME=.cf',
-      'PCF_SPACE=stage',
-      'PCF_DOMAIN=stage.geointservices.io'
+      'CF_HOME=.cf'
     ]) {
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
         sh "cf api ${env.PCF_API_ENDPOINT}"
         sh "cf auth ${CFUSER} ${CFPASS}"
-        sh "cf target -o ${env.PCF_ORG} -s ${env.PCF_SPACE}"
-        sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PCF_DOMAIN} --no-start"   
-        sh "cf set-env SPACE ${env.PCF_SPACE}"
-        sh "cf set-env DOMAIN ${env.PCF_DOMAIN}"
+        sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_TWO_PCF_SPACE}"
+        sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PHASE_TWO_PCF_DOMAIN} --no-start"
+        sh "cf set-env SPACE ${env.PHASE_TWO_PCF_SPACE}"
+        sh "cf set-env DOMAIN ${env.PHASE_TWO_PCF_DOMAIN}"
         sh "cf start"
 
         def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print \$4}'", returnStdout: true)
-        sh "cf map-route ${appName} ${env.PCF_DOMAIN} --hostname ${artifactId}"
+        sh "cf map-route ${appName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname ${artifactId}"
         def appExists = sh(script: "cf target ${legacyAppName}", returnStatus: true) == 0
         if (appExists) {
           // Delete old app. Do we have to unmap the routes?
