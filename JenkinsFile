@@ -70,7 +70,7 @@ node {
 
     // sonar
     sh """
-      ${env.SONAR_HOME}/bin/sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
+      sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
       -Dsonar.binaries=target/classes \
       -Dsonar.language=java \
       -Dsonar.links.scm=${env.GIT_URL} \
