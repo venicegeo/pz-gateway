@@ -39,7 +39,7 @@ node {
         -Dmaven.repo.local="${root}/.m2/repository" \
         -DartifactId=${artifactId} \
         -Dversion=${appvers}
-      """  */
+      """
   }
 
   stage('Scans') {
