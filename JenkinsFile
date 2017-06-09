@@ -1,4 +1,4 @@
-@Library('pipelib@master') _
+#!/usr/bin/groovy
 
 def THREADFIX_ID = env.THREADFIX_ID ? env.THREADFIX_ID : '115'
 
