@@ -18,7 +18,7 @@
 	<repositories>
 		<repository>
 			<id>nexus</id>
-			<url>${env.ARTIFACT_STORAGE_URL}</url>
+			<url>${ARTIFACT_STORAGE_URL}</url>
 		</repository>
 	</repositories>
 
