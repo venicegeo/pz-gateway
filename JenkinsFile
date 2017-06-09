@@ -69,8 +69,9 @@ node {
     """
 
     // sonar
+    def scannerHome = tool 'SonarQube Runner 2.8';
     sh """
-      sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
+      ${scannerHome}/bin/sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
       -Dsonar.binaries=target/classes \
       -Dsonar.language=java \
       -Dsonar.links.scm=${env.GIT_URL} \
