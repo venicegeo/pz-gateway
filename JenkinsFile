@@ -69,15 +69,14 @@ node {
     """
 
     // sonar
-    def scmUrl = (env.GIT_URL).tokenize('.')
     def scannerHome = tool 'SonarQube Runner 2.8';
     withSonarQubeEnv('DevOps Sonar') {
       sh """
         ${scannerHome}/bin/sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
         -Dsonar.binaries=target/classes \
         -Dsonar.language=java \
-        -Dsonar.links.scm=${scmUrl} \
-        -Dsonar.links.scm_dev=${env.GIT_URL} \
+        -Dsonar.links.scm=${env.GIT_URL} \
+        -Dsonar.links.scm_dev=${env.GIT_URL}.git \
         -Dsonar.projectKey=venicegeo:piazza:${artifactId} \
         -Dsonar.projectName=venicegeo:piazza:${artifactId} \
         -Dsonar.projectBaseDir=${root} \
