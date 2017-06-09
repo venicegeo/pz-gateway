@@ -70,28 +70,29 @@ node {
 
     // sonar
     def scannerHome = tool 'SonarQube Runner 2.8';
-    sh """
-      ${scannerHome}/bin/sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
-      -Dsonar.binaries=target/classes \
-      -Dsonar.language=java \
-      -Dsonar.links.scm=${env.GIT_URL} \
-      -Dsonar.links.scm_dev=${env.GIT_URL}.git \
-      -Dsonar.links.issue= \
-      -Dsonar.links.homepage= \
-      -Dsonar.links.ci=${env.JOB_URL} \
-      -Dsonar.projectKey=venicegeo:piazza:${artifactId} \
-      -Dsonar.projectName=venicegeo:piazza:${artifactId} \
-      -Dsonar.projectBaseDir=${root} \
-      -Dsonar.projectVersion=${appvers} \
-      -Dsonar.redmine.url= \
-      -Dsonar.redmine.api-access-key= \
-      -Dsonar.redmine.project-key= \
-      -Dsonar.sourceEncoding=utf-8 \
-      -Dsonar.sources=src/main/java \
-      -Dsonar.exclusions= \
-      -Dsonar.tests=src/test/java
-    """
-
+    withSonarQubeEnv('DevOps Sonar') {
+      sh """
+        ${scannerHome}/bin/sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
+        -Dsonar.binaries=target/classes \
+        -Dsonar.language=java \
+        -Dsonar.links.scm=${env.GIT_URL} \
+        -Dsonar.links.scm_dev=${env.GIT_URL}.git \
+        -Dsonar.links.issue= \
+        -Dsonar.links.homepage= \
+        -Dsonar.links.ci=${env.JOB_URL} \
+        -Dsonar.projectKey=venicegeo:piazza:${artifactId} \
+        -Dsonar.projectName=venicegeo:piazza:${artifactId} \
+        -Dsonar.projectBaseDir=${root} \
+        -Dsonar.projectVersion=${appvers} \
+        -Dsonar.redmine.url= \
+        -Dsonar.redmine.api-access-key= \
+        -Dsonar.redmine.project-key= \
+        -Dsonar.sourceEncoding=utf-8 \
+        -Dsonar.sources=src/main/java \
+        -Dsonar.exclusions= \
+        -Dsonar.tests=src/test/java
+      """
+    }
   }
 
   stage('CI Deploy') {
