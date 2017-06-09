@@ -24,11 +24,13 @@ node {
 
   stage('Archive') {
       sh """
-        mvn -DARTIFACT_STORAGE_URL=https://nexus.devops.geointservices.io/content/repositories/Piazza-Group/ -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
+        sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml
+        ${mvn}/bin/mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
         cp target/${targetName} ${root}/${archiveName}
       """
 
-     /* sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
+      sh """
+        mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
         -DrepositoryId=nexus \
         -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
         -DgroupId="org.piazza" \
