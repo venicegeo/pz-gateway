@@ -1,17 +1,12 @@
 #!/usr/bin/groovy
 
 node {
-  def mvn = tool 'M3'
   def root = pwd()
-
-  def targetName = "piazza-gateway-1.0.0.jar"
-  def artifactId = "pz-gateway"
-  def packaging = "jar"
-  def archiveName = "${artifactId}.${packaging}"
-
+  def mvn = tool 'M3'
 
   stage('Setup') {
     deleteDir()
+    // github is open gitlab requires credentials to clone
     if(env.GITLAB_CREDS) {
       git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GITLAB_CREDS}"
     } else {
@@ -20,176 +15,73 @@ node {
   }
 
   def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
-  def appName = "${artifactId}-${appvers}"
 
   stage('Archive') {
-      sh """
-        sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml
-        ${mvn}/bin/mvn -X clean package -U -Dmaven.repo.local=${root}/.m2/repository
-        cp target/${targetName} ${root}/${archiveName}
-      """
-
-      try {
-        sh """
-          mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${archiveName} \
-          -DrepositoryId=nexus \
-          -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
-          -DgroupId="org.piazza" \
-          -DgeneratePom=false \
-          -Dpackaging=${packaging} \
-          -Dmaven.repo.local="${root}/.m2/repository" \
-          -DartifactId=${artifactId} \
-          -Dversion=${appvers}
-        """
-      } catch (Exception error) {
-          sh "echo Error pushing to nexus. Maybe the artifact already exists."
-      }
+    sh """
+      ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
+      cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
+    """
+   sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/pz-gateway.jar \
+      -DrepositoryId=nexus \
+      -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
+      -DgroupId="org.piazza" \
+      -DgeneratePom=false \
+      -Dpackaging=jar \
+      -Dmaven.repo.local="${root}/.m2/repository" \
+      -DartifactId=pz-gateway \
+      -Dversion=${appvers}
+    """
   }
 
   stage('Scans') {
-    withCredentials([[$class: 'StringBinding', credentialsId: '978C467A-2B26-47AE-AD2F-4AFD5A4AF695', variable: 'THREADFIX_KEY']]) {
+    withCredentials([[$class: "StringBinding", credentialsId: "${env.THREADFIX_API_KEY}", variable: "THREADFIX_KEY"]]) {
       sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --version"
-      sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project '${artifactId}' --scan '.' --format 'XML' --enableExperimental --disableBundleAudit"
-      //sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
-    }
+      sh '/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project "pz-gateway" --scan "." --format "XML" --enableExperimental --disableBundleAudit'
+      sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
+      //ionConnect()
+      //sh """
+      //  mkdir -p ${root}/.m2/repository
+      //  ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
+      //    -Dmaven.repo.local=${root}/.m2/repository \
+      //    -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
+      //    -DdataFile=target/jacoco.exec
+      //"""
 
-    // ionConnect
-    /* This is working but needs creds
-    def pomFile = "${root}/pom.xml"
-    def ionConnect = tool 'ion-connect-latest'
-    def ioncmd = "${ionConnect}/linux/bin/ion-connect"
-    def jqLocation = tool 'jq-1.5'
-    def jqcmd = "${jqLocation}/jq"
-    sh """
-      resp=\$(${ioncmd} dependency resolve-dependencies-in-file --flatten --type maven ${pomFile})
-      deps=\$(echo \${resp} | ${jqcmd} .dependencies)
-      ${ioncmd} vulnerability get-vulnerabilities-for-list "\${deps}"
-    """
-    */
-    sh """
-      mkdir -p ${root}/.m2/repository
-      ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
-        -Dmaven.repo.local=${root}/.m2/repository \
-        -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
-        -DdataFile=target/jacoco.exec
-    """
-
-    // sonar
-    def scannerHome = tool 'SonarQube Runner 2.8';
-    withSonarQubeEnv('DevOps Sonar') {
       sh """
-        ${scannerHome}/bin/sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
-        -Dsonar.sources=src/main/java \
+        mkdir -p ${root}/.m2/repository
+        ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
+          -Dmaven.repo.local=${root}/.m2/repository \
+          -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
+          -DdataFile=target/jacoco.exec
+      """
+
+      sh """
+        sonar-scanner -Dsonar.jacoco.reportPath=target/jacoco.exec \
         -Dsonar.binaries=target/classes \
         -Dsonar.language=java \
         -Dsonar.links.scm=${env.GIT_URL} \
         -Dsonar.links.scm_dev=${env.GIT_URL}.git \
+        -Dsonar.links.issue= \
+        -Dsonar.links.homepage= \
+        -Dsonar.links.ci=${env.JOB_URL} \
         -Dsonar.projectKey=venicegeo:piazza:${artifactId} \
         -Dsonar.projectName=venicegeo:piazza:${artifactId} \
         -Dsonar.projectBaseDir=${root} \
+        -Dsonar.projectVersion=${appvers} \
+        -Dsonar.redmine.url= \
+        -Dsonar.redmine.api-gateway-key= \
+        -Dsonar.redmine.project-key= \
         -Dsonar.sourceEncoding=utf-8 \
-        -Dsonar.tests=src/test/java \
-        -Dsonar.projectVersion=${appvers}
+        -Dsonar.sources=src/main/java \
+        -Dsonar.exclusions= \
+        -Dsonar.tests=src/test/java
       """
+
+      //sh "${mvn}/bin/mvn install:install-file -Dmaven.repo.local=${root} -Dfile=pom.xml -DpomFile=pom.xml"
+      sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER} src/main/java/{*.java,**/*.java}"
+      sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER}  -scan -Xmx1G -f fortifyResults-${env.BUILD_NUMBER}.fpr"
+      sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
     }
-  }
-
-  stage('CI Deploy') {
-    sh """
-      cp target/${targetName} ${root}/${archiveName}
-    """
-    if(!fileExists('.cf')) {
-      sh "mkdir -p .cf"
-    }
-    /*withEnv(['CF_HOME=.cf']) {
-      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
-        sh "cf api ${env.PCF_API_ENDPOINT}"
-        sh "cf auth ${CFUSER} ${CFPASS}"
-        sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_ONE_PCF_SPACE}"
-        sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PHASE_ONE_PCF_DOMAIN} --no-start"
-        sh "cf set-env SPACE ${env.PHASE_ONE_PCF_SPACE}"
-        sh "cf set-env DOMAIN ${env.PHASE_ONE_PCF_DOMAIN}"
-        sh "cf start"
-
-        def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print \$4}'", returnStdout: true)
-        sh "cf map-route ${appName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname ${artifactId}"
-        def appExists = sh(script: "cf target ${legacyAppName}", returnStatus: true) == 0
-        if (appExists) {
-          // Delete old app. Do we have to unmap the routes?
-            sh "cf delete ${legacyAppName} -f"
-        }
-
-      }
-    }*/
-    
-    /*withCredentials([[$class: 'StringBinding', credentialsId: '978C467A-2B26-47AE-AD2F-4AFD5A4AF695', variable: 'THREADFIX_KEY']]) {
-      sh """${env.ZAPROXY_HOME}/zap.sh -cmd \
-        -quickout ${root}/out/zap.xml \
-        -quickurl https://${artifactId}-${appvers}.${env.PHASE_ONE_PCF_DOMAIN} \
-      """
-      cat ${root}/out/zap.xml
-      // Do we have to explicitly upload this to Threadfix or something?
-    }*/
-  }
-
-  stage('Integration Testing') {
-    //postman()
-  }
-
-  stage('Reset') {
-    if(env.GITLAB_CREDS) {
-      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GITLAB_CREDS}"
-    } else {
-      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
-    }
-  }
-
-  /*stage('Staging Deploy') {
-    withEnv(['CF_HOME=.cf']) {
-      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
-        sh "cf api ${env.PCF_API_ENDPOINT}"
-        sh "cf auth ${CFUSER} ${CFPASS}"
-        sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_TWO_PCF_SPACE}"
-        sh "cf push ${artifactId}-${appvers} --hostname ${artifactId}-${appvers} -f manifest.jenkins.yml -d ${env.PHASE_TWO_PCF_DOMAIN} --no-start"
-        sh "cf set-env SPACE ${env.PHASE_TWO_PCF_SPACE}"
-        sh "cf set-env DOMAIN ${env.PHASE_TWO_PCF_DOMAIN}"
-        sh "cf start"
-
-        def legacyAppName = sh(script: "cf routes | grep \"${artifactId} \" | awk '{print \$4}'", returnStdout: true)
-        sh "cf map-route ${appName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname ${artifactId}"
-        def appExists = sh(script: "cf target ${legacyAppName}", returnStatus: true) == 0
-        if (appExists) {
-          // Delete old app. Do we have to unmap the routes?
-            sh "cf delete ${legacyAppName} -f"
-        }
-
-      }
-    }
-  }*/
-
-  stage ('Stage: Integration Testing') {
-    /*postman {
-      cfSpace = 'stage'
-    }*/
-  }
-
-  stage('Reset') {
-    if(env.GITLAB_CREDS) {
-      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GITLAB_CREDS}"
-    } else {
-      git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
-    }
-  }
-
-  stage('Final Scans') {
-    sh """
-      ${mvn}/bin/mvn install:install-file -Dmaven.repo.local=${root}/.m2/repository -Dfile=pom.xml -DpomFile=pom.xml
-    """
-    /* fortify */
-    sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER} src/main/java/{*.java,**/*.java}"
-    sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER}  -scan -Xmx1G -f fortifyResults-${env.BUILD_NUMBER}.fpr"
-    //sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@fortifyResults-${env.BUILD_NUMBER}.fpr ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=$THREADFIX_KEY"
   }
 
 }
-
