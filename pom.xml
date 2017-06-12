@@ -63,7 +63,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.piazza</groupId>
+			<groupId>org.venice.piazza</groupId>
 			<artifactId>pz-jobcommon</artifactId>
 			<version>ato-sprite-155-g3018f08</version>
 		</dependency>
