@@ -86,7 +86,7 @@ node {
       sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
     }
     
-    withCredentials([string(credentialsId: '${env.sonar-prod-publish-token}', variable: 'USERNAME')]) {
+    withCredentials([string(credentialsId: "${env.sonar-prod-publish-token}", variable: 'USERNAME')]) {
       withEnv(["HOME=${root}", "_JAVA_OPTIONS=-Duser.home=${root}"]) {
         sh "${mvn}/bin/mvn sonar:sonar -Dmaven.repo.local=${root} -Dsonar.host.url=${sonarUrl} -Dsonar.projectKey=${projectKey} -Dsonar.projectName=${projectName} -Dsonar.login=${USERNAME} -P nga"
       }
