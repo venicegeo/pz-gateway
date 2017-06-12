@@ -3,10 +3,12 @@
 node {
   def root = pwd()
   def mvn = tool 'M3'
+  def zapHome = tool 'ZAProxy_v2_5_0'
   def sonarUrl = "https://sonar.gs.mil"
   def projectKey = "venicegeo:piazza:pz-gateway"
   def projectName = "venicegeo:piazza:pz-gateway"
-  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
+  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true).trim()
+  def appName = "pz-gateway-${appvers}"
   
   stage('Setup') {
     deleteDir()
@@ -20,6 +22,7 @@ node {
 
   stage('Archive') {
     sh """
+      sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml
       ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
       cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
     """
@@ -41,13 +44,18 @@ node {
       sh '/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project "pz-gateway" --scan "." --format "XML" --enableExperimental --disableBundleAudit'
       sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
       //ionConnect()
-      //sh """
-      //  mkdir -p ${root}/.m2/repository
-      //  ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
-      //    -Dmaven.repo.local=${root}/.m2/repository \
-      //    -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
-      //    -DdataFile=target/jacoco.exec
-      //"""
+      /* This is working but needs creds
+      def pomFile = "${root}/pom.xml"
+      def ionConnect = tool 'ion-connect-latest'
+      def ioncmd = "${ionConnect}/linux/bin/ion-connect"
+      def jqLocation = tool 'jq-1.5'
+      def jqcmd = "${jqLocation}/jq"
+      sh """
+        resp=\$(${ioncmd} dependency resolve-dependencies-in-file --flatten --type maven ${pomFile})
+        deps=\$(echo \${resp} | ${jqcmd} .dependencies)
+        ${ioncmd} vulnerability get-vulnerabilities-for-list "\${deps}"
+      """
+      */
 
       sh """
         mkdir -p ${root}/.m2/repository
@@ -66,6 +74,87 @@ node {
     withCredentials([string(credentialsId: 'sonar-prod-publish-token', variable: 'USERNAME')]) {
       withEnv(["HOME=${root}", "_JAVA_OPTIONS=-Duser.home=${root}"]) {
         sh "${mvn}/bin/mvn sonar:sonar -Dmaven.repo.local=${root} -Dsonar.host.url=${sonarUrl} -Dsonar.projectKey=${projectKey} -Dsonar.projectName=${projectName} -Dsonar.login=${USERNAME} -P nga"
+      }
+    }
+  }
+
+
+  stage ('Int Deploy') {
+    if(!fileExists('.cf')) {
+      sh "mkdir -p .cf"
+    }
+    withEnv(['CF_HOME=.cf']) {
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
+        sh "cf api ${env.PCF_API_ENDPOINT}"
+        sh "cf auth ${CFUSER} ${CFPASS}"
+        sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_ONE_PCF_SPACE}"
+        sh "cf push ${appName} -f manifest.jenkins.yml --hostname ${appName} -d ${env.PHASE_ONE_PCF_DOMAIN} --no-start"
+        sh "cf set-env ${appName} SPACE ${env.PHASE_ONE_PCF_SPACE}"
+        sh "cf set-env ${appName} DOMAIN ${env.PHASE_ONE_PCF_DOMAIN}"
+        sh "cf start ${appName}"
+      }
+    }
+    withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
+      sh """${zapHome}/zap.sh -cmd \
+        -quickout ${root}/out/zap.xml \
+        -quickurl https://${appName}.${env.PHASE_ONE_PCF_DOMAIN} \
+      """
+      echo "${root}/out/zap.xml"
+      // Do we have to explicitly upload this to Threadfix or something?
+    }
+    withEnv(['CF_HOME=.cf']) {
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
+        sh "cf api ${env.PCF_API_ENDPOINT}"
+        sh "cf auth ${CFUSER} ${CFPASS}"
+        sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_ONE_PCF_SPACE}"
+        def legacyAppNames = sh(script: "cf routes | grep \"pz-gateway \" | awk '{print \$4}'", returnStdout: true)
+        sh "cf map-route ${appName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname pz-gateway"
+        // Remove Legacy applications
+        for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
+          def legacyAppName = legacyApp.toString().trim()
+          sh "cf delete -f ${legacyAppName}"
+        }
+      }
+    }
+  }
+
+  if(DEPLOY_PHASE_TWO) {
+    stage('Stage Deploy') {
+      if(!fileExists('.cf')) {
+        sh "mkdir -p .cf"
+      }
+      withEnv(['CF_HOME=.cf']) {
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
+        sh "cf api ${env.PCF_API_ENDPOINT}"
+        sh "cf auth ${CFUSER} ${CFPASS}"
+        sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_TWO_PCF_SPACE}"
+        sh "cf push ${appName} --hostname ${appName} -f manifest.jenkins.yml -d ${env.PHASE_TWO_PCF_DOMAIN} --no-start"
+        sh "cf set-env ${appName} SPACE ${env.PHASE_TWO_PCF_SPACE}"
+        sh "cf set-env ${appName} DOMAIN ${env.PHASE_TWO_PCF_DOMAIN}"
+        sh "cf start ${appName}"
+        }
+      }
+      withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
+        sh """${zapHome}/zap.sh -cmd \
+        -quickout ${root}/out/zap.xml \
+        -quickurl https://${appName}.${env.PHASE_TWO_PCF_DOMAIN} \
+        """
+        echo "${root}/out/zap.xml"
+        // Do we have to explicitly upload this to Threadfix or something?
+      }
+      withEnv(['CF_HOME=.cf']) {
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'ldap_baxtersh', usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
+        sh "cf api ${env.PCF_API_ENDPOINT}"
+        sh "cf auth ${CFUSER} ${CFPASS}"
+        sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_TWO_PCF_SPACE}"
+        def legacyAppNames = sh(script: "cf routes | grep \"pz-gateway \" | awk '{print \$4}'", returnStdout: true)
+        sh "cf map-route ${appName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname pz-gateway"
+          // Remove Legacy applications
+          for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
+            def legacyAppName = legacyApp.toString().trim()
+            sh "cf delete -f ${legacyAppName}"
+          }
+        }
       }
     }
   }
