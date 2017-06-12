@@ -32,6 +32,7 @@ node {
       -DremoteRepositories="nexus::default::${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
       >> /dev/null 2>&1 \
     """, returnStatus: true)
+    echo "dependency status = ${getDependencyStatus}"
     if (getDependencyStatus == 0) {
       echo "Artifact version ${appvers} exists in Nexus, nothing to do"
     } else {
