@@ -65,7 +65,7 @@
 		<dependency>
 			<groupId>org.piazza</groupId>
 			<artifactId>pz-jobcommon</artifactId>
-			<version>ato-sprite-165-g6aacce1</version>
+			<version>ato-sprite-155-g3018f08</version>
 		</dependency>
 
 		<dependency>
