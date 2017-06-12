@@ -21,21 +21,36 @@ node {
   }
 
   stage('Archive') {
-    sh """
-      sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml
-      ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
-      cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
-    """
-   sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/pz-gateway.jar \
-      -DrepositoryId=nexus \
-      -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
-      -DgroupId="org.piazza" \
-      -DgeneratePom=false \
-      -Dpackaging=jar \
+    // Check if exists already
+    def getDependencyStatus = sh(script: """mvn --quiet --settings ~/.m2/settings.xml dependency:get \
       -Dmaven.repo.local="${root}/.m2/repository" \
+      -DrepositoryId=nexus \
       -DartifactId=pz-gateway \
-      -Dversion=${appvers}
-    """
+      -Dversion=${appvers} \
+      -DgroupId="org.venice.piazza" \
+      -Dpackaging=jar \
+      -DremoteRepositories="nexus::default::${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
+      >> /dev/null 2>&1 \
+    """, returnStatus: true)
+    if (getDependencyStatus == 0) {
+      echo "Artifact version ${appvers} exists in Nexus, nothing to do"
+    } else {
+      sh """
+        sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml
+        ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
+        cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
+      """
+     sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/pz-gateway.jar \
+        -DrepositoryId=nexus \
+        -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
+        -DgroupId="org.venice.piazza" \
+        -DgeneratePom=false \
+        -Dpackaging=jar \
+        -Dmaven.repo.local="${root}/.m2/repository" \
+        -DartifactId=pz-gateway \
+        -Dversion=${appvers}
+      """
+    }
   }
 
   stage('Scans') {
@@ -112,7 +127,9 @@ node {
         // Remove Legacy applications
         for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
           def legacyAppName = legacyApp.toString().trim()
-          sh "cf delete -f ${legacyAppName}"
+          if (legacyAppName != appName) {
+            sh "cf delete -f ${legacyAppName}"
+          }
         }
       }
     }
@@ -152,7 +169,9 @@ node {
           // Remove Legacy applications
           for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
             def legacyAppName = legacyApp.toString().trim()
-            sh "cf delete -f ${legacyAppName}"
+            if (legacyAppName != appName) {
+              sh "cf delete -f ${legacyAppName}"
+            }
           }
         }
       }
