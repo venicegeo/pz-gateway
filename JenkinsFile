@@ -8,10 +8,6 @@ node {
   def projectName = "venicegeo:piazza:pz-gateway"
   def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
   
-  environment {
-	ARTIFACT_STORAGE_URL = ${ARTIFACT_STORAGE_URL}
-  }
-    
   stage('Setup') {
     deleteDir()
     // github is open gitlab requires credentials to clone
