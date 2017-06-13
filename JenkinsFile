@@ -7,7 +7,8 @@ node {
   def sonarUrl = env.SONAR_URL
   def projectKey = "venicegeo:piazza:pz-gateway"
   def projectName = "venicegeo:piazza:pz-gateway"
-  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true).trim()
+  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
+  appvers = appvers.trim()
   def appName = "pz-gateway-${appvers}"
   
   stage('Setup') {
