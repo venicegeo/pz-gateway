@@ -24,7 +24,7 @@ node {
 
   stage('Archive') {
     // Check if exists already
-    def getDependencyStatus = sh(script: """mvn --quiet --settings ~/.m2/settings.xml dependency:get \
+    def getDependencyStatus = sh(script: """mvn -X --settings ~/.m2/settings.xml dependency:get \
       -Dmaven.repo.local="${root}/.m2/repository" \
       -DrepositoryId=nexus \
       -DartifactId=pz-gateway \
