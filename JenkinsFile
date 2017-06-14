@@ -114,12 +114,13 @@ node {
       }
     }
     withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
+      sh "mkdir -p ${root}/zap-out"
       sh """${zapHome}/zap.sh -cmd \
-        -quickout ${root}/out/zap.xml \
+        -quickout ${root}/zap-out/zap.xml \
         -quickurl https://${appName}.${env.PHASE_ONE_PCF_DOMAIN} \
       """
-      echo "${root}/out/zap.xml"
-      // Do we have to explicitly upload this to Threadfix or something?
+      sh "cat ${root}/zap-out/zap.xml"
+      //sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@${root}/zap-out/zap.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
     }
     withEnv(['CF_HOME=.cf']) {
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${env.PCF_CREDS}", usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
@@ -180,11 +181,11 @@ node {
       }
       withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
         sh """${zapHome}/zap.sh -cmd \
-        -quickout ${root}/out/zap.xml \
+        -quickout ${root}/zap-out/zap.xml \
         -quickurl https://${appName}.${env.PHASE_TWO_PCF_DOMAIN} \
         """
-        echo "${root}/out/zap.xml"
-        // Do we have to explicitly upload this to Threadfix or something?
+        sh "cat ${root}/zap-out/zap.xml"
+        //sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@${root}/zap-out/zap.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
       }
       withEnv(['CF_HOME=.cf']) {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${env.PCF_CREDS}", usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
