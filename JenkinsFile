@@ -4,6 +4,7 @@ node {
   def root = pwd()
   def mvn = tool 'M3'
   def zapHome = tool 'ZAProxy_v2_5_0'
+  def nodejs = tool 'NodeJS_6'
   def sonarUrl = env.SONAR_URL
   def projectKey = "venicegeo:piazza:pz-gateway"
   def projectName = "venicegeo:piazza:pz-gateway"
@@ -139,7 +140,27 @@ node {
     }
   }
 
-  if(DEPLOY_PHASE_TWO) {
+  if (!params.SKIP_INTEGRATION_TESTS) {
+    stage('Phase One Integration Tests') {
+      if(!fileExists("integration-tests")) {
+        sh "mkdir -p integration-tests"
+      }
+      // Clone Test Repository
+      withEnv(["PATH+=${root}/node_modules/newman/bin", "PCF_SPACE=int"]) {
+        dir ("integration-tests") {
+          if(env.GITLAB_CREDS) {
+            git url: "https://github.com/venicegeo/pztest-integration.git", branch: "master", credentialsId: "${env.GITLAB_CREDS}"
+          } else {
+            git url: "https://github.com/venicegeo/pztest-integration.git", branch: "master"
+          }
+          sh "npm install newman@2"
+          sh "ci/blackbox.sh"
+        }
+      }
+    }
+  }
+
+  if(params.DEPLOY_PHASE_TWO) {
     stage('Stage Deploy') {
       if(!fileExists('.cf')) {
         sh "mkdir -p .cf"
@@ -181,5 +202,16 @@ node {
         }
       }
     }
+
+    if (!params.SKIP_INTEGRATION_TESTS) {
+      stage('Phase Two Integration Tests') {
+        withEnv(["PATH+=${root}/node_modules/newman/bin", "PCF_SPACE=stage"]) {
+          dir ("integration-tests") {
+            sh "ci/blackbox.sh"
+          }
+        }
+      }
+    }
+
   }
 }
