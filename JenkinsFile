@@ -148,7 +148,7 @@ node {
       }
       // Clone Test Repository
       withCredentials([file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: 'POSTMAN_FILE')]) {
-        withEnv(["PATH+=${nodejs}/bin:${root}/integration-tests/node_modules/newman/bin", "PCF_SPACE=${env.PHASE_ONE_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
+        withEnv(["PATH=${root}/integration-tests/node_modules/newman/bin:${nodejs}/bin:$PATH", "PCF_SPACE=${env.PHASE_ONE_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
           dir ("integration-tests") {
             if(env.GITLAB_CREDS) {
               git url: "https://github.com/venicegeo/pztest-integration.git", branch: "master", credentialsId: "${env.GITLAB_CREDS}"
@@ -209,7 +209,7 @@ node {
     if (!params.SKIP_INTEGRATION_TESTS) {
       stage('Phase Two Integration Tests') {
         withCredentials([file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: 'POSTMAN_FILE')]) {
-          withEnv(["PATH+=${nodejs}/bin:${root}/integration-tests/node_modules/newman/bin", "PCF_SPACE=${env.PHASE_TWO_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
+          withEnv(["PATH=${root}/integration-tests/node_modules/newman/bin:${nodejs}/bin:$PATH", "PCF_SPACE=${env.PHASE_TWO_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
             dir ("integration-tests") {
               sh "ci/blackbox.sh"
             }
