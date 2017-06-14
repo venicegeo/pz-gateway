@@ -146,15 +146,17 @@ node {
         sh "mkdir -p integration-tests"
       }
       // Clone Test Repository
-      withEnv(["PATH+=${nodejs}/bin:${root}/node_modules/newman/bin", "PCF_SPACE=${env.PHASE_ONE_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
-        dir ("integration-tests") {
-          if(env.GITLAB_CREDS) {
-            git url: "https://github.com/venicegeo/pztest-integration.git", branch: "master", credentialsId: "${env.GITLAB_CREDS}"
-          } else {
-            git url: "https://github.com/venicegeo/pztest-integration.git", branch: "master"
+      withCredentials([file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: 'POSTMAN_FILE')]) {
+        withEnv(["PATH+=${nodejs}/bin:${root}/node_modules/newman/bin", "PCF_SPACE=${env.PHASE_ONE_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
+          dir ("integration-tests") {
+            if(env.GITLAB_CREDS) {
+              git url: "https://github.com/venicegeo/pztest-integration.git", branch: "master", credentialsId: "${env.GITLAB_CREDS}"
+            } else {
+              git url: "https://github.com/venicegeo/pztest-integration.git", branch: "master"
+            }
+            sh "npm install newman@2"
+            sh "ci/blackbox.sh"
           }
-          sh "npm install newman@2"
-          sh "ci/blackbox.sh"
         }
       }
     }
@@ -205,9 +207,11 @@ node {
 
     if (!params.SKIP_INTEGRATION_TESTS) {
       stage('Phase Two Integration Tests') {
-        withEnv(["PATH+=${nodejs}/bin:${root}/node_modules/newman/bin", "PCF_SPACE=${env.PHASE_TWO_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
-          dir ("integration-tests") {
-            sh "ci/blackbox.sh"
+        withCredentials([file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: 'POSTMAN_FILE')]) {
+          withEnv(["PATH+=${nodejs}/bin:${root}/node_modules/newman/bin", "PCF_SPACE=${env.PHASE_TWO_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
+            dir ("integration-tests") {
+              sh "ci/blackbox.sh"
+            }
           }
         }
       }
