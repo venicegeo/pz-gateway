@@ -63,18 +63,21 @@ node {
       //sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
 
       //ionConnect()
-      /* This is working but needs creds
-      def pomFile = "${root}/pom.xml"
-      def ionConnect = tool 'ion-connect-latest'
-      def ioncmd = "${ionConnect}/linux/bin/ion-connect"
-      def jqLocation = tool 'jq-1.5'
-      def jqcmd = "${jqLocation}/jq"
-      sh """
-        resp=\$(${ioncmd} dependency resolve-dependencies-in-file --flatten --type maven ${pomFile})
-        deps=\$(echo \${resp} | ${jqcmd} .dependencies)
-        ${ioncmd} vulnerability get-vulnerabilities-for-list "\${deps}"
-      """
-      */
+      def iontool = tool 'ion-connect-latest'
+      withEnv([
+        "ION_CONNECT_LATEST_HOME=${ionTool}",
+        "PATH+ION=${ionTool}/linux/bin",
+        "PATH+JQ=${tool 'jq1_5'}"
+      ]) {
+        withCredentials([string(credentialsId: "${env.IONCHANNEL_SECRET_KEY}", variable: 'IONCHANNEL_SECRET_KEY')]) {
+          def pomFile = "${root}/pom.xml"
+          sh """
+            resp=\$(ion-connect dependency resolve-dependencies-in-file --flatten --type maven ${pomFile})
+            deps=\$(echo \${resp} | jq .dependencies)
+            ion-connect vulnerability get-vulnerabilities-for-list "\${deps}"
+          """
+        }
+      }
 
       sh """
         mkdir -p ${root}/.m2/repository
