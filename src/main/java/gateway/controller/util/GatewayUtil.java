@@ -141,7 +141,7 @@ public class GatewayUtil {
 	public String sendJobRequest(PiazzaJobRequest request, String jobId) throws PiazzaJobException {
 		
 		// Generate a Job Id
-		final String finalJobId = (jobId == null ? getUuid() : jobId);
+		final String finalJobId = jobId == null ? getUuid() : jobId;
 		
 		try {
 			// Send the message to Job Manager
