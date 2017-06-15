@@ -20,7 +20,11 @@ node {
   }
 
   stage('Archive') {
-    sh "sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml"
+    sh """
+      sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml
+      ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
+      cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
+    """    
     // Check if exists already
     def getDependencyStatus = sh(script: """mvn -X --settings ~/.m2/settings.xml dependency:get \
       -Dmaven.repo.local="${root}/.m2/repository" \
@@ -36,10 +40,7 @@ node {
     if (getDependencyStatus == 0) {
       echo "Artifact version ${appvers} exists in Nexus, nothing to do"
     } else {
-      sh """
-        ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
-        cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
-      """
+
      sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/pz-gateway.jar \
         -DrepositoryId=nexus \
         -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
