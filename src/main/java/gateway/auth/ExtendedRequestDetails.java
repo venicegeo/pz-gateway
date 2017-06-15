@@ -15,8 +15,6 @@
  **/
 package gateway.auth;
 
-import java.io.Serializable;
-
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -27,8 +25,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author Patrick.Doody
  *
  */
-public class ExtendedRequestDetails implements Serializable {
-	private static final long serialVersionUID = 1L;
+public class ExtendedRequestDetails {
 
 	private HttpServletRequest request;
 
