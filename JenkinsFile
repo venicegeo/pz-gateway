@@ -5,9 +5,6 @@ node {
   def mvn = tool 'M3'
   def zapHome = tool 'ZAProxy_v2_5_0'
   def nodejs = tool 'NodeJS_6'
-  def sonarUrl = env.SONAR_URL
-  def projectKey = "venicegeo:piazza:pz-gateway"
-  def projectName = "venicegeo:piazza:pz-gateway"
   def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
   appvers = appvers.trim()
   def appName = "pz-gateway-${appvers}"
@@ -95,7 +92,8 @@ node {
     
     withCredentials([string(credentialsId: "${env.SONAR_TOKEN}", variable: 'USERNAME')]) {
       withEnv(["HOME=${root}", "_JAVA_OPTIONS=-Duser.home=${root}"]) {
-        sh "${mvn}/bin/mvn sonar:sonar -Dmaven.repo.local=${root} -Dsonar.host.url=${sonarUrl} -Dsonar.projectKey=${projectKey} -Dsonar.projectName=${projectName} -Dsonar.login=${USERNAME} -P nga"
+        def projectId = "venicegeo:piazza:pz-gateway"
+        sh "${mvn}/bin/mvn sonar:sonar -Dmaven.repo.local=${root} -Dsonar.host.url=${env.SONAR_URL} -Dsonar.projectKey=${projectId} -Dsonar.projectName=${projectId} -Dsonar.login=${USERNAME} -P nga"
       }
     }
   }
