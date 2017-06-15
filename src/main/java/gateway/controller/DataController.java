@@ -138,7 +138,7 @@ public class DataController extends PiazzaRestController {
 					new AuditElement(dn, "requestDataList", ""));
 
 			// Validate params
-			String validationError = null;
+			String validationError;
 			if ((order != null && (validationError = gatewayUtil.validateInput("order", order)) != null)
 					|| (page != null && (validationError = gatewayUtil.validateInput("page", page)) != null)
 					|| (perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null)) {
@@ -581,7 +581,6 @@ public class DataController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			String userName = gatewayUtil.getPrincipalName(user);
 			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s requested file download for Data %s", gatewayUtil.getPrincipalName(user), dataId),
 					Severity.INFORMATIONAL, new AuditElement(dn, "requestDownloadFile", dataId));

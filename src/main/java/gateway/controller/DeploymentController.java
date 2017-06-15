@@ -170,7 +170,7 @@ public class DeploymentController extends PiazzaRestController {
 					new AuditElement(dn, "requestDeploymentList", ""));
 
 			// Validate params
-			String validationError = null;
+			String validationError;
 			if ((order != null && (validationError = gatewayUtil.validateInput("order", order)) != null)
 					|| (page != null && (validationError = gatewayUtil.validateInput("page", page)) != null)
 					|| (perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null)) {

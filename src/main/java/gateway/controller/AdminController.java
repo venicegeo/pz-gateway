@@ -136,7 +136,9 @@ public class AdminController extends PiazzaRestController {
 				LOGGER.info("Could not find local version. Delegating to pz-release endpoint.", exception);
 			} finally {
 				try {
-					templateStream.close();
+					if( templateStream != null ) {
+						templateStream.close();
+					}
 				} catch (Exception exception) {
 					LOGGER.error("Error closing Local Version Number Input Stream.", exception);
 				}
