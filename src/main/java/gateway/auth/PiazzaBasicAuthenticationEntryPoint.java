@@ -46,7 +46,7 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 	@Autowired
 	private PiazzaLogger logger;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(PiazzaBasicAuthenticationEntryPoint.class);
+	private final static Logger LOG = LoggerFactory.getLogger(PiazzaBasicAuthenticationEntryPoint.class);
 
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authEx)
@@ -63,7 +63,7 @@ public class PiazzaBasicAuthenticationEntryPoint extends BasicAuthenticationEntr
 			logger.log(String.format("Unable to authenticate a user with Auth Type %s.", request.getAuthType()), Severity.ERROR);
 		} catch (Exception exception) {
 			String errorString = String.format("Exception encountered during Authorization check: %s.", exception.getMessage());
-			LOGGER.error(errorString, exception);
+			LOG.error(errorString, exception);
 			logger.log(errorString, Severity.ERROR);
 		}
 

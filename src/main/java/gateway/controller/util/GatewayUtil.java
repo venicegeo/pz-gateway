@@ -99,7 +99,7 @@ public class GatewayUtil {
 	@Value("${vcap.services.pz-blobstore.credentials.encryption_key}")
 	private String S3_KMS_CMK_ID;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(GatewayUtil.class);
+	private final static Logger LOG = LoggerFactory.getLogger(GatewayUtil.class);
 
 	private Producer<String, String> producer;
 	private AmazonS3 s3Client;
@@ -163,7 +163,7 @@ public class GatewayUtil {
 			return ((JobResponse) jobResponse.getBody()).data.getJobId();
 		} catch (Exception exception) {
 			String error = String.format("Error with Job Manager when Requesting New Piazza Job: %s", exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			// Log the failure
 			logger.log(String.format("Job Request at Gateway failed for Job %s", finalJobId), Severity.ERROR,
 					new AuditElement(request.createdBy, "failedRequestJob", finalJobId));
@@ -194,7 +194,7 @@ public class GatewayUtil {
 			return uuidFactory.getUUID();
 		} catch (Exception exception) {
 			String error = String.format("Could not connect to UUID Service for UUID: %s", exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			throw new PiazzaJobException(error);
 		}
 	}
@@ -283,6 +283,9 @@ public class GatewayUtil {
 				return "'page' parameter must be zero or greater.";
 			}
 			break;
+		default:
+			LOG.warn("Invalid type provided: {}", type);
+			break;
 		}
 		return null;
 	}
@@ -298,7 +301,7 @@ public class GatewayUtil {
 		try {
 			return objectMapper.readValue(errorBody, ErrorResponse.class);
 		} catch (Exception exception) {
-			LOGGER.error(String.format("Error Serializing Error Body (%s) into ErrorResponse class.", errorBody), exception);
+			LOG.error(String.format("Error Serializing Error Body (%s) into ErrorResponse class.", errorBody), exception);
 			return new ErrorResponse(errorBody, "Gateway");
 		}
 	}

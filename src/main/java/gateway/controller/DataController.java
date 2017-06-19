@@ -100,10 +100,13 @@ public class DataController extends PiazzaRestController {
 	private static final String DEFAULT_ORDER = "desc";
 	private static final String DEFAULT_SORTBY = "metadata.createdOn";
 	private static final String DEFAULT_SORTBY_ES = "dataResource.metadata.createdOn"; // schema for Elasticsearch
+	private static final String GATEWAY = "Gateway";
+	private static final String URL_FORMAT = "%s/%s/%s";
+
 	@Autowired
 	private RestTemplate restTemplate;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(DataController.class);
+	private final static Logger LOG = LoggerFactory.getLogger(DataController.class);
 
 	/**
 	 * Returns a queried list of Data Resources previously loaded into Piazza.
@@ -138,13 +141,15 @@ public class DataController extends PiazzaRestController {
 					new AuditElement(dn, "requestDataList", ""));
 
 			// Validate params
-			String validationError;
-			if ((order != null && (validationError = gatewayUtil.validateInput("order", order)) != null)
-					|| (page != null && (validationError = gatewayUtil.validateInput("page", page)) != null)
-					|| (perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null)) {
-				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, "Gateway"), HttpStatus.BAD_REQUEST);
+			String validationError = null;
+			final boolean isOrderInvalid = order != null && (validationError = gatewayUtil.validateInput("order", order)) != null;
+			final boolean isPageInvalid = page != null && (validationError = gatewayUtil.validateInput("page", page)) != null;
+			final boolean isPerPageInvalid = perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null;
+			
+			if ( isOrderInvalid	|| isPageInvalid || isPerPageInvalid ) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, GATEWAY), HttpStatus.BAD_REQUEST);
 			}
-
+			
 			// Proxy the request to Pz-Access
 			String url = String.format("%s/%s?page=%s&perPage=%s", ACCESS_URL, "data", page, perPage);
 			// Attach keywords if specified
@@ -172,14 +177,14 @@ public class DataController extends PiazzaRestController {
 						new AuditElement(dn, "successDataList", ""));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error querying data.", hee);
+				LOG.error("Error querying data.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -256,9 +261,9 @@ public class DataController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Loading Data for user %s of type %s:  %s", gatewayUtil.getPrincipalName(user),
 					job.getData().getDataType(), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -294,8 +299,8 @@ public class DataController extends PiazzaRestController {
 			} catch (Exception exception) {
 				String error = String.format("Incorrect JSON passed through the `data` parameter. Please verify input. Error: %s",
 						exception.getMessage());
-				LOGGER.error(error, exception);
-				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.BAD_REQUEST);
+				LOG.error(error, exception);
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.BAD_REQUEST);
 			}
 			// Ensure the user isn't trying to hack a dataId into their request.
 			job.getData().setDataId(null);
@@ -335,21 +340,21 @@ public class DataController extends PiazzaRestController {
 			String systemError = String.format("Error Loading Data File for user %s with error: %s", gatewayUtil.getPrincipalName(user),
 					amazonException.getMessage());
 			String userError = "There was an issue pushing the file to Piazza S3 Bucket. Please contact a Piazza administrator for details.";
-			LOGGER.error(systemError, amazonException);
+			LOG.error(systemError, amazonException);
 			logger.log(systemError, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(userError, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(userError, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (InvalidInputException invalidInputException) {
 			String error = String.format("Invalid Inputs for Loading Data File for user %s of type %s", gatewayUtil.getPrincipalName(user),
 					invalidInputException.getMessage());
-			LOGGER.error(error, invalidInputException);
+			LOG.error(error, invalidInputException);
 			logger.log(error, Severity.INFORMATIONAL);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.BAD_REQUEST);
 		} catch (Exception exception) {
 			String error = String.format("Error Loading Data File for user %s of type %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -383,21 +388,21 @@ public class DataController extends PiazzaRestController {
 			// Proxy the request to Pz-Access
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
-						.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "data", dataId), DataResourceResponse.class).getBody(),
+						.getForEntity(String.format(URL_FORMAT, ACCESS_URL, "data", dataId), DataResourceResponse.class).getBody(),
 						HttpStatus.OK);
 				logger.log(String.format("User %s successfully got Resource Metadata for Data %s", userName, dataId),
 						Severity.INFORMATIONAL, new AuditElement(dn, "successGetData", dataId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Getting Data Id " + dataId, hee);
+				LOG.error("Error Getting Data Id " + dataId, hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Loading Metadata for item %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -429,21 +434,21 @@ public class DataController extends PiazzaRestController {
 			// Proxy the request to Pz-ingest
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
-						.exchange(String.format("%s/%s/%s", INGEST_URL, "data", dataId), HttpMethod.DELETE, null, SuccessResponse.class)
+						.exchange(String.format(URL_FORMAT, INGEST_URL, "data", dataId), HttpMethod.DELETE, null, SuccessResponse.class)
 						.getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s successfully deleted Data Id %s", userName, dataId), Severity.INFORMATIONAL,
 						new AuditElement(dn, "successDeleteData", dataId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Deleting Data Id " + dataId, hee);
+				LOG.error("Error Deleting Data Id " + dataId, hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Deleting Data for item %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -479,21 +484,21 @@ public class DataController extends PiazzaRestController {
 			// Proxy the request to Ingest
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
-						.postForEntity(String.format("%s/%s/%s", INGEST_URL, "data", dataId), metadata, SuccessResponse.class).getBody(),
+						.postForEntity(String.format(URL_FORMAT, INGEST_URL, "data", dataId), metadata, SuccessResponse.class).getBody(),
 						HttpStatus.OK);
 				logger.log(String.format("User %s successfully Updated of Metadata for %s.", userName, dataId), Severity.INFORMATIONAL,
 						new AuditElement(dn, "successUpdateDataMetadata", dataId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Updating Metadata.", hee);
+				LOG.error("Error Updating Metadata.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Updating Metadata for item %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -547,14 +552,14 @@ public class DataController extends PiazzaRestController {
 						new AuditElement(dn, "successDataQuery", ""));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Querying Data.", hee);
+				LOG.error("Error Querying Data.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -600,15 +605,15 @@ public class DataController extends PiazzaRestController {
 						dataId), Severity.INFORMATIONAL, new AuditElement(dn, "successDownloadFile", dataId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Downloading File.", hee);
+				LOG.error("Error Downloading File.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error downloading file for Data %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.INFORMATIONAL);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }

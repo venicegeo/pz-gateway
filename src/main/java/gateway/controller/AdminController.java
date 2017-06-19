@@ -17,6 +17,7 @@ package gateway.controller;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,8 +103,11 @@ public class AdminController extends PiazzaRestController {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(AdminController.class);
+	private final static Logger LOG = LoggerFactory.getLogger(AdminController.class);
 
+	private final static String GATEWAY = "Gateway";
+	private final static String AUTHORIZATION = "Authorization";
+	
 	/**
 	 * Healthcheck required for all Piazza Core Services
 	 * 
@@ -123,7 +127,7 @@ public class AdminController extends PiazzaRestController {
 	 */
 	@ApiOperation(hidden = true, value = "Version")
 	@RequestMapping(value = "/version", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<?> getVersion() {
+	public ResponseEntity getVersion() {
 		try {
 			// Check for local file
 			InputStream templateStream = null;
@@ -133,23 +137,23 @@ public class AdminController extends PiazzaRestController {
 				localVersionJson = IOUtils.toString(templateStream);
 				return new ResponseEntity<String>(localVersionJson, HttpStatus.OK);
 			} catch (Exception exception) {
-				LOGGER.info("Could not find local version. Delegating to pz-release endpoint.", exception);
+				LOG.info("Could not find local version. Delegating to pz-release endpoint.", exception);
 			} finally {
 				try {
 					if( templateStream != null ) {
 						templateStream.close();
 					}
 				} catch (Exception exception) {
-					LOGGER.error("Error closing Local Version Number Input Stream.", exception);
+					LOG.error("Error closing Local Version Number Input Stream.", exception);
 				}
 			}
 
-			LOGGER.info("Returning release information from pz-release endpoint.");
+			LOG.info("Returning release information from pz-release endpoint.");
 			return new ResponseEntity<String>(restTemplate.getForObject(RELEASE_URL, String.class), HttpStatus.OK);
 		} catch (Exception e) {
 			String error = String.format("Error retrieving version for Piazza: %s", e.getMessage());
-			LOGGER.error(error, e);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			LOG.error(error, e);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -218,19 +222,19 @@ public class AdminController extends PiazzaRestController {
 	public ResponseEntity<PiazzaResponse> getExistingApiKeyV2() {
 		try {
 			HttpHeaders headers = new HttpHeaders();
-			headers.set("Authorization", request.getHeader("Authorization"));
+			headers.set(AUTHORIZATION, request.getHeader(AUTHORIZATION));
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(SECURITY_URL + "/v2/key", HttpMethod.GET,
 						new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error(hee.getResponseBodyAsString(), hee);
+				LOG.error(hee.getResponseBodyAsString(), hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error retrieving API Key: %s", exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -260,14 +264,14 @@ public class AdminController extends PiazzaRestController {
 						new AuditElement(dn, "successUserProfile", username));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error querying User Profile.", hee);
+				LOG.error("Error querying User Profile.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error retrieving User Profile : %s", exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -279,19 +283,19 @@ public class AdminController extends PiazzaRestController {
 	private ResponseEntity<PiazzaResponse> generateNewApiKey() {
 		try {
 			HttpHeaders headers = new HttpHeaders();
-			headers.set("Authorization", request.getHeader("Authorization"));
+			headers.set(AUTHORIZATION, request.getHeader(AUTHORIZATION));
 			try {
 				return new ResponseEntity<PiazzaResponse>(restTemplate.exchange(SECURITY_URL + "/v2/key", HttpMethod.POST,
 						new HttpEntity<String>("parameters", headers), UUIDResponse.class).getBody(), HttpStatus.CREATED);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error(hee.getResponseBodyAsString(), hee);
+				LOG.error(hee.getResponseBodyAsString(), hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error retrieving API Key: %s", exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }
