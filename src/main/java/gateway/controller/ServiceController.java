@@ -604,7 +604,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<?> getServiceQueueData(@PathVariable(value = "serviceId") String serviceId, Principal user) {
+	public ResponseEntity getServiceQueueData(@PathVariable(value = "serviceId") String serviceId, Principal user) {
 		try {
 			// Log the Request
 			String userName = gatewayUtil.getPrincipalName(user);

@@ -150,26 +150,9 @@ public class DataController extends PiazzaRestController {
 				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, GATEWAY), HttpStatus.BAD_REQUEST);
 			}
 			
+			final String url = constructURL(page, perPage, keyword, createdBy, order, sortBy, createdByJobId);
+			
 			// Proxy the request to Pz-Access
-			String url = String.format("%s/%s?page=%s&perPage=%s", ACCESS_URL, "data", page, perPage);
-			// Attach keywords if specified
-			if ((keyword != null) && (keyword.isEmpty() == false)) {
-				url = String.format("%s&keyword=%s", url, keyword);
-			}
-			// Add username if specified
-			if ((createdBy != null) && (createdBy.isEmpty() == false)) {
-				url = String.format("%s&userName=%s", url, createdBy);
-			}
-			// Add optional pagination
-			if ((order != null) && (order.isEmpty() == false)) {
-				url = String.format("%s&order=%s", url, order);
-			}
-			if ((sortBy != null) && (sortBy.isEmpty() == false)) {
-				url = String.format("%s&sortBy=%s", url, sortBy);
-			}
-			if ((createdByJobId != null) && (createdByJobId.isEmpty() == false)) {
-				url = String.format("%s&createdByJobId=%s", url, createdByJobId);
-			}
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
 						restTemplate.getForEntity(url, DataResourceListResponse.class).getBody(), HttpStatus.OK);
@@ -186,6 +169,37 @@ public class DataController extends PiazzaRestController {
 			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+	
+	private String constructURL(final Integer page, 
+			final Integer perPage, 
+			final String keyword, 
+			final String createdBy, 
+			final String order, 
+			final String sortBy, 
+			final String createdByJobId) {
+		
+		String url = String.format("%s/%s?page=%s&perPage=%s", ACCESS_URL, "data", page, perPage);
+		// Attach keywords if specified
+		if ((keyword != null) && (keyword.isEmpty() == false)) {
+			url = String.format("%s&keyword=%s", url, keyword);
+		}
+		// Add username if specified
+		if ((createdBy != null) && (createdBy.isEmpty() == false)) {
+			url = String.format("%s&userName=%s", url, createdBy);
+		}
+		// Add optional pagination
+		if ((order != null) && (order.isEmpty() == false)) {
+			url = String.format("%s&order=%s", url, order);
+		}
+		if ((sortBy != null) && (sortBy.isEmpty() == false)) {
+			url = String.format("%s&sortBy=%s", url, sortBy);
+		}
+		if ((createdByJobId != null) && (createdByJobId.isEmpty() == false)) {
+			url = String.format("%s&createdByJobId=%s", url, createdByJobId);
+		}
+		
+		return url;
 	}
 
 	/**
@@ -574,13 +588,14 @@ public class DataController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return The bytes of the file as a download, or an Error if the file cannot be retrieved.
 	 */
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/file/{dataId}", method = RequestMethod.GET)
 	@ApiOperation(value = "Download Data File", notes = "Gets the Bytes of Data loaded into Piazza. Only works for Data that is stored internally by Piazza.", tags = "Data")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The downloaded data file, byte array.", response = Byte[].class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<?> getFile(
+	public ResponseEntity getFile(
 			@ApiParam(value = "The Id of the Data to download.", required = true) @PathVariable(value = "dataId") String dataId,
 			@ApiParam(value = "Specify the name of the file that the user wishes to retrieve the data as. This will set the content-disposition header.") @RequestParam(value = "fileName", required = false) String fileName,
 			Principal user) {

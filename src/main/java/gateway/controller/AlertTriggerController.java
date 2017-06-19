@@ -110,6 +110,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user making the request
 	 * @return The Trigger, or an error.
 	 */
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/trigger", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)
 	@ApiOperation(value = "Creates a Trigger", notes = "Creates a new Trigger", tags = { "Trigger", "Workflow" })
@@ -225,13 +226,14 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * 
 	 * @return The list of Triggers, or an error.
 	 */
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/trigger", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "List Triggers", notes = "Returns an array of Triggers", tags = { "Trigger", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Triggers.", response = TriggerListResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<?> getTriggers(
+	public ResponseEntity getTriggers(
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
@@ -288,6 +290,7 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return Trigger information, or an error
 	 */
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/trigger/{triggerId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Gets a Trigger", notes = "Gets a Trigger by its Id.", tags = { "Trigger", "Workflow" })
 	@ApiResponses(value = {
@@ -295,7 +298,7 @@ public class AlertTriggerController extends PiazzaRestController {
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<?> getTrigger(
+	public ResponseEntity getTrigger(
 			@ApiParam(value = "The Id of the Trigger to retrieve.", required = true) @PathVariable(value = "triggerId") String triggerId,
 			Principal user) {
 		try {
@@ -386,13 +389,14 @@ public class AlertTriggerController extends PiazzaRestController {
 	 * 
 	 * @return The list of Alerts, or an error
 	 */
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/alert", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get User Alerts", notes = "Gets all of the Alerts", tags = { "Alert", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The list of Alerts.", response = AlertListResponse.class),
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<?> getAlerts(
+	public ResponseEntity getAlerts(
 			@ApiParam(value = "Paginating large numbers of results. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
 			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
 			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
@@ -452,13 +456,14 @@ public class AlertTriggerController extends PiazzaRestController {
 	 *            The user submitting the request
 	 * @return Trigger information, or an error
 	 */
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/alert/{alertId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get Alert Information", notes = "Gets an Alert by its Id", tags = { "Alert", "Workflow" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "The Alert", response = Alert.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 404, message = "Not Found", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<?> getAlert(
+	public ResponseEntity getAlert(
 			@ApiParam(value = "The Id of the Alert to retrieve data for.", required = true) @PathVariable(value = "alertId") String alertId,
 			Principal user) {
 		try {
