@@ -596,6 +596,7 @@ public class ServiceController extends PiazzaRestController {
 	 *            The ID of the Service
 	 * @return Map containing information regarding the Task-Managed Service
 	 */
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = {
 			"/service/{serviceId}/task/metadata" }, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get Task-Managed Service Metadata", notes = "Returns specific metadata on the current Job Queue for a Task-Managed Service, such as the number of jobs currently in the queue.", tags = {
