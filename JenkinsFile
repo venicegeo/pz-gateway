@@ -3,11 +3,12 @@
 node {
   def root = pwd()
   def mvn = tool 'M3'
+  def zapHome = tool 'ZAProxy_v2_5_0'
+  def nodejs = tool 'NodeJS_6'
   def sonarUrl = "https://sonar.gs.mil"
   def projectKey = "venicegeo:piazza:pz-gateway"
   def projectName = "venicegeo:piazza:pz-gateway"
-  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
-    
+
   stage('Setup') {
     deleteDir()
     // github is open gitlab requires credentials to clone
@@ -18,11 +19,18 @@ node {
     }
   }
 
+  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
+  appvers = appvers.trim()
+  def appName = "pz-gateway-${appvers}"
+
   stage('Archive') {
     sh """
       ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
       cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
     """
+    // Check if exists already
+    def getDependencyStatus = sh(script: """mvn -X --settings ~/.m2/settings.xml dependency:get \
+      -Dmaven.repo.local="${root}/.m2/repository" \
    sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/pz-gateway.jar \
       -DrepositoryId=nexus \
       -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
@@ -62,7 +70,7 @@ node {
       sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER}  -scan -Xmx1G -f fortifyResults-${env.BUILD_NUMBER}.fpr"
       sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
     }
-    
+
     withCredentials([string(credentialsId: 'sonar-prod-publish-token', variable: 'USERNAME')]) {
       withEnv(["HOME=${root}", "_JAVA_OPTIONS=-Duser.home=${root}"]) {
         sh "${mvn}/bin/mvn sonar:sonar -Dmaven.repo.local=${root} -Dsonar.host.url=${sonarUrl} -Dsonar.projectKey=${projectKey} -Dsonar.projectName=${projectName} -Dsonar.login=${USERNAME} -P nga"
