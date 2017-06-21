@@ -15,9 +15,7 @@
  **/
 package gateway.controller;
 
-import java.io.File;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,10 +101,10 @@ public class AdminController extends PiazzaRestController {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	private final static Logger LOG = LoggerFactory.getLogger(AdminController.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AdminController.class);
 
-	private final static String GATEWAY = "Gateway";
-	private final static String AUTHORIZATION = "Authorization";
+	private static final String GATEWAY = "Gateway";
+	private static final String AUTHORIZATION = "Authorization";
 	
 	/**
 	 * Healthcheck required for all Piazza Core Services
