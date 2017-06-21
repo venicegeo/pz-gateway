@@ -5,10 +5,10 @@ node {
   def mvn = tool 'M3'
   def zapHome = tool 'ZAProxy_v2_5_0'
   def nodejs = tool 'NodeJS_6'
-  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
-  appvers = appvers.trim()
-  def appName = "pz-gateway-${appvers}"
-  
+  def sonarUrl = "https://sonar.gs.mil"
+  def projectKey = "venicegeo:piazza:pz-gateway"
+  def projectName = "venicegeo:piazza:pz-gateway"
+
   stage('Setup') {
     deleteDir()
     // github is open gitlab requires credentials to clone
@@ -19,39 +19,28 @@ node {
     }
   }
 
+  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
+  appvers = appvers.trim()
+  def appName = "pz-gateway-${appvers}"
+
   stage('Archive') {
     sh """
-      sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml
       ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
       cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
-    """    
+    """
     // Check if exists already
     def getDependencyStatus = sh(script: """mvn -X --settings ~/.m2/settings.xml dependency:get \
       -Dmaven.repo.local="${root}/.m2/repository" \
+   sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/pz-gateway.jar \
       -DrepositoryId=nexus \
-      -DartifactId=pz-gateway \
-      -Dversion=${appvers} \
+      -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
       -DgroupId="org.venice.piazza" \
+      -DgeneratePom=false \
       -Dpackaging=jar \
-      -DremoteRepositories="nexus::default::${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
-      >> /dev/null 2>&1 \
-    """, returnStatus: true)
-    echo "dependency status = ${getDependencyStatus}"
-    if (getDependencyStatus == 0) {
-      echo "Artifact version ${appvers} exists in Nexus, nothing to do"
-    } else {
-
-     sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/pz-gateway.jar \
-        -DrepositoryId=nexus \
-        -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
-        -DgroupId="org.venice.piazza" \
-        -DgeneratePom=false \
-        -Dpackaging=jar \
-        -Dmaven.repo.local="${root}/.m2/repository" \
-        -DartifactId=pz-gateway \
-        -Dversion=${appvers}
-      """
-    }
+      -Dmaven.repo.local="${root}/.m2/repository" \
+      -DartifactId=pz-gateway \
+      -Dversion=${appvers}
+    """
   }
 
   stage('Scans') {
@@ -59,23 +48,14 @@ node {
       sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --version"
       sh '/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project "pz-gateway" --scan "." --format "XML" --enableExperimental --disableBundleAudit'
       sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
-
       //ionConnect()
-      def ionTool = tool 'ion-connect-latest'
-      withEnv([
-        "ION_CONNECT_LATEST_HOME=${ionTool}",
-        "PATH+ION=${ionTool}/linux/bin",
-        "PATH+JQ=${tool 'jq1_5'}"
-      ]) {
-        withCredentials([string(credentialsId: "${env.IONCHANNEL_SECRET_KEY}", variable: 'IONCHANNEL_SECRET_KEY')]) {
-          def pomFile = "${root}/pom.xml"
-          sh """
-            resp=\$(ion-connect dependency resolve-dependencies-in-file --flatten --type maven ${pomFile})
-            deps=\$(echo \${resp} | jq .dependencies)
-            ion-connect vulnerability get-vulnerabilities-for-list "\${deps}"
-          """
-        }
-      }
+      //sh """
+      //  mkdir -p ${root}/.m2/repository
+      //  ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
+      //    -Dmaven.repo.local=${root}/.m2/repository \
+      //    -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
+      //    -DdataFile=target/jacoco.exec
+      //"""
 
       sh """
         mkdir -p ${root}/.m2/repository
@@ -210,17 +190,10 @@ node {
       }
     }
 
-    if (!params.SKIP_INTEGRATION_TESTS) {
-      stage('Phase Two Integration Tests') {
-        withCredentials([file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: 'POSTMAN_FILE')]) {
-          withEnv(["PATH+=${root}/integration-tests/node_modules/newman/bin:${nodejs}/bin", "PCF_SPACE=${env.PHASE_TWO_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
-            dir ("integration-tests") {
-              sh "ci/blackbox.sh"
-            }
-          }
-        }
+    withCredentials([string(credentialsId: 'sonar-prod-publish-token', variable: 'USERNAME')]) {
+      withEnv(["HOME=${root}", "_JAVA_OPTIONS=-Duser.home=${root}"]) {
+        sh "${mvn}/bin/mvn sonar:sonar -Dmaven.repo.local=${root} -Dsonar.host.url=${sonarUrl} -Dsonar.projectKey=${projectKey} -Dsonar.projectName=${projectName} -Dsonar.login=${USERNAME} -P nga"
       }
     }
-
   }
 }

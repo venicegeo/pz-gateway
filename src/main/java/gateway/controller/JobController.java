@@ -92,7 +92,8 @@ public class JobController extends PiazzaRestController {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(JobController.class);
+	private final static Logger LOG = LoggerFactory.getLogger(JobController.class);
+	private static final String GATEWAY = "Gateway";
 
 	/**
 	 * Returns the Status of a Job.
@@ -129,14 +130,14 @@ public class JobController extends PiazzaRestController {
 						new AuditElement(dn, "completeFetchJob", jobId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Requesting Job Status", hee);
+				LOG.error("Error Requesting Job Status", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error requesting Job Status for Id %s: %s", jobId, exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -192,14 +193,14 @@ public class JobController extends PiazzaRestController {
 						.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, SuccessResponse.class).getBody(),
 						HttpStatus.OK);
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Requesting Job Cancellation", hee);
+				LOG.error("Error Requesting Job Cancellation", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error requesting Job Abort for Id %s: %s", jobId, exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -247,14 +248,14 @@ public class JobController extends PiazzaRestController {
 						new AuditElement(dn, "completeRepeatJob", jobId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Repeating Job", hee);
+				LOG.error("Error Repeating Job", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Repeating Job Id %s: %s", jobId, exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -295,7 +296,7 @@ public class JobController extends PiazzaRestController {
 				if ((service != null) && (service.getResourceMetadata() != null)
 						&& ResourceMetadata.STATUS_TYPE.OFFLINE.toString().equals(service.getResourceMetadata().getAvailability())) {
 					return new ResponseEntity<PiazzaResponse>(
-							new ErrorResponse("Cannot Execute Service with Service Availability set as Offline.", "Gateway"),
+							new ErrorResponse("Cannot Execute Service with Service Availability set as Offline.", GATEWAY),
 							HttpStatus.BAD_REQUEST);
 				}
 			} catch (Exception exception) {
@@ -303,7 +304,7 @@ public class JobController extends PiazzaRestController {
 						"Attempted to check Service Availability for %s but received an error %s. Continued with Job Request.",
 						job.getData().getServiceId(), exception.getMessage());
 				logger.log(error, Severity.WARNING);
-				LOGGER.error(error, exception);
+				LOG.error(error, exception);
 			}
 
 			// Create the Request to send to the Job Manager.
@@ -320,9 +321,9 @@ public class JobController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Executing for user %s for Service %s: %s", gatewayUtil.getPrincipalName(user),
 					job.data.getServiceId(), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }

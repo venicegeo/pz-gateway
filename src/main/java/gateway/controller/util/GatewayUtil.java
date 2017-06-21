@@ -99,7 +99,7 @@ public class GatewayUtil {
 	@Value("${vcap.services.pz-blobstore.credentials.encryption_key}")
 	private String S3_KMS_CMK_ID;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(GatewayUtil.class);
+	private final static Logger LOG = LoggerFactory.getLogger(GatewayUtil.class);
 
 	private Producer<String, String> producer;
 	private AmazonS3 s3Client;
@@ -139,22 +139,22 @@ public class GatewayUtil {
 	 * @return The Job Id
 	 */
 	public String sendJobRequest(PiazzaJobRequest request, String jobId) throws PiazzaJobException {
+		
+		// Generate a Job Id
+		final String finalJobId = jobId == null ? getUuid() : jobId;
+		
 		try {
-			// Generate a Job Id
-			if (jobId == null) {
-				jobId = getUuid();
-			}
 			// Send the message to Job Manager
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			// Log this request
 			logger.log(
-					String.format("Forwarding Job %s for user %s with Type %s", jobId, request.createdBy,
+					String.format("Forwarding Job %s for user %s with Type %s", finalJobId, request.createdBy,
 							request.jobType.getClass().getSimpleName()),
-					Severity.INFORMATIONAL, new AuditElement(request.createdBy, "requestJob", jobId));
+					Severity.INFORMATIONAL, new AuditElement(request.createdBy, "requestJob", finalJobId));
 			ResponseEntity<PiazzaResponse> jobResponse = restTemplate
-					.postForEntity(String.format("%s/%s?jobId=%s", JOBMANAGER_URL, "requestJob", jobId), entity, PiazzaResponse.class);
+					.postForEntity(String.format("%s/%s?jobId=%s", JOBMANAGER_URL, "requestJob", finalJobId), entity, PiazzaResponse.class);
 			// Check if the response was an error.
 			if (jobResponse.getBody() instanceof ErrorResponse) {
 				throw new PiazzaJobException(((ErrorResponse) jobResponse.getBody()).message);
@@ -163,10 +163,10 @@ public class GatewayUtil {
 			return ((JobResponse) jobResponse.getBody()).data.getJobId();
 		} catch (Exception exception) {
 			String error = String.format("Error with Job Manager when Requesting New Piazza Job: %s", exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			// Log the failure
-			logger.log(String.format("Job Request at Gateway failed for Job %s", jobId), Severity.ERROR,
-					new AuditElement(request.createdBy, "failedRequestJob", jobId));
+			logger.log(String.format("Job Request at Gateway failed for Job %s", finalJobId), Severity.ERROR,
+					new AuditElement(request.createdBy, "failedRequestJob", finalJobId));
 			throw new PiazzaJobException(error);
 		}
 	}
@@ -194,7 +194,7 @@ public class GatewayUtil {
 			return uuidFactory.getUUID();
 		} catch (Exception exception) {
 			String error = String.format("Could not connect to UUID Service for UUID: %s", exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			throw new PiazzaJobException(error);
 		}
 	}
@@ -269,7 +269,7 @@ public class GatewayUtil {
 	public String validateInput(String type, Object value) {
 		switch (type) {
 		case "order":
-			if (!value.equals("asc") && !value.equals("desc")) {
+			if (!"asc".equals(value) && !"desc".equals(value)) {
 				return "'order' parameter must be 'asc' or 'desc'";
 			}
 			break;
@@ -282,6 +282,9 @@ public class GatewayUtil {
 			if (Integer.parseInt(value.toString()) < 0) {
 				return "'page' parameter must be zero or greater.";
 			}
+			break;
+		default:
+			LOG.warn("Invalid type provided: {}", type);
 			break;
 		}
 		return null;
@@ -298,7 +301,7 @@ public class GatewayUtil {
 		try {
 			return objectMapper.readValue(errorBody, ErrorResponse.class);
 		} catch (Exception exception) {
-			LOGGER.error(String.format("Error Serializing Error Body (%s) into ErrorResponse class.", errorBody), exception);
+			LOG.error(String.format("Error Serializing Error Body (%s) into ErrorResponse class.", errorBody), exception);
 			return new ErrorResponse(errorBody, "Gateway");
 		}
 	}
