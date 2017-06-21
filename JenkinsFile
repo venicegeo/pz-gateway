@@ -28,7 +28,7 @@ node {
     sh """
       sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml
       ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
-      cp ${root}/target/pz-gateway-1.0.0.jar ${root}/pz-gateway.jar
+      cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
     """
     // Check if exists already
     def getDependencyStatus = sh(script: """mvn -X --settings ~/.m2/settings.xml dependency:get \
