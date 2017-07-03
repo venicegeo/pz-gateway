@@ -107,6 +107,7 @@ node {
         sh "cf set-env ${appName} DOMAIN ${env.PHASE_ONE_PCF_DOMAIN}"
         try {
           sh "cf start ${appName}"
+          error("Testing")
         } catch (Exception e) {
           sh "cf logs --recent ${appName}"
           sh "cf delete ${appName} -f"
