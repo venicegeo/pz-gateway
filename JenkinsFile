@@ -75,7 +75,7 @@ node {
         mkdir -p ${root}/.m2/repository
         ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
           -Dmaven.repo.local=${root}/.m2/repository \
-          -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
+          -Pcoveragef-per-test org.jacoco:jacoco-maven-plugin:report \
           -DdataFile=target/jacoco.exec
       """
 
@@ -93,7 +93,6 @@ node {
     }
   }
 
-
   stage ('Int Deploy') {
     if(!fileExists('.cf')) {
       sh "mkdir -p .cf"
@@ -106,7 +105,13 @@ node {
         sh "cf push ${appName} -f manifest.jenkins.yml --hostname ${appName} -b ${env.JAVA_BUILDPACK_NAME} -d ${env.PHASE_ONE_PCF_DOMAIN} --no-start"
         sh "cf set-env ${appName} SPACE ${env.PHASE_ONE_PCF_SPACE}"
         sh "cf set-env ${appName} DOMAIN ${env.PHASE_ONE_PCF_DOMAIN}"
-        sh "cf start ${appName}"
+        try {
+          sh "cf start ${appName}"
+        } catch (Exception e) {
+          sh "cf logs --recent ${appName}"
+          sh "cf delete ${appName} -f"
+          error("Error during application start. Deleting ${appName} and failing the build.")
+        }
       }
     }
     withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
@@ -173,7 +178,13 @@ node {
         sh "cf push ${appName} --hostname ${appName} -f manifest.jenkins.yml -b ${env.JAVA_BUILDPACK_NAME} -d ${env.PHASE_TWO_PCF_DOMAIN} --no-start"
         sh "cf set-env ${appName} SPACE ${env.PHASE_TWO_PCF_SPACE}"
         sh "cf set-env ${appName} DOMAIN ${env.PHASE_TWO_PCF_DOMAIN}"
-        sh "cf start ${appName}"
+        try {
+          sh "cf start ${appName}"
+        } catch (Exception e) {
+          sh "cf logs --recent ${appName}"
+          sh "cf delete ${appName} -f"
+          error("Error during application start. Deleting ${appName} and failing the build.")
+        }
         }
       }
       withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
