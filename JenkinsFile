@@ -58,6 +58,7 @@ node {
   }
 
   stage('Scans') {
+    return
     withCredentials([[$class: "StringBinding", credentialsId: "${env.THREADFIX_API_KEY}", variable: "THREADFIX_KEY"]]) {
       sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --version"
       sh '/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project "pz-gateway" --scan "." --format "XML" --enableExperimental --disableBundleAudit'
@@ -109,7 +110,7 @@ node {
           sh "cf start ${appName}"
           error("Testing")
         } catch (Exception e) {
-          sh "cf logs --recent ${appName}"
+          //sh "cf logs --recent ${appName}"
           sh "cf delete ${appName} -f"
           error("Error during application start. Deleting ${appName} and failing the build.")
         }
