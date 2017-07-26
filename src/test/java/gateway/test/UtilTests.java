@@ -136,4 +136,18 @@ public class UtilTests {
 		assertTrue(gatewayUtil.validateInput("page", 10) == null);
 		assertTrue(gatewayUtil.validateInput("page", -50).isEmpty() == false);
 	}
+	
+	/**
+	 * Tests input concatenation
+	 */
+	@Test
+	public void testJoinValidationErrors() {
+		assertEquals(null, gatewayUtil.joinValidationErrors((String)null)); // This mimics a null return from validateInput.
+		assertEquals(null, gatewayUtil.joinValidationErrors(null, null, null));
+		assertEquals("foo", gatewayUtil.joinValidationErrors("foo"));
+		assertEquals("foo", gatewayUtil.joinValidationErrors(null, "foo", null));
+		assertEquals("bar  foo  baz", gatewayUtil.joinValidationErrors("bar", "foo", "baz"));
+		assertEquals("bar  foo  baz", gatewayUtil.joinValidationErrors("bar", null, "foo", null, "baz"));
+	}
+	
 }

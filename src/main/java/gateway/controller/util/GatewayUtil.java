@@ -270,7 +270,7 @@ public class GatewayUtil {
 		switch (type) {
 		case "order":
 			if (!"asc".equals(value) && !"desc".equals(value)) {
-				return "'order' parameter must be 'asc' or 'desc'";
+				return "'order' parameter must be 'asc' or 'desc'.";
 			}
 			break;
 		case "perPage":
@@ -284,10 +284,31 @@ public class GatewayUtil {
 			}
 			break;
 		default:
-			LOG.warn("Invalid type provided: {}", type);
+			LOG.warn("Invalid type provided: {}.", type);
 			break;
 		}
 		return null;
+	}
+	
+	/**
+	 * Joins multiple strings (from validateInput), formatting properly if there are 0, 1, or many validation errors.
+	 * 
+	 *  @param validationErrors
+	 *  	The validation string(s) and/or null(s) from validateInput
+	 *  @return Null if all validationErrors are null.  A single string containing any validationErrors that are not null, if any.
+	 */
+	public String joinValidationErrors(String... validationErrors) {
+		String joinedErrors = null;
+		for (String validationError : validationErrors) {
+			if (validationError != null) {
+				if (joinedErrors == null) {
+					joinedErrors = validationError;
+				} else {
+					joinedErrors += "  " + validationError;
+				}
+			}
+		}
+		return joinedErrors;
 	}
 
 	/**

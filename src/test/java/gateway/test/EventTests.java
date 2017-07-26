@@ -18,6 +18,7 @@ package gateway.test;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.anyVararg;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -118,7 +119,7 @@ public class EventTests {
 		assertTrue(((ErrorResponse) response.getBody()).message.contains("event error"));
 
 		// Test Validation Input Exception
-		when(gatewayUtil.validateInput(anyString(), any())).thenReturn("Error");
+		when(gatewayUtil.joinValidationErrors(anyVararg())).thenReturn("Error");
 		response = eventController.getEvents(null, null, null, null, 0, 10, user);
 		assertTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
 		assertTrue(response.getBody() instanceof ErrorResponse);

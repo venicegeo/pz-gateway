@@ -172,12 +172,12 @@ public class DeploymentController extends PiazzaRestController {
 					new AuditElement(dn, "requestDeploymentList", ""));
 
 			// Validate params
-			String validationError = null;
-			final boolean isOrderInvalid = order != null && (validationError = gatewayUtil.validateInput("order", order)) != null;
-			final boolean isPageInvalid = page != null && (validationError = gatewayUtil.validateInput("page", page)) != null;
-			final boolean isPerPageInvalid = perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null;
-			
-			if ( isOrderInvalid	|| isPageInvalid || isPerPageInvalid ) {
+			String validationError = gatewayUtil.joinValidationErrors(
+					gatewayUtil.validateInput("order", order),
+					gatewayUtil.validateInput("page", page),
+					gatewayUtil.validateInput("perPage", perPage)
+					);
+			if ( validationError != null ) {
 				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, GATEWAY), HttpStatus.BAD_REQUEST);
 			}
 			
