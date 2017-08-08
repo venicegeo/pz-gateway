@@ -346,7 +346,7 @@ public class DeploymentController extends PiazzaRestController {
 	}
 
 	/**
-	 * Deletes a Deployment Group. This will delete the Group in the Mongo DB holdings, and also in the GIS Server
+	 * Deletes a Deployment Group. This will delete the Group in the DB holdings, and also in the GIS Server
 	 * instance. Unrecoverable once deleted.
 	 * 
 	 * @param deploymentGroupId

@@ -269,7 +269,7 @@ public class EventTests {
 		EventListResponse mockResponse = new EventListResponse();
 		mockResponse.data = new ArrayList<Event>();
 		mockResponse.getData().add(event);
-		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
 		when(restTemplate.postForObject(anyString(), any(), eq(EventListResponse.class))).thenReturn(mockResponse);
 
 		// Test
@@ -279,7 +279,7 @@ public class EventTests {
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 		assertTrue(response.getData().get(0).eventId.equalsIgnoreCase(event.eventId));
-		assertTrue(response.getPagination().getCount().equals(1));
+		assertTrue(response.getPagination().getCount().equals(new Long(1)));
 
 		// Test an Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(EventListResponse.class))).thenThrow(new RestClientException(""));
@@ -300,7 +300,7 @@ public class EventTests {
 		EventTypeListResponse mockResponse = new EventTypeListResponse();
 		mockResponse.data = new ArrayList<EventType>();
 		mockResponse.getData().add(eventType);
-		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
 		when(restTemplate.postForObject(anyString(), any(), eq(EventTypeListResponse.class))).thenReturn(mockResponse);
 
 		// Test
@@ -310,7 +310,7 @@ public class EventTests {
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 		assertTrue(response.getData().get(0).eventTypeId.equalsIgnoreCase(eventType.eventTypeId));
-		assertTrue(response.getPagination().getCount().equals(1));
+		assertTrue(response.getPagination().getCount().equals(new Long(1)));
 
 		// Test an Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(EventTypeListResponse.class))).thenThrow(new RestClientException(""));
