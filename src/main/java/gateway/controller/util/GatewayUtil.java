@@ -26,6 +26,8 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -139,10 +141,10 @@ public class GatewayUtil {
 	 * @return The Job Id
 	 */
 	public String sendJobRequest(PiazzaJobRequest request, String jobId) throws PiazzaJobException {
-		
+
 		// Generate a Job Id
 		final String finalJobId = jobId == null ? getUuid() : jobId;
-		
+
 		try {
 			// Send the message to Job Manager
 			HttpHeaders headers = new HttpHeaders();
@@ -169,19 +171,6 @@ public class GatewayUtil {
 					new AuditElement(request.createdBy, "failedRequestJob", finalJobId));
 			throw new PiazzaJobException(error);
 		}
-	}
-
-	/**
-	 * Sends a message to Kafka. This will additionally invoke .get() on the message sent, which will block until the
-	 * acknowledgement from Kafka has been received that the message entered the Kafka queue.
-	 * 
-	 * @param message
-	 *            The message to send.
-	 * @throws Exception
-	 *             Any exceptions encountered with the send.
-	 */
-	public void sendKafkaMessage(ProducerRecord<String, String> message) throws InterruptedException, ExecutionException {
-		producer.send(message).get();
 	}
 
 	/**
@@ -289,13 +278,14 @@ public class GatewayUtil {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Joins multiple strings (from validateInput), formatting properly if there are 0, 1, or many validation errors.
 	 * 
-	 *  @param validationErrors
-	 *  	The validation string(s) and/or null(s) from validateInput
-	 *  @return Null if all validationErrors are null.  A single string containing any validationErrors that are not null, if any.
+	 * @param validationErrors
+	 *            The validation string(s) and/or null(s) from validateInput
+	 * @return Null if all validationErrors are null. A single string containing any validationErrors that are not null,
+	 *         if any.
 	 */
 	public String joinValidationErrors(String... validationErrors) {
 		String joinedErrors = null;

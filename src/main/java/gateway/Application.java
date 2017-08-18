@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -53,6 +54,7 @@ import gateway.auth.ExtendedRequestDetails;
 import gateway.auth.PiazzaBasicAuthenticationEntryPoint;
 import gateway.auth.PiazzaBasicAuthenticationProvider;
 import io.swagger.annotations.Api;
+import messaging.job.JobMessageFactory;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -77,6 +79,8 @@ public class Application extends SpringBootServletInitializer {
 	private int httpMaxTotal;
 	@Value("${http.max.route}")
 	private int httpMaxRoute;
+	@Value("${SPACE}")
+	private String SPACE;
 
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
@@ -85,6 +89,11 @@ public class Application extends SpringBootServletInitializer {
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args); // NOSONAR
+	}
+
+	@Bean
+	public Queue abortJobsQueue() {
+		return new Queue(String.format(JobMessageFactory.KAFKA_TOPIC_TEMPLATE, JobMessageFactory.ABORT_JOB_TOPIC_NAME, SPACE));
 	}
 
 	@Bean
