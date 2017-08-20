@@ -40,6 +40,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpServerErrorException;
@@ -83,6 +85,10 @@ public class JobTests {
 	private GatewayUtil gatewayUtil;
 	@Mock
 	private RestTemplate restTemplate;
+	@Mock
+	private RabbitTemplate rabbitTemplate;
+	@Mock
+	private Queue abortJobsQueue;
 	@InjectMocks
 	private JobController jobController;
 	@Mock
@@ -170,7 +176,8 @@ public class JobTests {
 		// Mock
 		ResponseEntity<SuccessResponse> mockEntity = new ResponseEntity<SuccessResponse>(new SuccessResponse("Deleted", "Job Manager"), HttpStatus.OK);
 		when(restTemplate.postForEntity(anyString(), any(), eq(SuccessResponse.class))).thenReturn(mockEntity);
-
+		when(abortJobsQueue.getName()).thenReturn("AbortJobQueue");
+		
 		// Test
 		ResponseEntity<PiazzaResponse> entity = jobController.abortJob("123456", "Not Needed", user);
 
