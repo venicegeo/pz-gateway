@@ -171,6 +171,7 @@ public class JobController extends PiazzaRestController {
 			@ApiParam(value = "Id of the Job to cancel.", required = true) @PathVariable(value = "jobId") String jobId,
 			@ApiParam(value = "Details for the cancellation of the Job.") @RequestParam(value = "reason", required = false) String reason,
 			Principal user) {
+		ResponseEntity<PiazzaResponse> response = null;
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
@@ -183,31 +184,32 @@ public class JobController extends PiazzaRestController {
 			request.createdBy = userName;
 			request.jobType = new AbortJob(jobId, reason);
 
-			// Send the message through the Event Bus to abort the job.
-			rabbitTemplate.convertAndSend(abortJobsQueue.getName(), mapper.writeValueAsString(request));
-
-			logger.log(String.format("User %s cancelled Job %s", userName, jobId), Severity.INFORMATIONAL,
-					new AuditElement(dn, "completeJobCancelRequest", jobId));
-
 			// Proxy the request to the Job Manager, where the Job Table will be
 			// updated.
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate
+				response = new ResponseEntity<PiazzaResponse>(restTemplate
 						.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, SuccessResponse.class).getBody(),
 						HttpStatus.OK);
+				// Send the message through the Event Bus to abort the job.
+				rabbitTemplate.convertAndSend(abortJobsQueue.getName(), mapper.writeValueAsString(request));
+				logger.log(String.format("User %s cancelled Job %s", userName, jobId), Severity.INFORMATIONAL,
+						new AuditElement(dn, "completeJobCancelRequest", jobId));
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOG.error("Error Requesting Job Cancellation", hee);
-				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
+				response = new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()),
+						hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error requesting Job Abort for Id %s: %s", jobId, exception.getMessage());
 			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
+			response = new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+
+		return response;
 	}
 
 	/**
