@@ -19,7 +19,6 @@ import java.security.Principal;
 
 import javax.validation.Valid;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Queue;
@@ -53,7 +52,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import messaging.job.JobMessageFactory;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.AbortJob;
 import model.job.type.ExecuteServiceJob;
@@ -94,7 +92,9 @@ public class JobController extends PiazzaRestController {
 	private RabbitTemplate rabbitTemplate;
 	@Autowired
 	private Queue abortJobsQueue;
-	
+	@Autowired
+	private ObjectMapper mapper;
+
 	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
 	@Value("${SPACE}")
@@ -102,7 +102,6 @@ public class JobController extends PiazzaRestController {
 
 	private final static Logger LOG = LoggerFactory.getLogger(JobController.class);
 	private static final String GATEWAY = "Gateway";
-	private ObjectMapper mapper = new ObjectMapper();
 
 	/**
 	 * Returns the Status of a Job.
