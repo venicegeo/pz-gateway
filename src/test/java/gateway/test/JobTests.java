@@ -19,18 +19,12 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.security.Principal;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import javax.management.remote.JMXPrincipal;
 
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,14 +32,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.mockito.Spy;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import exception.PiazzaJobException;
 import gateway.controller.JobController;
@@ -77,6 +72,8 @@ import util.UUIDFactory;
  *
  */
 public class JobTests {
+	@Spy
+	private ObjectMapper mapper;
 	@Mock
 	private PiazzaLogger logger;
 	@Mock
@@ -89,12 +86,10 @@ public class JobTests {
 	private RabbitTemplate rabbitTemplate;
 	@Mock
 	private Queue abortJobsQueue;
-	@InjectMocks
-	private JobController jobController;
 	@Mock
 	private ServiceController serviceController;
-	@Mock
-	private Producer<String, String> producer;
+	@InjectMocks
+	private JobController jobController;
 
 	private Principal user;
 	private Job mockJob;
@@ -125,19 +120,7 @@ public class JobTests {
 		// Mock a user
 		user = new JMXPrincipal("Test User");
 
-		// Mock the Kafka response that Producers will send. This will always
-		// return a Future that completes immediately and simply returns true.
-		when(producer.send(isA(ProducerRecord.class))).thenAnswer(new Answer<Future<Boolean>>() {
-			@Override
-			public Future<Boolean> answer(InvocationOnMock invocation) throws Throwable {
-				Future<Boolean> future = mock(FutureTask.class);
-				when(future.isDone()).thenReturn(true);
-				when(future.get()).thenReturn(true);
-				return future;
-			}
-		});
-		
-		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();		
+		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();
 	}
 
 	/**
@@ -146,7 +129,8 @@ public class JobTests {
 	@Test
 	public void testGetStatus() {
 		// Mock
-		ResponseEntity<JobStatusResponse> mockResponse = new ResponseEntity<JobStatusResponse>(new JobStatusResponse(mockJob), HttpStatus.OK);
+		ResponseEntity<JobStatusResponse> mockResponse = new ResponseEntity<JobStatusResponse>(new JobStatusResponse(mockJob),
+				HttpStatus.OK);
 		when(restTemplate.getForEntity(anyString(), eq(JobStatusResponse.class))).thenReturn(mockResponse);
 
 		// Test
@@ -161,7 +145,8 @@ public class JobTests {
 		assertTrue(response.data.createdBy.equals("Test User 2"));
 
 		// Test Exception
-		when(restTemplate.getForEntity(anyString(), eq(JobStatusResponse.class))).thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+		when(restTemplate.getForEntity(anyString(), eq(JobStatusResponse.class)))
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
 		entity = jobController.getJobStatus("123456", user);
 		assertTrue(entity.getBody() instanceof ErrorResponse);
@@ -174,10 +159,11 @@ public class JobTests {
 	@Test
 	public void testAbort() {
 		// Mock
-		ResponseEntity<SuccessResponse> mockEntity = new ResponseEntity<SuccessResponse>(new SuccessResponse("Deleted", "Job Manager"), HttpStatus.OK);
+		ResponseEntity<SuccessResponse> mockEntity = new ResponseEntity<SuccessResponse>(new SuccessResponse("Deleted", "Job Manager"),
+				HttpStatus.OK);
 		when(restTemplate.postForEntity(anyString(), any(), eq(SuccessResponse.class))).thenReturn(mockEntity);
 		when(abortJobsQueue.getName()).thenReturn("AbortJobQueue");
-		
+
 		// Test
 		ResponseEntity<PiazzaResponse> entity = jobController.abortJob("123456", "Not Needed", user);
 
@@ -185,8 +171,9 @@ public class JobTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 
 		// Test Exception
-		when(restTemplate.postForEntity(anyString(), any(), eq(SuccessResponse.class))).thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
-		
+		when(restTemplate.postForEntity(anyString(), any(), eq(SuccessResponse.class)))
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+
 		entity = jobController.abortJob("123456", "Not Needed", user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
@@ -209,7 +196,7 @@ public class JobTests {
 
 		// Test Exception
 		when(restTemplate.postForEntity(anyString(), any(), eq(JobResponse.class)))
-			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
 		entity = jobController.repeatJob("123456", user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
@@ -243,8 +230,7 @@ public class JobTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
-		Mockito.doThrow(new PiazzaJobException("REST Broke")).when(gatewayUtil)
-				.sendJobRequest(any(PiazzaJobRequest.class), anyString());
+		Mockito.doThrow(new PiazzaJobException("REST Broke")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class), anyString());
 		entity = jobController.executeService(executeJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);

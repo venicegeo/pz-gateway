@@ -19,19 +19,31 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import gateway.controller.DataController;
-import gateway.controller.util.GatewayUtil;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import javax.management.remote.JMXPrincipal;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import com.amazonaws.services.s3.AmazonS3;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import exception.PiazzaJobException;
+import gateway.controller.DataController;
+import gateway.controller.util.GatewayUtil;
 import model.data.DataResource;
 import model.data.type.GeoJsonDataType;
 import model.data.type.TextDataType;
@@ -45,30 +57,8 @@ import model.response.JobResponse;
 import model.response.Pagination;
 import model.response.PiazzaResponse;
 import model.response.SuccessResponse;
-
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
-
 import util.PiazzaLogger;
 import util.UUIDFactory;
-
-import com.amazonaws.services.s3.AmazonS3;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import exception.PiazzaJobException;
 
 /**
  * Tests the Data Controller, and various Data Access/Load Jobs.
@@ -89,8 +79,6 @@ public class DataTests {
 	private AmazonS3 s3Client;
 	@InjectMocks
 	private DataController dataController;
-	@Mock
-	private Producer<String, String> producer;
 
 	private Principal user;
 	private DataResource mockData;
@@ -118,19 +106,7 @@ public class DataTests {
 		// Mock a user
 		user = new JMXPrincipal("Test User");
 
-		// Mock the Kafka response that Producers will send. This will always
-		// return a Future that completes immediately and simply returns true.
-		when(producer.send(isA(ProducerRecord.class))).thenAnswer(new Answer<Future<Boolean>>() {
-			@Override
-			public Future<Boolean> answer(InvocationOnMock invocation) throws Throwable {
-				Future<Boolean> future = mock(FutureTask.class);
-				when(future.isDone()).thenReturn(true);
-				when(future.get()).thenReturn(true);
-				return future;
-			}
-		});
-		
-		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();		
+		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();
 	}
 
 	/**
@@ -160,7 +136,7 @@ public class DataTests {
 
 		// Mock an Exception being thrown and handled.
 		when(restTemplate.getForEntity(anyString(), eq(DataResourceListResponse.class)))
-			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
 		// Get the data
 		entity = dataController.getData(null, null, 0, 10, null, "asc", null, user);
@@ -220,8 +196,7 @@ public class DataTests {
 		when(gatewayUtil.sendJobRequest(any(PiazzaJobRequest.class), anyString())).thenReturn("123456");
 
 		// Test the request
-		ResponseEntity<PiazzaResponse> entity = dataController
-				.ingestDataFile(new ObjectMapper().writeValueAsString(mockJob), file, user);
+		ResponseEntity<PiazzaResponse> entity = dataController.ingestDataFile(new ObjectMapper().writeValueAsString(mockJob), file, user);
 		PiazzaResponse response = entity.getBody();
 
 		// Verify the results. This request should fail since the host flag is
@@ -270,7 +245,7 @@ public class DataTests {
 
 		// Test an Exception
 		when(restTemplate.getForEntity(anyString(), eq(DataResourceResponse.class)))
-			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 		entity = dataController.getMetadata("123456", user);
 		response = entity.getBody();
 		assertTrue(response instanceof ErrorResponse);
@@ -284,7 +259,7 @@ public class DataTests {
 	public void testDeleteData() {
 		// Mock the Response
 		when(restTemplate.exchange(anyString(), any(), any(), eq(SuccessResponse.class)))
-			.thenReturn(new ResponseEntity<SuccessResponse>(new SuccessResponse("Deleted", "Ingest"), HttpStatus.OK));
+				.thenReturn(new ResponseEntity<SuccessResponse>(new SuccessResponse("Deleted", "Ingest"), HttpStatus.OK));
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = dataController.deleteData("123456", user);
@@ -296,7 +271,7 @@ public class DataTests {
 
 		// Test an Exception
 		when(restTemplate.exchange(anyString(), any(), any(), eq(SuccessResponse.class)))
-			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
 		entity = dataController.deleteData("123456", user);
 		response = entity.getBody();
@@ -311,7 +286,7 @@ public class DataTests {
 	public void testUpdateData() {
 		// Mock
 		when(restTemplate.postForEntity(anyString(), any(), eq(SuccessResponse.class)))
-			.thenReturn(new ResponseEntity<SuccessResponse>(new SuccessResponse("Updated", "Ingest"), HttpStatus.OK));
+				.thenReturn(new ResponseEntity<SuccessResponse>(new SuccessResponse("Updated", "Ingest"), HttpStatus.OK));
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = dataController.updateMetadata("123456", mockData.getMetadata(), user);
@@ -321,7 +296,7 @@ public class DataTests {
 
 		// Test an Exception
 		when(restTemplate.postForEntity(anyString(), any(), eq(SuccessResponse.class)))
-			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+				.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 		entity = dataController.updateMetadata("123456", mockData.getMetadata(), user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
@@ -337,8 +312,7 @@ public class DataTests {
 		mockResponse.data = new ArrayList<DataResource>();
 		mockResponse.getData().add(mockData);
 		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
-		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class)))
-				.thenReturn(mockResponse);
+		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class))).thenReturn(mockResponse);
 
 		// Test
 		ResponseEntity<PiazzaResponse> entity = dataController.searchData(null, 0, 10, null, null, user);
@@ -350,8 +324,7 @@ public class DataTests {
 		assertTrue(response.getPagination().getCount().equals(new Long(1)));
 
 		// Test an Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class)))
-				.thenThrow(new RestClientException(""));
+		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class))).thenThrow(new RestClientException(""));
 		entity = dataController.searchData(null, 0, 10, null, null, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);

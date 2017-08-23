@@ -19,21 +19,30 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import gateway.controller.ServiceController;
-import gateway.controller.util.GatewayUtil;
+import static org.mockito.Mockito.when;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import javax.management.remote.JMXPrincipal;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import gateway.controller.ServiceController;
+import gateway.controller.util.GatewayUtil;
 import model.job.metadata.ResourceMetadata;
 import model.response.ErrorResponse;
 import model.response.Pagination;
@@ -43,24 +52,6 @@ import model.response.ServiceListResponse;
 import model.response.ServiceResponse;
 import model.response.SuccessResponse;
 import model.service.metadata.Service;
-
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
-
 import util.PiazzaLogger;
 import util.UUIDFactory;
 
@@ -81,8 +72,6 @@ public class ServiceTests {
 	private RestTemplate restTemplate;
 	@InjectMocks
 	private ServiceController serviceController;
-	@Mock
-	private Producer<String, String> producer;
 
 	private Principal user;
 	private Service mockService;
@@ -109,18 +98,6 @@ public class ServiceTests {
 		// Mock a user
 		user = new JMXPrincipal("Test User");
 
-		// Mock the Kafka response that Producers will send. This will always
-		// return a Future that completes immediately and simply returns true.
-		when(producer.send(isA(ProducerRecord.class))).thenAnswer(new Answer<Future<Boolean>>() {
-			@Override
-			public Future<Boolean> answer(InvocationOnMock invocation) throws Throwable {
-				Future<Boolean> future = mock(FutureTask.class);
-				when(future.isDone()).thenReturn(true);
-				when(future.get()).thenReturn(true);
-				return future;
-			}
-		});
-		
 		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();
 	}
 

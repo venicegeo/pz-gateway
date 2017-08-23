@@ -17,17 +17,11 @@ package gateway.controller.util;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -54,7 +48,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import exception.PiazzaJobException;
 import gateway.auth.PiazzaAuthenticationToken;
-import messaging.job.KafkaClientFactory;
 import model.data.FileRepresentation;
 import model.data.location.FileLocation;
 import model.data.location.S3FileStore;
@@ -86,8 +79,6 @@ public class GatewayUtil {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	@Value("${vcap.services.pz-kafka.credentials.host}")
-	private String KAFKA_HOSTS;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
 	@Value("${vcap.services.pz-blobstore.credentials.access_key_id:}")
@@ -102,8 +93,6 @@ public class GatewayUtil {
 	private String S3_KMS_CMK_ID;
 
 	private final static Logger LOG = LoggerFactory.getLogger(GatewayUtil.class);
-
-	private Producer<String, String> producer;
 	private AmazonS3 s3Client;
 
 	/**
@@ -111,10 +100,6 @@ public class GatewayUtil {
 	 */
 	@PostConstruct
 	public void init() {
-		// Kafka Producer.
-		producer = KafkaClientFactory.getProducer(KAFKA_HOSTS);
-		logger.log("Connecting to Kafka Cluster", Severity.INFORMATIONAL,
-				new AuditElement("gateway", "connectedToKafkaCluster", KAFKA_HOSTS));
 		// Connect to S3 Bucket. Only apply credentials if they are present.
 		if ((AMAZONS3_ACCESS_KEY.isEmpty()) && (AMAZONS3_PRIVATE_KEY.isEmpty())) {
 			s3Client = new AmazonS3Client();
@@ -125,11 +110,6 @@ public class GatewayUtil {
 			s3Client = new AmazonS3EncryptionClient(credentials, materialProvider,
 					new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1)).withRegion(Region.getRegion(Regions.US_EAST_1));
 		}
-	}
-
-	@PreDestroy
-	public void cleanup() {
-		producer.close();
 	}
 
 	/**

@@ -17,25 +17,15 @@ package gateway.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import javax.management.remote.JMXPrincipal;
 
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -65,8 +55,6 @@ public class UtilTests {
 	private RestTemplate restTemplate;
 	@Mock
 	private AmazonS3 s3Client;
-	@Mock
-	private Producer<String, String> producer;
 
 	@InjectMocks
 	private GatewayUtil gatewayUtil;
@@ -77,18 +65,6 @@ public class UtilTests {
 	@Before
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
-
-		// Mock the Kafka response that Producers will send. This will always
-		// return a Future that completes immediately and simply returns true.
-		when(producer.send(isA(ProducerRecord.class))).thenAnswer(new Answer<Future<Boolean>>() {
-			@Override
-			public Future<Boolean> answer(InvocationOnMock invocation) throws Throwable {
-				Future<Boolean> future = mock(FutureTask.class);
-				when(future.isDone()).thenReturn(true);
-				when(future.get()).thenReturn(true);
-				return future;
-			}
-		});
 	}
 
 	/**
@@ -136,18 +112,19 @@ public class UtilTests {
 		assertTrue(gatewayUtil.validateInput("page", 10) == null);
 		assertTrue(gatewayUtil.validateInput("page", -50).isEmpty() == false);
 	}
-	
+
 	/**
 	 * Tests input concatenation
 	 */
 	@Test
 	public void testJoinValidationErrors() {
-		assertEquals(null, gatewayUtil.joinValidationErrors((String)null)); // This mimics a null return from validateInput.
+		assertEquals(null, gatewayUtil.joinValidationErrors((String) null)); // This mimics a null return from
+																				// validateInput.
 		assertEquals(null, gatewayUtil.joinValidationErrors(null, null, null));
 		assertEquals("foo", gatewayUtil.joinValidationErrors("foo"));
 		assertEquals("foo", gatewayUtil.joinValidationErrors(null, "foo", null));
 		assertEquals("bar  foo  baz", gatewayUtil.joinValidationErrors("bar", "foo", "baz"));
 		assertEquals("bar  foo  baz", gatewayUtil.joinValidationErrors("bar", null, "foo", null, "baz"));
 	}
-	
+
 }
