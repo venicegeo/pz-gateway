@@ -186,11 +186,6 @@ public class JobController extends PiazzaRestController {
 
 			// Send the message through the Event Bus to abort the job.
 			rabbitTemplate.convertAndSend(abortJobsQueue.getName(), mapper.writeValueAsString(request));
-			
-// Send the message through Kafka to delete the Job. This message
-// will get picked up by whatever component is running the Job.
-//ProducerRecord<String, String> abortMessage = JobMessageFactory.getAbortJobMessage(request, gatewayUtil.getUuid(), SPACE);
-//gatewayUtil.sendKafkaMessage(abortMessage);
 
 			logger.log(String.format("User %s cancelled Job %s", userName, jobId), Severity.INFORMATIONAL,
 					new AuditElement(dn, "completeJobCancelRequest", jobId));
