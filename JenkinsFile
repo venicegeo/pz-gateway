@@ -215,10 +215,17 @@ node {
       }
     }
 
-    withCredentials([string(credentialsId: "${env.SONAR_TOKEN}", variable: 'USERNAME')]) {
-      withEnv(["HOME=${root}", "_JAVA_OPTIONS=-Duser.home=${root}"]) {
-        sh "${mvn}/bin/mvn sonar:sonar -Dmaven.repo.local=${root} -Dsonar.host.url=${env.SONAR_URL} -Dsonar.projectKey=${projectKey} -Dsonar.projectName=${projectName} -Dsonar.login=${USERNAME} -P nga"
+    if (!params.SKIP_INTEGRATION_TESTS) {
+      stage('Phase Two Integration Tests') {
+        withCredentials([file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: 'POSTMAN_FILE')]) {
+          withEnv(["PATH+=${root}/integration-tests/node_modules/newman/bin:${nodejs}/bin", "PCF_SPACE=${env.PHASE_TWO_PCF_SPACE}", "HOME=${WORKSPACE}"]) {
+            dir ("integration-tests") {
+              sh "ci/blackbox.sh"
+            }
+          }
+        }
       }
     }
+	
   }
 }
