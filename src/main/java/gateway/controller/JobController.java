@@ -52,6 +52,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import messaging.job.JobMessageFactory;
 import model.job.metadata.ResourceMetadata;
 import model.job.type.AbortJob;
 import model.job.type.ExecuteServiceJob;
@@ -194,7 +195,8 @@ public class JobController extends PiazzaRestController {
 						.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, SuccessResponse.class).getBody(),
 						HttpStatus.OK);
 				// Send the message through the Event Bus to abort the job.
-				rabbitTemplate.convertAndSend(abortJobsQueue.getName(), mapper.writeValueAsString(request));
+				rabbitTemplate.convertAndSend(JobMessageFactory.PIAZZA_EXCHANGE_NAME, abortJobsQueue.getName(),
+						mapper.writeValueAsString(request));
 				logger.log(String.format("User %s cancelled Job %s", userName, jobId), Severity.INFORMATIONAL,
 						new AuditElement(dn, "completeJobCancelRequest", jobId));
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
