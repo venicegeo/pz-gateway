@@ -96,7 +96,7 @@ public class GatewayUtil {
 	private AmazonS3 s3Client;
 
 	/**
-	 * Initializing the Kafka Producer on Controller startup.
+	 * Initializing the components
 	 */
 	@PostConstruct
 	public void init() {

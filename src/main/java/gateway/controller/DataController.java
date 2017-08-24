@@ -339,7 +339,7 @@ public class DataController extends PiazzaRestController {
 			// Send the file to S3.
 			String jobId = gatewayUtil.getUuid();
 			job = gatewayUtil.pushS3File(jobId, job, file);
-			// Create the Request to send to Kafka
+			// Create the Request to send to the message bus
 			PiazzaJobRequest request = new PiazzaJobRequest();
 			request.jobType = job;
 			request.createdBy = userName;

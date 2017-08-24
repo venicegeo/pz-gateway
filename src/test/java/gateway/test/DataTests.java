@@ -165,7 +165,7 @@ public class DataTests {
 		ResponseEntity<PiazzaResponse> entity = dataController.ingestData(mockJob, user);
 		PiazzaResponse response = entity.getBody();
 
-		// Verify the results. If the mock Kafka message is sent, then this is
+		// Verify the results. If the mock message is sent, then this is
 		// considered a success.
 		assertTrue(response instanceof JobResponse == true);
 		assertTrue(response instanceof ErrorResponse == false);
@@ -215,7 +215,7 @@ public class DataTests {
 		mockJob.data.dataType = new GeoJsonDataType();
 
 		// Resubmit the Job. It should now succeed with the message successfully
-		// being sent to Kafka.
+		// being sent to the Message Bus.
 		entity = dataController.ingestDataFile(new ObjectMapper().writeValueAsString(mockJob), file, user);
 		response = entity.getBody();
 

@@ -120,12 +120,12 @@ public class DeploymentTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
-		Mockito.doThrow(new PiazzaJobException("Kafka Blows Up")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class),
+		Mockito.doThrow(new PiazzaJobException("Message Bus Error")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class),
 				anyString());
 		entity = deploymentController.createDeployment(accessJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
-		assertTrue(((ErrorResponse) entity.getBody()).message.contains("Kafka Blows Up"));
+		assertTrue(((ErrorResponse) entity.getBody()).message.contains("Message Bus Error"));
 	}
 
 	/**
