@@ -93,7 +93,8 @@ public class Application extends SpringBootServletInitializer {
 
 	@Bean
 	public Queue abortJobsQueue() {
-		return new Queue(String.format(JobMessageFactory.TOPIC_TEMPLATE, JobMessageFactory.ABORT_JOB_TOPIC_NAME, SPACE));
+		return new Queue(String.format(JobMessageFactory.TOPIC_TEMPLATE, JobMessageFactory.ABORT_JOB_TOPIC_NAME, SPACE), true, false,
+				false);
 	}
 
 	@Bean
