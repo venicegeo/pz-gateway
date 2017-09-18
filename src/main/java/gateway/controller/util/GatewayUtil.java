@@ -298,17 +298,14 @@ public class GatewayUtil {
 	 *  @return Null if all validationErrors are null.  A single string containing any validationErrors that are not null, if any.
 	 */
 	public String joinValidationErrors(String... validationErrors) {
-		String joinedErrors = null;
+		StringBuilder joinedErrors = new StringBuilder();
 		for (String validationError : validationErrors) {
 			if (validationError != null) {
-				if (joinedErrors == null) {
-					joinedErrors = validationError;
-				} else {
-					joinedErrors += "  " + validationError;
-				}
+				joinedErrors.append(validationError);
+				joinedErrors.append(" ");
 			}
 		}
-		return joinedErrors;
+		return joinedErrors.toString();
 	}
 
 	/**
