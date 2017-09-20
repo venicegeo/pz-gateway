@@ -142,8 +142,8 @@ public class UtilTests {
 	 */
 	@Test
 	public void testJoinValidationErrors() {
-		assertEquals("", gatewayUtil.joinValidationErrors((String)null)); // This mimics a null return from validateInput.
-		assertEquals("", gatewayUtil.joinValidationErrors(null, null, null));
+		assertEquals(null, gatewayUtil.joinValidationErrors((String)null)); // This mimics a null return from validateInput.
+		assertEquals(null, gatewayUtil.joinValidationErrors(null, null, null));
 		assertEquals("foo ", gatewayUtil.joinValidationErrors("foo"));
 		assertEquals("foo ", gatewayUtil.joinValidationErrors(null, "foo", null));
 		assertEquals("bar foo baz ", gatewayUtil.joinValidationErrors("bar", "foo", "baz"));

@@ -307,7 +307,7 @@ public class GatewayUtil {
 			}
 		}
 		String joinedErrorString = joinedErrors.toString();
-		return joinedErrorString != "" ? joinedErrorString : null;
+		return joinedErrorString.length() > 1 ? joinedErrorString : null;
 	}
 
 	/**
