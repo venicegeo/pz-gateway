@@ -139,10 +139,10 @@ public class GatewayUtil {
 	 * @return The Job Id
 	 */
 	public String sendJobRequest(PiazzaJobRequest request, String jobId) throws PiazzaJobException {
-		
+
 		// Generate a Job Id
 		final String finalJobId = jobId == null ? getUuid() : jobId;
-		
+
 		try {
 			// Send the message to Job Manager
 			HttpHeaders headers = new HttpHeaders();
@@ -289,13 +289,14 @@ public class GatewayUtil {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Joins multiple strings (from validateInput), formatting properly if there are 0, 1, or many validation errors.
 	 * 
-	 *  @param validationErrors
-	 *  	The validation string(s) and/or null(s) from validateInput
-	 *  @return Null if all validationErrors are null.  A single string containing any validationErrors that are not null, if any.
+	 * @param validationErrors
+	 *            The validation string(s) and/or null(s) from validateInput
+	 * @return Null if all validationErrors are null. A single string containing any validationErrors that are not null,
+	 *         if any.
 	 */
 	public String joinValidationErrors(String... validationErrors) {
 		StringBuilder joinedErrors = new StringBuilder();
@@ -305,7 +306,8 @@ public class GatewayUtil {
 				joinedErrors.append(" ");
 			}
 		}
-		return joinedErrors.toString();
+		String joinedErrorString = joinedErrors.toString();
+		return joinedErrorString != "" ? joinedErrorString : null;
 	}
 
 	/**
