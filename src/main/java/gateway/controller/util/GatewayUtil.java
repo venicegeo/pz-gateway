@@ -268,17 +268,15 @@ public class GatewayUtil {
 	 *         if any.
 	 */
 	public String joinValidationErrors(String... validationErrors) {
-		String joinedErrors = null;
+		StringBuilder joinedErrors = new StringBuilder();
 		for (String validationError : validationErrors) {
 			if (validationError != null) {
-				if (joinedErrors == null) {
-					joinedErrors = validationError;
-				} else {
-					joinedErrors += "  " + validationError;
-				}
+				joinedErrors.append(validationError);
+				joinedErrors.append(" ");
 			}
 		}
-		return joinedErrors;
+		String joinedErrorString = joinedErrors.toString();
+		return joinedErrorString.length() > 1 ? joinedErrorString : null;
 	}
 
 	/**
