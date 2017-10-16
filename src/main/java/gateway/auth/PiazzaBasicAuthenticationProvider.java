@@ -46,7 +46,7 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 	@Autowired
 	private UserDetailsBean userDetails;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(PiazzaBasicAuthenticationProvider.class);
+	private final static Logger LOG = LoggerFactory.getLogger(PiazzaBasicAuthenticationProvider.class);
 
 	public PiazzaBasicAuthenticationProvider() {
 		super();
@@ -71,7 +71,7 @@ public class PiazzaBasicAuthenticationProvider implements AuthenticationProvider
 		} catch (Exception exception) {
 			String error = String.format("Error retrieving Api Key: %s.", exception.getMessage());
 			logger.log(error, Severity.ERROR);
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 		}
 		return null;
 	}

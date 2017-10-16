@@ -73,8 +73,6 @@ public class AdminTests {
 		assertTrue(stats.containsKey("ServiceController"));
 		assertTrue(stats.containsKey("UUIDGen"));
 		assertTrue(stats.containsKey("Logger"));
-		assertTrue(stats.containsKey("Space"));
-		assertTrue(stats.containsKey("Space"));
 		assertTrue(stats.containsKey("Security"));
 	}
 }

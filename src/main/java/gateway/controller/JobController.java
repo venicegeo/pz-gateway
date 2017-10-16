@@ -92,7 +92,8 @@ public class JobController extends PiazzaRestController {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(JobController.class);
+	private final static Logger LOG = LoggerFactory.getLogger(JobController.class);
+	private static final String GATEWAY = "Gateway";
 
 	/**
 	 * Returns the Status of a Job.
@@ -129,14 +130,14 @@ public class JobController extends PiazzaRestController {
 						new AuditElement(dn, "completeFetchJob", jobId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Requesting Job Status", hee);
+				LOG.error("Error Requesting Job Status", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error requesting Job Status for Id %s: %s", jobId, exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -162,6 +163,7 @@ public class JobController extends PiazzaRestController {
 			@ApiParam(value = "Id of the Job to cancel.", required = true) @PathVariable(value = "jobId") String jobId,
 			@ApiParam(value = "Details for the cancellation of the Job.") @RequestParam(value = "reason", required = false) String reason,
 			Principal user) {
+		ResponseEntity<PiazzaResponse> response = null;
 		try {
 			// Log the request
 			String userName = gatewayUtil.getPrincipalName(user);
@@ -174,11 +176,6 @@ public class JobController extends PiazzaRestController {
 			request.createdBy = userName;
 			request.jobType = new AbortJob(jobId, reason);
 
-			// Send the message through Kafka to delete the Job. This message
-			// will get picked up by whatever component is running the Job.
-			ProducerRecord<String, String> abortMessage = JobMessageFactory.getAbortJobMessage(request, gatewayUtil.getUuid(), SPACE);
-			gatewayUtil.sendKafkaMessage(abortMessage);
-
 			logger.log(String.format("User %s cancelled Job %s", userName, jobId), Severity.INFORMATIONAL,
 					new AuditElement(dn, "completeJobCancelRequest", jobId));
 
@@ -188,19 +185,25 @@ public class JobController extends PiazzaRestController {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			try {
-				return new ResponseEntity<PiazzaResponse>(restTemplate
-						.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, SuccessResponse.class).getBody(),
-						HttpStatus.OK);
+				response = new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, SuccessResponse.class).getBody(), HttpStatus.OK);
+
+				// Send the message through Kafka to delete the Job. This message
+				// will get picked up by whatever component is running the Job.
+				ProducerRecord<String, String> abortMessage = JobMessageFactory.getAbortJobMessage(request, gatewayUtil.getUuid(), SPACE);
+				gatewayUtil.sendKafkaMessage(abortMessage);
+
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Requesting Job Cancellation", hee);
-				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
+				LOG.error("Error Requesting Job Cancellation", hee);
+				response = new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error requesting Job Abort for Id %s: %s", jobId, exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			response = new ResponseEntity<PiazzaResponse>(new JobErrorResponse(jobId, error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+
+		return response;
 	}
 
 	/**
@@ -247,14 +250,14 @@ public class JobController extends PiazzaRestController {
 						new AuditElement(dn, "completeRepeatJob", jobId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Repeating Job", hee);
+				LOG.error("Error Repeating Job", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Repeating Job Id %s: %s", jobId, exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -295,7 +298,7 @@ public class JobController extends PiazzaRestController {
 				if ((service != null) && (service.getResourceMetadata() != null)
 						&& ResourceMetadata.STATUS_TYPE.OFFLINE.toString().equals(service.getResourceMetadata().getAvailability())) {
 					return new ResponseEntity<PiazzaResponse>(
-							new ErrorResponse("Cannot Execute Service with Service Availability set as Offline.", "Gateway"),
+							new ErrorResponse("Cannot Execute Service with Service Availability set as Offline.", GATEWAY),
 							HttpStatus.BAD_REQUEST);
 				}
 			} catch (Exception exception) {
@@ -303,7 +306,7 @@ public class JobController extends PiazzaRestController {
 						"Attempted to check Service Availability for %s but received an error %s. Continued with Job Request.",
 						job.getData().getServiceId(), exception.getMessage());
 				logger.log(error, Severity.WARNING);
-				LOGGER.error(error, exception);
+				LOG.error(error, exception);
 			}
 
 			// Create the Request to send to the Job Manager.
@@ -320,9 +323,9 @@ public class JobController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Executing for user %s for Service %s: %s", gatewayUtil.getPrincipalName(user),
 					job.data.getServiceId(), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }

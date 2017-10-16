@@ -110,11 +110,11 @@ public class JobTests {
 		// Mock a Job
 		mockJob = new Job();
 		mockJob.setJobId("123456");
-		mockJob.jobType = new RepeatJob("654321");
-		mockJob.progress = new JobProgress(50);
-		mockJob.createdBy = "Test User 2";
-		mockJob.createdOn = new DateTime();
-		mockJob.status = StatusUpdate.STATUS_RUNNING;
+		mockJob.setJobType(new RepeatJob("654321"));
+		mockJob.setProgress(new JobProgress(50));
+		mockJob.setCreatedBy("Test User 2");
+		mockJob.setCreatedOnString(new DateTime().toString());
+		mockJob.setStatus(StatusUpdate.STATUS_RUNNING);
 
 		// Mock a user
 		user = new JMXPrincipal("Test User");

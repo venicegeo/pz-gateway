@@ -97,8 +97,11 @@ public class ServiceController extends PiazzaRestController {
 	private static final String DEFAULT_SORTBY = "resourceMetadata.createdOn";
 	private static final String DEFAULT_SERVICE_SORTBY = "service.resourceMetadata.createdOn";
 	private static final String DEFAULT_ORDER = "desc";
+	private static final String GATEWAY = "Gateway";
+	private static final String URL_FORMAT = "%s/%s/%s";
+	private static final String SERVICE = "service";
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(ServiceController.class);
+	private final static Logger LOG = LoggerFactory.getLogger(ServiceController.class);
 
 	/**
 	 * Registers an external service with the Piazza Service Controller.
@@ -149,15 +152,15 @@ public class ServiceController extends PiazzaRestController {
 						"completeServiceRegistration", ((ServiceIdResponse) response.getBody()).data.getServiceId()));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Registering Service", hee);
+				LOG.error("Error Registering Service", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Registering Service by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -183,28 +186,27 @@ public class ServiceController extends PiazzaRestController {
 			Principal user) {
 		try {
 			// Log the request
-			String userName = gatewayUtil.getPrincipalName(user);
 			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
 			logger.log(String.format("User %s has requested Service metadata for %s", gatewayUtil.getPrincipalName(user), serviceId),
 					Severity.INFORMATIONAL, new AuditElement(dn, "requestServiceMetadataFetch", serviceId));
 			// Proxy the request to the Service Controller instance
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
-						.getForEntity(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), ServiceResponse.class)
+						.getForEntity(String.format(URL_FORMAT, SERVICECONTROLLER_URL, SERVICE, serviceId), ServiceResponse.class)
 						.getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s Retrieved Service metadata for %s", gatewayUtil.getPrincipalName(user), serviceId),
 						Severity.INFORMATIONAL, new AuditElement(dn, "completeServiceMetadataFetch", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Getting Service Info", hee);
+				LOG.error("Error Getting Service Info", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Getting Service %s Info for user %s: %s", serviceId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -237,7 +239,7 @@ public class ServiceController extends PiazzaRestController {
 					new AuditElement(dn, "requestServiceDelete", serviceId));
 
 			// Proxy the request to the Service Controller instance
-			String url = String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId);
+			String url = String.format(URL_FORMAT, SERVICECONTROLLER_URL, SERVICE, serviceId);
 			url = (softDelete) ? (String.format("%s?softDelete=%s", url, softDelete)) : (url);
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
@@ -246,15 +248,15 @@ public class ServiceController extends PiazzaRestController {
 						new AuditElement(dn, "completeServiceDelete", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Deleting Service", hee);
+				LOG.error("Error Deleting Service", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Deleting Service %s Info for user %s: %s", serviceId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -280,7 +282,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
 	public ResponseEntity<PiazzaResponse> updateService(
 			@ApiParam(value = "The Id of the Service to Update.", required = true) @PathVariable(value = "serviceId") String serviceId,
-			@ApiParam(value = "The Service Metadata. All properties specified in the Service data here will overwrite the existing properties of the Service.", required = true, name = "service") @RequestBody Service serviceData,
+			@ApiParam(value = "The Service Metadata. All properties specified in the Service data here will overwrite the existing properties of the Service.", required = true, name = SERVICE) @RequestBody Service serviceData,
 			Principal user) {
 		try {
 			// Log the request
@@ -296,22 +298,22 @@ public class ServiceController extends PiazzaRestController {
 			HttpEntity<Service> request = new HttpEntity<Service>(serviceData, theHeaders);
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
-						restTemplate.exchange(String.format("%s/%s/%s", SERVICECONTROLLER_URL, "service", serviceId), HttpMethod.PUT,
+						restTemplate.exchange(String.format(URL_FORMAT, SERVICECONTROLLER_URL, SERVICE, serviceId), HttpMethod.PUT,
 								request, SuccessResponse.class).getBody(),
 						HttpStatus.OK);
 				logger.log(String.format("User %s has Updated Service %s", userName, serviceId), Severity.INFORMATIONAL,
 						new AuditElement(dn, "completeUpdateService", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Updating Service", hee);
+				LOG.error("Error Updating Service", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Updating Service %s Info for user %s: %s", serviceId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 
 		}
 	}
@@ -356,15 +358,17 @@ public class ServiceController extends PiazzaRestController {
 					new AuditElement(dn, "requestServiceList", ""));
 
 			// Validate params
-			String validationError = null;
-			if ((order != null && (validationError = gatewayUtil.validateInput("order", order)) != null)
-					|| (page != null && (validationError = gatewayUtil.validateInput("page", page)) != null)
-					|| (perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null)) {
-				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, "Gateway"), HttpStatus.BAD_REQUEST);
+			String validationError = gatewayUtil.joinValidationErrors(
+					gatewayUtil.validateInput("order", order),
+					gatewayUtil.validateInput("page", page),
+					gatewayUtil.validateInput("perPage", perPage)
+					);
+			if ( validationError != null ) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, GATEWAY), HttpStatus.BAD_REQUEST);
 			}
 
 			// Proxy the request to the Service Controller
-			String url = String.format("%s/%s?page=%s&perPage=%s", SERVICECONTROLLER_URL, "service", page, perPage);
+			String url = String.format("%s/%s?page=%s&perPage=%s", SERVICECONTROLLER_URL, SERVICE, page, perPage);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
@@ -387,15 +391,15 @@ public class ServiceController extends PiazzaRestController {
 						new AuditElement(dn, "completeServiceList", ""));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Querying Services", hee);
+				LOG.error("Error Querying Services", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 	
@@ -474,9 +478,9 @@ public class ServiceController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -517,15 +521,15 @@ public class ServiceController extends PiazzaRestController {
 						Severity.INFORMATIONAL, new AuditElement(dn, "completeRetrieveTaskManagedJob", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Fetching Job from Task Managed Service Queue.", hee);
+				LOG.error("Error Fetching Job from Task Managed Service Queue.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Retrieving Task-Managed Service's Job by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -573,15 +577,15 @@ public class ServiceController extends PiazzaRestController {
 						Severity.INFORMATIONAL, new AuditElement(dn, "completeUpdatedTaskManagedJob", jobId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Updating Job from Task Managed Service Queue.", hee);
+				LOG.error("Error Updating Job from Task Managed Service Queue.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Updating Job Status for Job %s in Service %s by User %s : %s", jobId, serviceId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -592,6 +596,7 @@ public class ServiceController extends PiazzaRestController {
 	 *            The ID of the Service
 	 * @return Map containing information regarding the Task-Managed Service
 	 */
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = {
 			"/service/{serviceId}/task/metadata" }, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Get Task-Managed Service Metadata", notes = "Returns specific metadata on the current Job Queue for a Task-Managed Service, such as the number of jobs currently in the queue.", tags = {
@@ -600,7 +605,7 @@ public class ServiceController extends PiazzaRestController {
 			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
 			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
 			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<?> getServiceQueueData(@PathVariable(value = "serviceId") String serviceId, Principal user) {
+	public ResponseEntity getServiceQueueData(@PathVariable(value = "serviceId") String serviceId, Principal user) {
 		try {
 			// Log the Request
 			String userName = gatewayUtil.getPrincipalName(user);
@@ -620,15 +625,15 @@ public class ServiceController extends PiazzaRestController {
 						Severity.INFORMATIONAL, new AuditElement(dn, "completeRetrieveTaskManagedMetadata", serviceId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Fetching Job from Task Managed Service Queue.", hee);
+				LOG.error("Error Fetching Job from Task Managed Service Queue.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Retrieving Task-Managed Service Metadata Information user %s: %s",
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }

@@ -158,7 +158,7 @@ public class DeploymentTests {
 		DeploymentListResponse mockResponse = new DeploymentListResponse();
 		mockResponse.data = new ArrayList<Deployment>();
 		mockResponse.getData().add(mockDeployment);
-		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
 		when(restTemplate.getForEntity(anyString(), eq(DeploymentListResponse.class)))
 				.thenReturn(new ResponseEntity<DeploymentListResponse>(mockResponse, HttpStatus.OK));
 

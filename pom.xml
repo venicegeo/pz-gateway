@@ -18,7 +18,7 @@
 	<repositories>
 		<repository>
 			<id>nexus</id>
-			<url>https://nexus.devops.geointservices.io/content/repositories/Piazza-Group/</url>
+			<url>${env.ARTIFACT_STORAGE_URL}</url>
 		</repository>
 	</repositories>
 
@@ -36,7 +36,6 @@
 		    <artifactId>transport</artifactId>
 		    <version>5.4.0</version>
 		</dependency>
-
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -74,7 +73,7 @@
 		<dependency>
 			<groupId>org.venice.piazza</groupId>
 			<artifactId>pz-jobcommon</artifactId>
-			<version>elastic6</version>
+			<version>1-0-2-4-g22ef4cf</version>
 		</dependency>
 
 		<dependency>

@@ -215,7 +215,7 @@ public class AlertTriggerTests {
 		AlertListResponse mockResponse = new AlertListResponse();
 		mockResponse.data = new ArrayList<Alert>();
 		mockResponse.getData().add(alert);
-		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
 		when(restTemplate.postForObject(anyString(), any(), eq(AlertListResponse.class))).thenReturn(mockResponse);
 
 		// Test
@@ -225,7 +225,7 @@ public class AlertTriggerTests {
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 		assertTrue(response.getData().get(0).alertId.equalsIgnoreCase(alert.alertId));
-		assertTrue(response.getPagination().getCount().equals(1));
+		assertTrue(response.getPagination().getCount().equals(new Long(1)));
 
 		// Test an Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(AlertListResponse.class))).thenThrow(new RestClientException(""));
@@ -246,7 +246,7 @@ public class AlertTriggerTests {
 		TriggerListResponse mockResponse = new TriggerListResponse();
 		mockResponse.data = new ArrayList<Trigger>();
 		mockResponse.getData().add(trigger);
-		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
 		when(restTemplate.postForObject(anyString(), any(), eq(TriggerListResponse.class))).thenReturn(mockResponse);
 
 		// Test
@@ -256,7 +256,7 @@ public class AlertTriggerTests {
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 		assertTrue(response.getData().get(0).triggerId.equalsIgnoreCase(trigger.triggerId));
-		assertTrue(response.getPagination().getCount().equals(1));
+		assertTrue(response.getPagination().getCount().equals(new Long(1)));
 
 		// Test an Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(TriggerListResponse.class))).thenThrow(new RestClientException(""));

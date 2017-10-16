@@ -86,8 +86,10 @@ public class DeploymentController extends PiazzaRestController {
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_ORDER = "desc";
 	private static final String DEFAULT_SORTBY = "createdOn";
-
-	private final static Logger LOGGER = LoggerFactory.getLogger(DeploymentController.class);
+	private static final String GATEWAY = "Gateway";
+	private static final String DEPLOYMENT = "deployment";
+	
+	private final static Logger LOG = LoggerFactory.getLogger(DeploymentController.class);
 
 	/**
 	 * Processes a request to create a GIS Server deployment for Piazza data.
@@ -133,9 +135,9 @@ public class DeploymentController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Loading Data for user %s for Id %s of type %s: %s", gatewayUtil.getPrincipalName(user),
 					job.getDataId(), job.getDeploymentType(), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -170,15 +172,17 @@ public class DeploymentController extends PiazzaRestController {
 					new AuditElement(dn, "requestDeploymentList", ""));
 
 			// Validate params
-			String validationError = null;
-			if ((order != null && (validationError = gatewayUtil.validateInput("order", order)) != null)
-					|| (page != null && (validationError = gatewayUtil.validateInput("page", page)) != null)
-					|| (perPage != null && (validationError = gatewayUtil.validateInput("perPage", perPage)) != null)) {
-				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, "Gateway"), HttpStatus.BAD_REQUEST);
+			String validationError = gatewayUtil.joinValidationErrors(
+					gatewayUtil.validateInput("order", order),
+					gatewayUtil.validateInput("page", page),
+					gatewayUtil.validateInput("perPage", perPage)
+					);
+			if ( validationError != null ) {
+				return new ResponseEntity<PiazzaResponse>(new ErrorResponse(validationError, GATEWAY), HttpStatus.BAD_REQUEST);
 			}
-
+			
 			// Proxy the request to Pz-Access
-			String url = String.format("%s/%s?page=%s&perPage=%s", ACCESS_URL, "deployment", page, perPage);
+			String url = String.format("%s/%s?page=%s&perPage=%s", ACCESS_URL, DEPLOYMENT, page, perPage);
 			// Attach keywords if specified
 			if ((keyword != null) && (keyword.isEmpty() == false)) {
 				url = String.format("%s&keyword=%s", url, keyword);
@@ -196,15 +200,15 @@ public class DeploymentController extends PiazzaRestController {
 						new AuditElement(dn, "successDeploymentList", ""));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Listing Deployments.", hee);
+				LOG.error("Error Listing Deployments.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Listing Deployments by user %s: %s", gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -238,21 +242,21 @@ public class DeploymentController extends PiazzaRestController {
 			// Broker the request to Pz-Access
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
-						.getForEntity(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), DeploymentResponse.class)
+						.getForEntity(String.format("%s/%s/%s", ACCESS_URL, DEPLOYMENT, deploymentId), DeploymentResponse.class)
 						.getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s successfully retrieved Deployment Data for %s", userName, deploymentId),
 						Severity.INFORMATIONAL, new AuditElement(dn, "successDeploymentData", deploymentId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Fetching Deployment.", hee);
+				LOG.error("Error Fetching Deployment.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error fetching Deployment for Id %s by user %s: %s", deploymentId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -286,22 +290,22 @@ public class DeploymentController extends PiazzaRestController {
 			// Broker the request to Pz-Access
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
-						restTemplate.exchange(String.format("%s/%s/%s", ACCESS_URL, "deployment", deploymentId), HttpMethod.DELETE, null,
+						restTemplate.exchange(String.format("%s/%s/%s", ACCESS_URL, DEPLOYMENT, deploymentId), HttpMethod.DELETE, null,
 								SuccessResponse.class).getBody(),
 						HttpStatus.OK);
 				logger.log(String.format("User %s successfully deleted for Deployment %s", userName, deploymentId), Severity.INFORMATIONAL,
 						new AuditElement(dn, "successDeleteDeployment", deploymentId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Deleting Deployment.", hee);
+				LOG.error("Error Deleting Deployment.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Deleting Deployment by Id %s by user %s: %s", deploymentId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -335,14 +339,14 @@ public class DeploymentController extends PiazzaRestController {
 			return response;
 		} catch (Exception exception) {
 			String error = String.format("Error creating DeploymentGroup: %s", exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	/**
-	 * Deletes a Deployment Group. This will delete the Group in the Mongo DB holdings, and also in the GIS Server
+	 * Deletes a Deployment Group. This will delete the Group in the DB holdings, and also in the GIS Server
 	 * instance. Unrecoverable once deleted.
 	 * 
 	 * @param deploymentGroupId
@@ -374,15 +378,15 @@ public class DeploymentController extends PiazzaRestController {
 						Severity.INFORMATIONAL, new AuditElement(dn, "successDeleteDeploymentGroup", deploymentGroupId));
 				return response;
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOGGER.error("Error Deleting Deployment.", hee);
+				LOG.error("Error Deleting Deployment.", hee);
 				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error Deleting DeploymentGroup %s : %s - exception: %s", deploymentGroupId,
 					gatewayUtil.getPrincipalName(user), exception.getMessage());
-			LOGGER.error(error, exception);
+			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, "Gateway"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }

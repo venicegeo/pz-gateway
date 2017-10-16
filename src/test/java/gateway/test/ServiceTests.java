@@ -237,7 +237,7 @@ public class ServiceTests {
 		ServiceListResponse mockResponse = new ServiceListResponse();
 		mockResponse.data = new ArrayList<Service>();
 		mockResponse.getData().add(mockService);
-		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
 		when(restTemplate.getForEntity(anyString(), eq(ServiceListResponse.class)))
 				.thenReturn(new ResponseEntity<ServiceListResponse>(mockResponse, HttpStatus.OK));
 
@@ -270,7 +270,7 @@ public class ServiceTests {
 		ServiceListResponse mockResponse = new ServiceListResponse();
 		mockResponse.data = new ArrayList<Service>();
 		mockResponse.getData().add(mockService);
-		mockResponse.pagination = new Pagination(1, 0, 10, "test", "asc");
+		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
 		when(restTemplate.postForObject(anyString(), any(), eq(ServiceListResponse.class))).thenReturn(mockResponse);
 
 		// Test
@@ -280,7 +280,7 @@ public class ServiceTests {
 		// Verify
 		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
 		assertTrue(response.getData().get(0).getServiceId().equalsIgnoreCase(mockService.getServiceId()));
-		assertTrue(response.getPagination().getCount().equals(1));
+		assertTrue(response.getPagination().getCount().equals(new Long(1)));
 
 		// Test Exception
 		when(restTemplate.postForObject(anyString(), any(), eq(ServiceListResponse.class))).thenThrow(new RestClientException("Error"));
