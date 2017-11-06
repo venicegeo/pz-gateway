@@ -110,7 +110,11 @@ node {
           sh "cf set-env ${appName} DOMAIN ${env.PHASE_ONE_PCF_DOMAIN}"
           sh "cf start ${appName}"
         } catch (Exception e) {
-          sh "cf logs --recent ${appName}"
+	      try {
+		sh "cf logs --recent ${appName}"
+	      } catch (Exception e) {
+		echo "Printing logs failed: ${e}"
+	      }
           sh "cf delete ${appName} -f -r"
           error("Error during application start. Deleting ${appName} and failing the build.")
         }
@@ -186,7 +190,11 @@ node {
           sh "cf set-env ${appName} DOMAIN ${env.PHASE_TWO_PCF_DOMAIN}"
           sh "cf start ${appName}"
         } catch (Exception e) {
-          sh "cf logs --recent ${appName}"
+	      try {
+		sh "cf logs --recent ${appName}"
+	      } catch (Exception e) {
+		echo "Printing logs failed: ${e}"
+	      }
           sh "cf delete ${appName} -f -r"
           error("Error during application start. Deleting ${appName} and failing the build.")
         }
@@ -234,6 +242,5 @@ node {
         }
       }
     }
-	
   }
 }
