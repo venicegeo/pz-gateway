@@ -112,8 +112,8 @@ node {
         } catch (Exception e) {
 	      try {
 		sh "cf logs --recent ${appName}"
-	      } catch (Exception e) {
-		echo "Printing logs failed: ${e}"
+	      } catch (Exception ex) {
+		echo "Printing logs failed: ${ex}"
 	      }
           sh "cf delete ${appName} -f -r"
           error("Error during application start. Deleting ${appName} and failing the build.")
@@ -192,8 +192,8 @@ node {
         } catch (Exception e) {
 	      try {
 		sh "cf logs --recent ${appName}"
-	      } catch (Exception e) {
-		echo "Printing logs failed: ${e}"
+	      } catch (Exception ex) {
+		echo "Printing logs failed: ${ex}"
 	      }
           sh "cf delete ${appName} -f -r"
           error("Error during application start. Deleting ${appName} and failing the build.")
