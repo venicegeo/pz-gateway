@@ -19,27 +19,19 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import javax.management.remote.JMXPrincipal;
 
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -83,8 +75,6 @@ public class DeploymentTests {
 	private AmazonS3 s3Client;
 	@InjectMocks
 	private DeploymentController deploymentController;
-	@Mock
-	private Producer<String, String> producer;
 
 	private Principal user;
 	private ErrorResponse mockError;
@@ -108,18 +98,6 @@ public class DeploymentTests {
 		mockDeployment = new Deployment("123456", "654321", "localhost", "8080", "layer",
 				"http://localhost:8080/layer?request=GetCapabilities");
 
-		// Mock the Kafka response that Producers will send. This will always
-		// return a Future that completes immediately and simply returns true.
-		when(producer.send(isA(ProducerRecord.class))).thenAnswer(new Answer<Future<Boolean>>() {
-			@Override
-			public Future<Boolean> answer(InvocationOnMock invocation) throws Throwable {
-				Future<Boolean> future = mock(FutureTask.class);
-				when(future.isDone()).thenReturn(true);
-				when(future.get()).thenReturn(true);
-				return future;
-			}
-		});
-
 		when(gatewayUtil.getErrorResponse(anyString())).thenCallRealMethod();
 	}
 
@@ -142,11 +120,12 @@ public class DeploymentTests {
 		assertTrue(entity.getStatusCode().equals(HttpStatus.CREATED));
 
 		// Test Exception
-		Mockito.doThrow(new PiazzaJobException("Kafka Blows Up")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class), anyString());
+		Mockito.doThrow(new PiazzaJobException("Message Bus Error")).when(gatewayUtil).sendJobRequest(any(PiazzaJobRequest.class),
+				anyString());
 		entity = deploymentController.createDeployment(accessJob, user);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 		assertTrue(entity.getBody() instanceof ErrorResponse);
-		assertTrue(((ErrorResponse) entity.getBody()).message.contains("Kafka Blows Up"));
+		assertTrue(((ErrorResponse) entity.getBody()).message.contains("Message Bus Error"));
 	}
 
 	/**
