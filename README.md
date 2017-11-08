@@ -16,3 +16,5 @@ NOTE: This Maven build depends on having access to the `Piazza-Group` repository
 
 Check the `application.properties` file if any port or host information needs to change for certain components. Since the Gateway proxies to all internal Piazza components, then depending on what you are attempting to debug locally, you may need to set one or many of these parameters. For example, if you are debugging `pz-ingest` as well, then you would change the `ingest.url` property in `application.properties` to your own local machine.
 
+
+
