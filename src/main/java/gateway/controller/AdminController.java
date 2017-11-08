@@ -73,8 +73,6 @@ public class AdminController extends PiazzaRestController {
 	private HttpServletRequest request;
 	@Autowired
 	private GatewayUtil gatewayUtil;
-	@Value("${vcap.services.pz-kafka.credentials.host}")
-	private String KAFKA_ADDRESS;
 	@Value("${SPACE}")
 	private String SPACE;
 	@Value("${workflow.url}")
@@ -164,8 +162,6 @@ public class AdminController extends PiazzaRestController {
 	@RequestMapping(value = "/admin/stats", method = RequestMethod.GET)
 	public ResponseEntity<Map<String, Object>> getAdminStats() {
 		Map<String, Object> stats = new HashMap<String, Object>();
-		// Write the Kafka configs
-		stats.put("Kafka Address", KAFKA_ADDRESS);
 		// Write the URL configs
 		stats.put("Space", SPACE);
 		stats.put("Workflow", WORKFLOW_URL);

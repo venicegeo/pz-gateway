@@ -63,7 +63,6 @@ public class AdminTests {
 		Map<String, Object> stats = response.getBody();
 
 		// Ensure proper keys
-		assertTrue(stats.containsKey("Kafka Address"));
 		assertTrue(stats.containsKey("Space"));
 		assertTrue(stats.containsKey("Workflow"));
 		assertTrue(stats.containsKey("Search"));

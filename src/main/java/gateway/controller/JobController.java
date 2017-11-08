@@ -19,9 +19,10 @@ import java.security.Principal;
 
 import javax.validation.Valid;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -41,6 +42,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
@@ -84,13 +87,19 @@ public class JobController extends PiazzaRestController {
 	private PiazzaLogger logger;
 	@Autowired
 	private ServiceController serviceController;
+	@Autowired
+	private RestTemplate restTemplate;
+	@Autowired
+	private RabbitTemplate rabbitTemplate;
+	@Autowired
+	private Queue abortJobsQueue;
+	@Autowired
+	private ObjectMapper mapper;
+
 	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
 	@Value("${SPACE}")
 	private String SPACE;
-
-	@Autowired
-	private RestTemplate restTemplate;
 
 	private final static Logger LOG = LoggerFactory.getLogger(JobController.class);
 	private static final String GATEWAY = "Gateway";
@@ -176,25 +185,24 @@ public class JobController extends PiazzaRestController {
 			request.createdBy = userName;
 			request.jobType = new AbortJob(jobId, reason);
 
-			logger.log(String.format("User %s cancelled Job %s", userName, jobId), Severity.INFORMATIONAL,
-					new AuditElement(dn, "completeJobCancelRequest", jobId));
-
 			// Proxy the request to the Job Manager, where the Job Table will be
 			// updated.
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<PiazzaJobRequest> entity = new HttpEntity<PiazzaJobRequest>(request, headers);
 			try {
-				response = new ResponseEntity<PiazzaResponse>(restTemplate.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, SuccessResponse.class).getBody(), HttpStatus.OK);
-
-				// Send the message through Kafka to delete the Job. This message
-				// will get picked up by whatever component is running the Job.
-				ProducerRecord<String, String> abortMessage = JobMessageFactory.getAbortJobMessage(request, gatewayUtil.getUuid(), SPACE);
-				gatewayUtil.sendKafkaMessage(abortMessage);
-
+				response = new ResponseEntity<PiazzaResponse>(restTemplate
+						.postForEntity(String.format("%s/%s", JOBMANAGER_URL, "abort"), entity, SuccessResponse.class).getBody(),
+						HttpStatus.OK);
+				// Send the message through the Event Bus to abort the job.
+				rabbitTemplate.convertAndSend(JobMessageFactory.PIAZZA_EXCHANGE_NAME, abortJobsQueue.getName(),
+						mapper.writeValueAsString(request));
+				logger.log(String.format("User %s cancelled Job %s", userName, jobId), Severity.INFORMATIONAL,
+						new AuditElement(dn, "completeJobCancelRequest", jobId));
 			} catch (HttpClientErrorException | HttpServerErrorException hee) {
 				LOG.error("Error Requesting Job Cancellation", hee);
-				response = new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
+				response = new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()),
+						hee.getStatusCode());
 			}
 		} catch (Exception exception) {
 			String error = String.format("Error requesting Job Abort for Id %s: %s", jobId, exception.getMessage());

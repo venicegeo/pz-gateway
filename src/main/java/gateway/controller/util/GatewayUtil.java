@@ -17,13 +17,9 @@ package gateway.controller.util;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +48,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import exception.PiazzaJobException;
 import gateway.auth.PiazzaAuthenticationToken;
-import messaging.job.KafkaClientFactory;
 import model.data.FileRepresentation;
 import model.data.location.FileLocation;
 import model.data.location.S3FileStore;
@@ -84,10 +79,10 @@ public class GatewayUtil {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	@Value("${vcap.services.pz-kafka.credentials.host}")
-	private String KAFKA_HOSTS;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
+	@Value("${s3.use.kms}")
+	private Boolean USE_KMS;
 	@Value("${vcap.services.pz-blobstore.credentials.access_key_id:}")
 	private String AMAZONS3_ACCESS_KEY;
 	@Value("${vcap.services.pz-blobstore.credentials.secret_access_key:}")
@@ -96,38 +91,32 @@ public class GatewayUtil {
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
-	@Value("${vcap.services.pz-blobstore.credentials.encryption_key}")
+	@Value("${vcap.services.pz-blobstore.credentials.encryption_key:}")
 	private String S3_KMS_CMK_ID;
 
 	private final static Logger LOG = LoggerFactory.getLogger(GatewayUtil.class);
-
-	private Producer<String, String> producer;
 	private AmazonS3 s3Client;
 
 	/**
-	 * Initializing the Kafka Producer on Controller startup.
+	 * Initializing the components
 	 */
 	@PostConstruct
 	public void init() {
-		// Kafka Producer.
-		producer = KafkaClientFactory.getProducer(KAFKA_HOSTS);
-		logger.log("Connecting to Kafka Cluster", Severity.INFORMATIONAL,
-				new AuditElement("gateway", "connectedToKafkaCluster", KAFKA_HOSTS));
 		// Connect to S3 Bucket. Only apply credentials if they are present.
 		if ((AMAZONS3_ACCESS_KEY.isEmpty()) && (AMAZONS3_PRIVATE_KEY.isEmpty())) {
 			s3Client = new AmazonS3Client();
 		} else {
 			BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
-			// Set up encryption using the KMS CMK Key
-			KMSEncryptionMaterialsProvider materialProvider = new KMSEncryptionMaterialsProvider(S3_KMS_CMK_ID);
-			s3Client = new AmazonS3EncryptionClient(credentials, materialProvider,
-					new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1)).withRegion(Region.getRegion(Regions.US_EAST_1));
+			if (USE_KMS.booleanValue()) {
+				// Set up encryption using the KMS CMK Key
+				KMSEncryptionMaterialsProvider materialProvider = new KMSEncryptionMaterialsProvider(S3_KMS_CMK_ID);
+				s3Client = new AmazonS3EncryptionClient(credentials, materialProvider,
+						new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1)).withRegion(Region.getRegion(Regions.US_EAST_1));
+			} else {
+				// No KMS.
+				s3Client = new AmazonS3Client(credentials);
+			}
 		}
-	}
-
-	@PreDestroy
-	public void cleanup() {
-		producer.close();
 	}
 
 	/**
@@ -169,19 +158,6 @@ public class GatewayUtil {
 					new AuditElement(request.createdBy, "failedRequestJob", finalJobId));
 			throw new PiazzaJobException(error);
 		}
-	}
-
-	/**
-	 * Sends a message to Kafka. This will additionally invoke .get() on the message sent, which will block until the
-	 * acknowledgement from Kafka has been received that the message entered the Kafka queue.
-	 * 
-	 * @param message
-	 *            The message to send.
-	 * @throws Exception
-	 *             Any exceptions encountered with the send.
-	 */
-	public void sendKafkaMessage(ProducerRecord<String, String> message) throws InterruptedException, ExecutionException {
-		producer.send(message).get();
 	}
 
 	/**
