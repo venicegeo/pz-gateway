@@ -88,6 +88,8 @@ public class GatewayUtil {
 	private String KAFKA_HOSTS;
 	@Value("${s3.domain}")
 	private String AMAZONS3_DOMAIN;
+	@Value("${s3.use.kms}")
+	private Boolean USE_KMS;
 	@Value("${vcap.services.pz-blobstore.credentials.access_key_id:}")
 	private String AMAZONS3_ACCESS_KEY;
 	@Value("${vcap.services.pz-blobstore.credentials.secret_access_key:}")
@@ -96,7 +98,7 @@ public class GatewayUtil {
 	private String AMAZONS3_BUCKET_NAME;
 	@Value("${jobmanager.url}")
 	private String JOBMANAGER_URL;
-	@Value("${vcap.services.pz-blobstore.credentials.encryption_key}")
+	@Value("${vcap.services.pz-blobstore.credentials.encryption_key:}")
 	private String S3_KMS_CMK_ID;
 
 	private final static Logger LOG = LoggerFactory.getLogger(GatewayUtil.class);
@@ -118,10 +120,15 @@ public class GatewayUtil {
 			s3Client = new AmazonS3Client();
 		} else {
 			BasicAWSCredentials credentials = new BasicAWSCredentials(AMAZONS3_ACCESS_KEY, AMAZONS3_PRIVATE_KEY);
-			// Set up encryption using the KMS CMK Key
-			KMSEncryptionMaterialsProvider materialProvider = new KMSEncryptionMaterialsProvider(S3_KMS_CMK_ID);
-			s3Client = new AmazonS3EncryptionClient(credentials, materialProvider,
-					new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1)).withRegion(Region.getRegion(Regions.US_EAST_1));
+			if (USE_KMS.booleanValue()) {
+				// Set up encryption using the KMS CMK Key
+				KMSEncryptionMaterialsProvider materialProvider = new KMSEncryptionMaterialsProvider(S3_KMS_CMK_ID);
+				s3Client = new AmazonS3EncryptionClient(credentials, materialProvider,
+						new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1)).withRegion(Region.getRegion(Regions.US_EAST_1));
+			} else {
+				// No KMS.
+				s3Client = new AmazonS3Client(credentials);
+			}
 		}
 	}
 
