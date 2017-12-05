@@ -20,6 +20,16 @@
 			<id>nexus</id>
 			<url>${env.ARTIFACT_STORAGE_URL}</url>
 		</repository>
+<!--       <repository> -->
+<!--          <id>elasticsearch-releases</id> -->
+<!--          <url>https://maven.elasticsearch.org/releases</url> -->
+<!--          <releases> -->
+<!--             <enabled>true</enabled> -->
+<!--          </releases> -->
+<!--          <snapshots> -->
+<!--             <enabled>false</enabled> -->
+<!--          </snapshots> -->
+<!--       </repository> -->
 	</repositories>
 
 	<dependencies>
@@ -47,19 +57,25 @@
 		    <artifactId>transport</artifactId>
 		    <version>5.4.0</version>
 		</dependency>
-
-<!-- 		<dependency> -->
-<!-- 		   <groupId>org.elasticsearch.client</groupId> -->
-<!-- 		   <artifactId>x-pack-transport</artifactId> -->
-<!-- 		   <version>5.4.3</version> -->
-<!-- 		</dependency> -->
-
 		
 		<dependency>
-			<groupId>org.elasticsearch.client</groupId>
-			<artifactId>x-pack-transport</artifactId>
-			<version>5.1.1</version>
+		   <groupId>org.elasticsearch.client</groupId>
+		   <artifactId>x-pack-transport</artifactId>
+		   <version>5.4.3</version>
 		</dependency>
+				
+<!-- 		<dependency> -->
+<!-- 		    <groupId>org.elasticsearch.plugin</groupId> -->
+<!-- 		    <artifactId>shield</artifactId> -->
+<!-- 		    <version>2.4.6</version> -->
+<!-- 		    <scope>provided</scope> -->
+<!-- 		</dependency> -->
+				
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.elasticsearch.client</groupId> -->
+<!-- 			<artifactId>x-pack-transport</artifactId> -->
+<!-- 			<version>5.1.1</version> -->
+<!-- 		</dependency> -->
 		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -96,7 +112,7 @@
 		<dependency>
 			<groupId>org.venice.piazza</groupId>
 			<artifactId>pz-jobcommon</artifactId>
-			<version>1-0-4-25-g3fa2005</version>
+			<version>1-0-4-26-gb26e7fc</version>
 		</dependency>
 
 		<dependency>
