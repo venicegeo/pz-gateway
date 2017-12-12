@@ -87,6 +87,8 @@ public class Application extends SpringBootServletInitializer {
 	private Integer elasticSearchPort;
 	@Value("${vcap.services.pz-elasticsearch.credentials.host}")
 	private String elasticSearchHost;
+	@Value("${elasticsearch.hostoverride}")
+	private String elasticSearchHostOverride;
 	@Value("${vcap.services.pz-elasticsearch.credentials.clusterId}")
 	private String clusterId;
 	@Value("${vcap.services.pz-elasticsearch.credentials.username}")
@@ -119,7 +121,7 @@ public class Application extends SpringBootServletInitializer {
 	@Bean
 	public RestTemplate restTemplate() {
 		
-		System.out.println("\n\n============================" + "\nelasticSearchHost: " +  elasticSearchHost + "\nelasticSearchPort: " + elasticSearchPort + "\nclusterId: " + clusterId + "\nelasticUsername: " + elasticUsername + "\n============================");
+		System.out.println("\n\n============================" + "\nelasticSearchHostOverride: " + elasticSearchHostOverride + "\nelasticSearchHost: " +  elasticSearchHost + "\nelasticSearchPort: " + elasticSearchPort + "\nclusterId: " + clusterId + "\nelasticUsername: " + elasticUsername + "\n============================");
 		
 		RestTemplate restTemplate = new RestTemplate();
 		HttpClient httpClient = HttpClients.custom().setMaxConnTotal(httpMaxTotal).setMaxConnPerRoute(httpMaxRoute)
