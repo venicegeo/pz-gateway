@@ -82,6 +82,17 @@ public class Application extends SpringBootServletInitializer {
 	private int httpMaxRoute;
 	@Value("${SPACE}")
 	private String SPACE;
+	
+	@Value("${elasticsearch.transportClientPort}")
+	private Integer elasticSearchPort;
+	@Value("${vcap.services.pz-elasticsearch.credentials.host}")
+	private String elasticSearchHost;
+	@Value("${vcap.services.pz-elasticsearch.credentials.clusterId}")
+	private String clusterId;
+	@Value("${vcap.services.pz-elasticsearch.credentials.username}")
+	private String elasticUsername;
+	@Value("${vcap.services.pz-elasticsearch.credentials.password}")
+	private String elasticPassword;
 
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
@@ -107,6 +118,9 @@ public class Application extends SpringBootServletInitializer {
 
 	@Bean
 	public RestTemplate restTemplate() {
+		
+		System.out.println("\n\n============================" + "\nelasticSearchHost: " +  elasticSearchHost + "\nelasticSearchPort: " + elasticSearchPort + "\nclusterId: " + clusterId + "\nelasticUsername: " + elasticUsername + "\n============================");
+		
 		RestTemplate restTemplate = new RestTemplate();
 		HttpClient httpClient = HttpClients.custom().setMaxConnTotal(httpMaxTotal).setMaxConnPerRoute(httpMaxRoute)
 				.setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
