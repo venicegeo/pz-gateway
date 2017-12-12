@@ -13,3 +13,4 @@ applications:
   env:
     SPRING_PROFILES_ACTIVE: cloud,secure
     elasticsearch.transportClientPort: 9343
+    elasticsearch.hostoverride: 9b1cefa0106547cca95cd180d52be728.int.east3.paas.geointservices.io
