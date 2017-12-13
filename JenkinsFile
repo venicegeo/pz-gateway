@@ -50,16 +50,18 @@ node {
     if (getDependencyStatus == 0) {
       echo "Artifact version ${appvers} exists in Nexus, nothing to do"
     } else {
-     sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/${artifactDirectory}/${tarball} \
-        -DrepositoryId=nexus \
-        -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
-        -DgroupId="org.venice.piazza" \
-        -DgeneratePom=false \
-        -Dpackaging=tar.gz \
-        -Dmaven.repo.local="${root}/.m2/repository" \
-        -DartifactId=pz-gateway \
-        -Dversion=${appvers}
-      """
+      dir("${root}/${artifactDirectory}") {
+        sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/${artifactDirectory}/${tarball} \
+          -DrepositoryId=nexus \
+          -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
+          -DgroupId="org.venice.piazza" \
+          -DgeneratePom=false \
+          -Dpackaging=tar.gz \
+          -Dmaven.repo.local="${root}/.m2/repository" \
+          -DartifactId=pz-gateway \
+          -Dversion=${appvers}
+        """
+      }
     }
   }
 
