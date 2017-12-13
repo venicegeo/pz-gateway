@@ -24,11 +24,14 @@ node {
   def appName = "pz-gateway-${appvers}"
 
   stage('Archive') {
-    // Build
+    // Build Tarball
+    def targetFiles = "pz-gateway.jar manifest.jenkins.yml"
+    def tarball = "pz-gateway.tar.gz"
     sh """
       sed -i 's,\${env.ARTIFACT_STORAGE_URL},${env.ARTIFACT_STORAGE_URL},g' pom.xml
       ${mvn}/bin/mvn clean package -U -Dmaven.repo.local=${root}
       cp ${root}/target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
+      tar cvvzf ${tarball} ${targetFiles}
     """
     // Check if exists already
     def getDependencyStatus = sh(script: """mvn -X --settings ~/.m2/settings.xml dependency:get \
@@ -37,19 +40,19 @@ node {
       -DartifactId=pz-gateway \
       -Dversion=${appvers} \
       -DgroupId="org.venice.piazza" \
-      -Dpackaging=jar \
+      -Dpackaging=tar.gz \
       -DremoteRepositories="nexus::default::${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
     """, returnStatus: true)
     echo "dependency status = ${getDependencyStatus}"
     if (getDependencyStatus == 0) {
       echo "Artifact version ${appvers} exists in Nexus, nothing to do"
     } else {
-     sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/pz-gateway.jar \
+     sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/${tarball} \
         -DrepositoryId=nexus \
         -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
         -DgroupId="org.venice.piazza" \
         -DgeneratePom=false \
-        -Dpackaging=jar \
+        -Dpackaging=tar.gz \
         -Dmaven.repo.local="${root}/.m2/repository" \
         -DartifactId=pz-gateway \
         -Dversion=${appvers}
@@ -59,40 +62,25 @@ node {
 
   if(!params.SKIP_SCANS) {
 	  stage('Scans') {
-		withCredentials([[$class: "StringBinding", credentialsId: "${env.THREADFIX_API_KEY}", variable: "THREADFIX_KEY"]]) {
-		  sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --version"
-		  sh '/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project "pz-gateway" --scan "." --format "XML" --enableExperimental --disableBundleAudit'
-		  sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
-		  //ionConnect()
-		  //sh """
-		  //  mkdir -p ${root}/.m2/repository
-		  //  ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
-		  //    -Dmaven.repo.local=${root}/.m2/repository \
-		  //    -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
-		  //    -DdataFile=target/jacoco.exec
-		  //"""
+      withCredentials([[$class: "StringBinding", credentialsId: "${env.THREADFIX_API_KEY}", variable: "THREADFIX_KEY"]]) {
+        sh "/jslave/dependency-check/dependency-check/bin/dependency-check.sh --version"
+        sh '/jslave/dependency-check/dependency-check/bin/dependency-check.sh --project "pz-gateway" --scan "." --format "XML" --enableExperimental --disableBundleAudit'
+        sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@dependency-check-report.xml ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
+        
+        sh """
+        mkdir -p ${root}/.m2/repository
+        ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
+          -Dmaven.repo.local=${root}/.m2/repository \
+          -Pcoveragef-per-test org.jacoco:jacoco-maven-plugin:report \
+          -DdataFile=target/jacoco.exec
+        """
 
-		  sh """
-			mkdir -p ${root}/.m2/repository
-			${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
-			  -Dmaven.repo.local=${root}/.m2/repository \
-			  -Pcoveragef-per-test org.jacoco:jacoco-maven-plugin:report \
-			  -DdataFile=target/jacoco.exec
-		  """
-
-		  //sh "${mvn}/bin/mvn install:install-file -Dmaven.repo.local=${root} -Dfile=pom.xml -DpomFile=pom.xml"
-		  sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER} src/main/java/{*.java,**/*.java}"
-		  sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER}  -scan -Xmx1G -f fortifyResults-${env.BUILD_NUMBER}.fpr"
-		  sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@fortifyResults-${env.BUILD_NUMBER}.fpr ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
-		}
-/*
-		withCredentials([string(credentialsId: "${env.SONAR_TOKEN}", variable: 'USERNAME')]) {
-		  withEnv(["HOME=${root}", "_JAVA_OPTIONS=-Duser.home=${root}"]) {
-			def projectId = "venicegeo:piazza:pz-gateway"
-			sh "${mvn}/bin/mvn sonar:sonar -Dmaven.repo.local=${root} -Dsonar.host.url=${env.SONAR_URL} -Dsonar.projectKey=${projectId} -Dsonar.projectName=${projectId} -Dsonar.login=${USERNAME} -P nga"
-		  }
-		}*/
-	  }
+        //sh "${mvn}/bin/mvn install:install-file -Dmaven.repo.local=${root} -Dfile=pom.xml -DpomFile=pom.xml"
+        sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER} src/main/java/{*.java,**/*.java}"
+        sh "/opt/hp_fortify_sca/bin/sourceanalyzer -b ${env.BUILD_NUMBER}  -scan -Xmx1G -f fortifyResults-${env.BUILD_NUMBER}.fpr"
+        sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@fortifyResults-${env.BUILD_NUMBER}.fpr ${env.THREADFIX_URL}/rest/applications/${env.THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
+      }
+    }
   }
 
   stage ('Int Deploy') {
@@ -105,32 +93,32 @@ node {
         sh "cf auth ${CFUSER} ${CFPASS}"
         sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_ONE_PCF_SPACE}"
         sh "cf push ${appName} -f manifest.jenkins.yml --hostname ${appName} -b ${env.JAVA_BUILDPACK_NAME} -d ${env.PHASE_ONE_PCF_DOMAIN} --no-start"
-		try {
+        try {
           sh "cf set-env ${appName} SPACE ${env.PHASE_ONE_PCF_SPACE}"
           sh "cf set-env ${appName} DOMAIN ${env.PHASE_ONE_PCF_DOMAIN}"
           sh "cf start ${appName}"
         } catch (Exception e) {
-	      try {
-		sh "cf logs --recent ${appName}"
-	      } catch (Exception ex) {
-		echo "Printing logs failed: ${ex}"
-	      }
+          try {
+            sh "cf logs --recent ${appName}"
+          } catch (Exception ex) {
+            echo "Printing logs failed: ${ex}"
+          }
           sh "cf delete ${appName} -f -r"
           error("Error during application start. Deleting ${appName} and failing the build.")
         }
       }
     }
-	if(!params.SKIP_SCANS) {
-		withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
-		  sh "mkdir -p ${root}/zap-out"
-		  sh """${zapHome}/zap.sh -cmd \
-			-quickout ${root}/zap-out/zap.xml \
-			-quickurl https://${appName}.${env.PHASE_ONE_PCF_DOMAIN} \
-		  """
-		  sh "cat ${root}/zap-out/zap.xml"
-		  sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@${root}/zap-out/zap.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
-		}
-	}
+    if(!params.SKIP_SCANS) {
+      withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
+        sh "mkdir -p ${root}/zap-out"
+        sh """${zapHome}/zap.sh -cmd \
+        -quickout ${root}/zap-out/zap.xml \
+        -quickurl https://${appName}.${env.PHASE_ONE_PCF_DOMAIN} \
+        """
+        sh "cat ${root}/zap-out/zap.xml"
+        sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@${root}/zap-out/zap.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
+      }
+    }
     withEnv(['CF_HOME=.cf']) {
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${env.PCF_CREDS}", usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
         sh "cf api ${env.PCF_API_ENDPOINT}"
@@ -144,7 +132,7 @@ node {
           def legacyAppName = legacyApp.toString().trim()
           if (legacyAppName != appName) {
             sh "cf unmap-route ${legacyAppName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname pz-gateway"
-	    sh "cf unmap-route ${legacyAppName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname piazza"
+            sh "cf unmap-route ${legacyAppName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname piazza"
             sh "cf delete -f ${legacyAppName} -r"
           }
         }
@@ -181,35 +169,35 @@ node {
       }
       withEnv(['CF_HOME=.cf']) {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${env.PCF_CREDS}", usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
-        sh "cf api ${env.PCF_API_ENDPOINT}"
-        sh "cf auth ${CFUSER} ${CFPASS}"
-        sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_TWO_PCF_SPACE}"
-        sh "cf push ${appName} --hostname ${appName} -f manifest.jenkins.yml -b ${env.JAVA_BUILDPACK_NAME} -d ${env.PHASE_TWO_PCF_DOMAIN} --no-start"
-        try {
-          sh "cf set-env ${appName} SPACE ${env.PHASE_TWO_PCF_SPACE}"
-          sh "cf set-env ${appName} DOMAIN ${env.PHASE_TWO_PCF_DOMAIN}"
-          sh "cf start ${appName}"
-        } catch (Exception e) {
-	      try {
-		sh "cf logs --recent ${appName}"
-	      } catch (Exception ex) {
-		echo "Printing logs failed: ${ex}"
-	      }
-          sh "cf delete ${appName} -f -r"
-          error("Error during application start. Deleting ${appName} and failing the build.")
-        }
+          sh "cf api ${env.PCF_API_ENDPOINT}"
+          sh "cf auth ${CFUSER} ${CFPASS}"
+          sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_TWO_PCF_SPACE}"
+          sh "cf push ${appName} --hostname ${appName} -f manifest.jenkins.yml -b ${env.JAVA_BUILDPACK_NAME} -d ${env.PHASE_TWO_PCF_DOMAIN} --no-start"
+          try {
+            sh "cf set-env ${appName} SPACE ${env.PHASE_TWO_PCF_SPACE}"
+            sh "cf set-env ${appName} DOMAIN ${env.PHASE_TWO_PCF_DOMAIN}"
+            sh "cf start ${appName}"
+          } catch (Exception e) {
+            try {
+              sh "cf logs --recent ${appName}"
+            } catch (Exception ex) {
+              echo "Printing logs failed: ${ex}"
+            }
+            sh "cf delete ${appName} -f -r"
+            error("Error during application start. Deleting ${appName} and failing the build.")
+          }
         }
       }
-	  if(!params.SKIP_SCANS) {
-		  withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
-			sh """${zapHome}/zap.sh -cmd \
-			-quickout ${root}/zap-out/zap.xml \
-			-quickurl https://${appName}.${env.PHASE_TWO_PCF_DOMAIN} \
-			"""
-			sh "cat ${root}/zap-out/zap.xml"
-			sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@${root}/zap-out/zap.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
-		  }
-	  }
+      if(!params.SKIP_SCANS) {
+        withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: 'THREADFIX_KEY']]) {
+        sh """${zapHome}/zap.sh -cmd \
+        -quickout ${root}/zap-out/zap.xml \
+        -quickurl https://${appName}.${env.PHASE_TWO_PCF_DOMAIN} \
+        """
+        sh "cat ${root}/zap-out/zap.xml"
+        sh "/bin/curl -v --insecure -H 'Accept: application/json' -X POST --form file=@${root}/zap-out/zap.xml ${env.THREADFIX_URL}/rest/applications/${THREADFIX_ID}/upload?apiKey=${THREADFIX_KEY}"
+        }
+      }
       withEnv(['CF_HOME=.cf']) {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${env.PCF_CREDS}", usernameVariable: 'CFUSER', passwordVariable: 'CFPASS']]) {
         sh "cf api ${env.PCF_API_ENDPOINT}"
@@ -223,7 +211,7 @@ node {
             def legacyAppName = legacyApp.toString().trim()
             if (legacyAppName != appName) {
               sh "cf unmap-route ${legacyAppName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname pz-gateway"
-	      sh "cf unmap-route ${legacyAppName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname piazza"
+              sh "cf unmap-route ${legacyAppName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname piazza"
               sh "cf delete -f ${legacyAppName} -r"
             }
           }
