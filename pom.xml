@@ -46,11 +46,17 @@
 		    <version>5.4.0</version>
 		</dependency>
 		
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>x-pack-transport</artifactId>
-            <version>5.1.1</version>
+		<dependency>
+		   <groupId>org.elasticsearch.client</groupId>
+		   <artifactId>x-pack-transport</artifactId>
+		   <version>5.4.3</version>
 		</dependency>
+		
+<!--         <dependency> -->
+<!--             <groupId>org.elasticsearch.client</groupId> -->
+<!--             <artifactId>x-pack-transport</artifactId> -->
+<!--             <version>5.1.1</version> -->
+<!-- 		</dependency> -->
 		
 <!-- 		<dependency> -->
 <!-- 		    <groupId>org.elasticsearch.plugin</groupId> -->
@@ -106,7 +112,7 @@
 		<dependency>
 			<groupId>org.venice.piazza</groupId>
 			<artifactId>pz-jobcommon</artifactId>
-			<version>1-0-4-31-g786d84f</version>
+			<version>1-0-4-32-g663be5c</version>
 		</dependency>
 
 		<dependency>
