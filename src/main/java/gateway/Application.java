@@ -120,9 +120,6 @@ public class Application extends SpringBootServletInitializer {
 
 	@Bean
 	public RestTemplate restTemplate() {
-		
-		System.out.println("\n\n============================" + "\nelasticSearchHostOverride: " + elasticSearchHostOverride + "\nelasticSearchHost: " +  elasticSearchHost + "\nelasticSearchPort: " + elasticSearchPort + "\nclusterId: " + clusterId + "\nelasticUsername: " + elasticUsername + "\n============================");
-		
 		RestTemplate restTemplate = new RestTemplate();
 		HttpClient httpClient = HttpClients.custom().setMaxConnTotal(httpMaxTotal).setMaxConnPerRoute(httpMaxRoute)
 				.setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
