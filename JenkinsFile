@@ -34,20 +34,20 @@ node {
       mv ${tarball} ${root}/${artifactDirectory}/${tarball}
     """
     // Check if exists already
-    def getDependencyStatus = sh(script: """mvn -X --settings ~/.m2/settings.xml dependency:get \
-      -Dmaven.repo.local="${root}/.m2/repository" \
-      -DrepositoryId=nexus \
-      -DartifactId=pz-gateway \
-      -Dversion=${appvers} \
-      -DgroupId="org.venice.piazza" \
-      -Dpackaging=tar.gz \
-      -DremoteRepositories="nexus::default::${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
-    """, returnStatus: true)
-    echo "dependency status = ${getDependencyStatus}"
-    if (getDependencyStatus == 0) {
-      echo "Artifact version ${appvers} exists in Nexus, nothing to do"
-    } else {
-      dir("${root}/${artifactDirectory}") {
+    dir("${root}/${artifactDirectory}") {
+      def getDependencyStatus = sh(script: """mvn -X --settings ~/.m2/settings.xml dependency:get \
+        -Dmaven.repo.local="${root}/.m2/repository" \
+        -DrepositoryId=nexus \
+        -DartifactId=pz-gateway \
+        -Dversion=${appvers} \
+        -DgroupId="org.venice.piazza" \
+        -Dpackaging=tar.gz \
+        -DremoteRepositories="nexus::default::${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
+      """, returnStatus: true)
+      echo "dependency status = ${getDependencyStatus}"
+      if (getDependencyStatus == 0) {
+        echo "Artifact version ${appvers} exists in Nexus, nothing to do"
+      } else {
         sh """mvn -X --settings ~/.m2/settings.xml deploy:deploy-file -Dfile=${root}/${artifactDirectory}/${tarball} \
           -DrepositoryId=nexus \
           -Durl="${env.ARTIFACT_STORAGE_DEPLOY_URL}" \
