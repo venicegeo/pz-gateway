@@ -20,9 +20,16 @@ import java.security.Principal;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,7 +89,7 @@ public class Application extends SpringBootServletInitializer {
 	private int httpMaxRoute;
 	@Value("${SPACE}")
 	private String SPACE;
-	
+
 	@Value("${elasticsearch.transportClientPort}")
 	private Integer elasticSearchPort;
 	@Value("${vcap.services.pz-elasticsearch.credentials.host}")
@@ -122,7 +129,21 @@ public class Application extends SpringBootServletInitializer {
 	public RestTemplate restTemplate() {
 		RestTemplate restTemplate = new RestTemplate();
 		HttpClient httpClient = HttpClients.custom().setMaxConnTotal(httpMaxTotal).setMaxConnPerRoute(httpMaxRoute)
-				.setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
+				.setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {
+					@Override
+					public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+						HeaderElementIterator it = new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+						while (it.hasNext()) {
+							HeaderElement headerElement = it.nextElement();
+							String param = headerElement.getName();
+							String value = headerElement.getValue();
+							if (value != null && param.equalsIgnoreCase("timeout")) {
+								return Long.parseLong(value) * 1000;
+							}
+						}
+						return 5 * 1000;
+					}
+				}).setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
 		restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
 		return restTemplate;
 	}
