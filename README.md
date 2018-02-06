@@ -5,7 +5,7 @@ To run the Gateway service locally (without Vagrant), perhaps through Eclipse or
     mvn clean install -U spring-boot:run
 
 	With optional parameters:
-	java -jar target/piazza-gateway-1.0.0.jar --search.url=http://localhost:8581 --jobmanager.prefix=localhost --servicecontroller.port=8088 --servicecontroller.prefix=localhost --servicecontroller.protocol=http --logger.url=http://192.168.46.46:14600 --workflow.url=http://192.168.50.50:14400 --ingest.url=http://localhost:8084 --access.url=http://localhost:8085
+	java -jar target/piazza-gateway-1.0.0.jar --jobmanager.prefix=localhost --servicecontroller.port=8088 --servicecontroller.prefix=localhost --servicecontroller.protocol=http --ingest.url=http://localhost:8084 --access.url=http://localhost:8085
 
 To build and run this project, RabbitMQ, ElasticSearch, and S3 Buckets are required.  For details on these prerequisites, refer to the
 [Piazza Developer's Guide](https://pz-docs.geointservices.io/devguide/index.html#_piazza_core_overview).

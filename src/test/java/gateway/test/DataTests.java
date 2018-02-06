@@ -303,34 +303,6 @@ public class DataTests {
 	}
 
 	/**
-	 * Test POST /data/query
-	 */
-	@Test
-	public void testQueryData() {
-		// Mock
-		DataResourceListResponse mockResponse = new DataResourceListResponse();
-		mockResponse.data = new ArrayList<DataResource>();
-		mockResponse.getData().add(mockData);
-		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
-		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class))).thenReturn(mockResponse);
-
-		// Test
-		ResponseEntity<PiazzaResponse> entity = dataController.searchData(null, 0, 10, null, null, user);
-		DataResourceListResponse response = (DataResourceListResponse) entity.getBody();
-
-		// Verify
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
-		assertTrue(response.getData().get(0).getDataId().equalsIgnoreCase(mockData.getDataId()));
-		assertTrue(response.getPagination().getCount().equals(new Long(1)));
-
-		// Test an Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(DataResourceListResponse.class))).thenThrow(new RestClientException(""));
-		entity = dataController.searchData(null, 0, 10, null, null, user);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(entity.getBody() instanceof ErrorResponse);
-	}
-
-	/**
 	 * Test GET /file/{dataId}
 	 */
 	@Test

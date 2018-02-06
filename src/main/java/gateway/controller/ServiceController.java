@@ -85,10 +85,6 @@ public class ServiceController extends PiazzaRestController {
 	private PiazzaLogger logger;
 	@Value("${servicecontroller.url}")
 	private String SERVICECONTROLLER_URL;
-	@Value("${search.url}")
-	private String SEARCH_URL;
-	@Value("${search.service.endpoint}")
-	private String SEARCH_ENDPOINT;
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -433,55 +429,6 @@ public class ServiceController extends PiazzaRestController {
 			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
 			Principal user) {
 		return getServices(keyword, page, perPage, gatewayUtil.getPrincipalName(user), order, sortBy, user);
-	}
-
-	/**
-	 * Proxies an ElasticSearch DSL query to the Pz-Search component to return a list of Service items.
-	 * 
-	 * @see http ://pz-swagger/#!/Service/post_service_query
-	 * 
-	 * @return The list of Services matching the query.
-	 */
-	@RequestMapping(value = "/service/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseStatus(HttpStatus.OK)
-	@ApiOperation(value = "Query Metadata in Piazza Services", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for registered Services. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
-			"Search", "Service" })
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = ServiceListResponse.class),
-			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
-			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<PiazzaResponse> searchServices(
-			@ApiParam(value = "The Query string for the Search component.", name = "search", required = true) @Valid @RequestBody SearchRequest query,
-			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false, defaultValue = DEFAULT_PAGE) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false, defaultValue = DEFAULT_PAGE_SIZE) Integer perPage,
-			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false, defaultValue = DEFAULT_ORDER) String order,
-			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false, defaultValue = DEFAULT_SERVICE_SORTBY) String sortBy,
-			Principal user) {
-		try {
-			// Log the request
-			String userName = gatewayUtil.getPrincipalName(user);
-			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
-			logger.log(String.format("User %s sending a complex query for Search Services.", userName), Severity.INFORMATIONAL,
-					new AuditElement(dn, "requestServiceQuery", ""));
-			// Send the query to the Pz-Search component
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
-			HttpEntity<Object> entity = new HttpEntity<Object>(query, headers);
-			ServiceListResponse searchResponse = restTemplate.postForObject(
-					String.format("%s/%s?page=%s&perPage=%s&order=%s&sortBy=%s", SEARCH_URL, SEARCH_ENDPOINT, page, perPage, order, sortBy),
-					entity, ServiceListResponse.class);
-			// Respond
-			logger.log(String.format("User %s Executed Query for Search Services.", userName), Severity.INFORMATIONAL,
-					new AuditElement(dn, "completeServiceQuery", ""));
-			return new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
-		} catch (Exception exception) {
-			String error = String.format("Error Querying Services by user %s: %s", gatewayUtil.getPrincipalName(user),
-					exception.getMessage());
-			LOG.error(error, exception);
-			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
-		}
 	}
 
 	/**

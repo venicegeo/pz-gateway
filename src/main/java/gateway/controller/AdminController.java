@@ -77,8 +77,6 @@ public class AdminController extends PiazzaRestController {
 	private String SPACE;
 	@Value("${workflow.url}")
 	private String WORKFLOW_URL;
-	@Value("${search.url}")
-	private String SEARCH_URL;
 	@Value("${ingest.url}")
 	private String INGEST_URL;
 	@Value("${access.url}")
@@ -165,7 +163,6 @@ public class AdminController extends PiazzaRestController {
 		// Write the URL configs
 		stats.put("Space", SPACE);
 		stats.put("Workflow", WORKFLOW_URL);
-		stats.put("Search", SEARCH_URL);
 		stats.put("Ingest", INGEST_URL);
 		stats.put("Access", ACCESS_URL);
 		stats.put("JobManager", JOBMANAGER_URL);
