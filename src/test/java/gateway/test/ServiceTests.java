@@ -237,32 +237,4 @@ public class ServiceTests {
 		assertTrue(response instanceof ErrorResponse);
 		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 	}
-
-	/**
-	 * Test service/query
-	 */
-	@Test
-	public void testQuery() {
-		// Mock
-		ServiceListResponse mockResponse = new ServiceListResponse();
-		mockResponse.data = new ArrayList<Service>();
-		mockResponse.getData().add(mockService);
-		mockResponse.pagination = new Pagination(new Long(1), 0, 10, "test", "asc");
-		when(restTemplate.postForObject(anyString(), any(), eq(ServiceListResponse.class))).thenReturn(mockResponse);
-
-		// Test
-		ResponseEntity<PiazzaResponse> entity = serviceController.searchServices(null, 0, 10, null, null, user);
-		ServiceListResponse response = (ServiceListResponse) entity.getBody();
-
-		// Verify
-		assertTrue(entity.getStatusCode().equals(HttpStatus.OK));
-		assertTrue(response.getData().get(0).getServiceId().equalsIgnoreCase(mockService.getServiceId()));
-		assertTrue(response.getPagination().getCount().equals(new Long(1)));
-
-		// Test Exception
-		when(restTemplate.postForObject(anyString(), any(), eq(ServiceListResponse.class))).thenThrow(new RestClientException("Error"));
-		entity = serviceController.searchServices(null, 0, 10, null, null, user);
-		assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
-		assertTrue(entity.getBody() instanceof ErrorResponse);
-	}
 }

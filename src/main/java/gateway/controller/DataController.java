@@ -84,8 +84,6 @@ public class DataController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("${search.url}")
-	private String SEARCH_URL;
 	@Value("${search.data.endpoint}")
 	private String SEARCH_ENDPOINT;
 	@Value("${ingest.url}")
@@ -99,7 +97,6 @@ public class DataController extends PiazzaRestController {
 	private static final String DEFAULT_PAGE = "0";
 	private static final String DEFAULT_ORDER = "desc";
 	private static final String DEFAULT_SORTBY = "metadata.createdOn";
-	private static final String DEFAULT_SORTBY_ES = "dataResource.metadata.createdOn"; // schema for Elasticsearch
 	private static final String GATEWAY = "Gateway";
 	private static final String URL_FORMAT = "%s/%s/%s";
 
@@ -510,67 +507,6 @@ public class DataController extends PiazzaRestController {
 		} catch (Exception exception) {
 			String error = String.format("Error Updating Metadata for item %s by user %s: %s", dataId, gatewayUtil.getPrincipalName(user),
 					exception.getMessage());
-			LOG.error(error, exception);
-			logger.log(error, Severity.ERROR);
-			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Proxies an ElasticSearch DSL query to the Pz-Search component to return a list of DataResource items.
-	 * 
-	 * @see http://pz-swagger/#!/Data/post_data_query
-	 * 
-	 * @return The list of DataResource items matching the query.
-	 */
-	@RequestMapping(value = "/data/query", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseStatus(HttpStatus.OK)
-	@ApiOperation(value = "Query Metadata in Piazza Data holdings", notes = "Sends a complex query message to the Piazza Search component, that allow users to search for loaded data. Searching is capable of filtering by keywords, spatial metadata, or other dynamic information.", tags = {
-			"Data", "Search" })
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "The list of Search results that match the query string.", response = DataResourceListResponse.class),
-			@ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
-			@ApiResponse(code = 401, message = "Unauthorized", response = ErrorResponse.class),
-			@ApiResponse(code = 500, message = "Internal Error", response = ErrorResponse.class) })
-	public ResponseEntity<PiazzaResponse> searchData(
-			@ApiParam(value = "The Query string for the Search component.", required = true) @Valid @RequestBody SearchRequest query,
-			@ApiParam(value = "Paginating large datasets. This will determine the starting page for the query.") @RequestParam(value = "page", required = false) Integer page,
-			@ApiParam(value = "The number of results to be returned per query.") @RequestParam(value = "perPage", required = false) Integer perPage,
-			@ApiParam(value = "Indicates ascending or descending order.") @RequestParam(value = "order", required = false) String order,
-			@ApiParam(value = "The data field to sort by.") @RequestParam(value = "sortBy", required = false) String sortBy,
-			Principal user) {
-		try {
-			// Log the request
-			String userName = gatewayUtil.getPrincipalName(user);
-			String dn = gatewayUtil.getDistinguishedName(SecurityContextHolder.getContext().getAuthentication());
-			logger.log(String.format("User %s sending a complex query for Search.", userName), Severity.INFORMATIONAL,
-					new AuditElement(dn, "requestDataQuery", ""));
-
-			// Send the query to the Pz-Search component
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
-			HttpEntity<Object> entity = new HttpEntity<Object>(query, headers);
-
-			String paramPage = (page == null) ? "" : "page=" + page.toString();
-			String paramPerPage = (perPage == null) ? "" : "perPage=" + perPage.toString();
-			String paramOrder = (order == null) ? "" : "order=" + order;
-			String paramSortBy = (sortBy == null) ? "" : "sortBy=" + sortBy;
-
-			try {
-				DataResourceListResponse searchResponse = restTemplate.postForObject(
-						String.format("%s/%s?%s&%s&%s&%s", SEARCH_URL, SEARCH_ENDPOINT, paramPage, paramPerPage, paramOrder, paramSortBy),
-						entity, DataResourceListResponse.class);
-				// Respond
-				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(searchResponse, HttpStatus.OK);
-				logger.log(String.format("User %s successfully got a complex query for Searching Data", userName), Severity.INFORMATIONAL,
-						new AuditElement(dn, "successDataQuery", ""));
-				return response;
-			} catch (HttpClientErrorException | HttpServerErrorException hee) {
-				LOG.error("Error Querying Data.", hee);
-				return new ResponseEntity<PiazzaResponse>(gatewayUtil.getErrorResponse(hee.getResponseBodyAsString()), hee.getStatusCode());
-			}
-		} catch (Exception exception) {
-			String error = String.format("Error Querying Data by user %s: %s", gatewayUtil.getPrincipalName(user), exception.getMessage());
 			LOG.error(error, exception);
 			logger.log(error, Severity.ERROR);
 			return new ResponseEntity<PiazzaResponse>(new ErrorResponse(error, GATEWAY), HttpStatus.INTERNAL_SERVER_ERROR);
