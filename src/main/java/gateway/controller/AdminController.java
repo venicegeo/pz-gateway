@@ -89,13 +89,13 @@ public class AdminController extends PiazzaRestController {
 	private String JOBMANAGER_URL;
 	@Value("${servicecontroller.url}")
 	private String SERVICECONTROLLER_URL;
-	@Value("${uuid.url}")
+	@Value("${uuid.url:}")
 	private String UUIDGEN_URL;
-	@Value("${logger.url}")
+	@Value("${logger.url:}")
 	private String LOGGER_URL;
-	@Value("${security.url}")
+	@Value("${security.url:}")
 	private String SECURITY_URL;
-	@Value("${release.url}")
+	@Value("${release.url:}")
 	private String RELEASE_URL;
 
 	@Autowired
