@@ -57,7 +57,6 @@ import model.job.type.RegisterServiceJob;
 import model.logger.AuditElement;
 import model.logger.Severity;
 import model.request.PiazzaJobRequest;
-import model.request.SearchRequest;
 import model.response.ErrorResponse;
 import model.response.PiazzaResponse;
 import model.response.ServiceIdResponse;

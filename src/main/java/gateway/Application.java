@@ -90,19 +90,6 @@ public class Application extends SpringBootServletInitializer {
 	@Value("${SPACE}")
 	private String SPACE;
 
-	@Value("${elasticsearch.transportClientPort}")
-	private Integer elasticSearchPort;
-	@Value("${vcap.services.pz-elasticsearch.credentials.host}")
-	private String elasticSearchHost;
-	@Value("${elasticsearch.hostoverride}")
-	private String elasticSearchHostOverride;
-	@Value("${vcap.services.pz-elasticsearch.credentials.clusterId}")
-	private String clusterId;
-	@Value("${vcap.services.pz-elasticsearch.credentials.username}")
-	private String elasticUsername;
-	@Value("${vcap.services.pz-elasticsearch.credentials.password}")
-	private String elasticPassword;
-
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
 		return builder.sources(Application.class);

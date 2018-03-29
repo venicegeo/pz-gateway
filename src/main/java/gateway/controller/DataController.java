@@ -23,8 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -61,7 +59,6 @@ import model.job.type.IngestJob;
 import model.logger.AuditElement;
 import model.logger.Severity;
 import model.request.PiazzaJobRequest;
-import model.request.SearchRequest;
 import model.response.DataResourceListResponse;
 import model.response.DataResourceResponse;
 import model.response.ErrorResponse;
@@ -84,8 +81,6 @@ public class DataController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Autowired
 	private PiazzaLogger logger;
-	@Value("${search.data.endpoint}")
-	private String SEARCH_ENDPOINT;
 	@Value("${ingest.url}")
 	private String INGEST_URL;
 	@Value("${access.url}")

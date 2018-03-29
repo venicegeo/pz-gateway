@@ -64,13 +64,9 @@ public class AdminTests {
 
 		// Ensure proper keys
 		assertTrue(stats.containsKey("Space"));
-		assertTrue(stats.containsKey("Workflow"));
 		assertTrue(stats.containsKey("Ingest"));
 		assertTrue(stats.containsKey("Access"));
 		assertTrue(stats.containsKey("JobManager"));
 		assertTrue(stats.containsKey("ServiceController"));
-		assertTrue(stats.containsKey("UUIDGen"));
-		assertTrue(stats.containsKey("Logger"));
-		assertTrue(stats.containsKey("Security"));
 	}
 }

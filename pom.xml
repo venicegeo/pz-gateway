@@ -12,7 +12,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.6.RELEASE</version>
+		<version>1.5.9.RELEASE</version>
 	</parent>
 
 	<repositories>
@@ -22,19 +22,18 @@
 		</repository>
 	</repositories>
 
-	<dependencies>		
+	<dependencies>
 		<dependency>
-		    <groupId>org.apache.logging.log4j</groupId>
-		    <artifactId>log4j-to-slf4j</artifactId>
-		    <version>2.7</version>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-to-slf4j</artifactId>
+			<version>2.7</version>
 		</dependency>
 		<dependency>
-		    <groupId>ch.qos.logback</groupId>
-		    <artifactId>logback-classic</artifactId>
-		    <version>1.1.7</version>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.1.7</version>
 		</dependency>
-		<!-- ============================================ -->		
-		
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -56,6 +55,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.apache.directory.studio</groupId>
 			<artifactId>org.apache.commons.io</artifactId>
 			<version>2.4</version>
@@ -64,13 +68,13 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>4.3.5.RELEASE</version>
+			<version>4.3.12.RELEASE</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.venice.piazza</groupId>
 			<artifactId>pz-jobcommon</artifactId>
-			<version>2-0-0-7-gb51fe13</version>
+			<version>2-0-1-s4-0-gb51fe13</version>
 		</dependency>
 
 		<dependency>
@@ -84,41 +88,38 @@
 			<artifactId>aws-java-sdk-s3</artifactId>
 			<version>1.11.240</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 			<version>1.1.0.Final</version>
 		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<scope>test</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
-			<version>4.3.5.RELEASE</version>
+			<version>4.3.12.RELEASE</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger-ui</artifactId>
-			<version>2.5.0</version>
+			<version>2.7.0</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger2</artifactId>
-			<version>2.5.0</version>
+			<version>2.7.0</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -127,7 +128,6 @@
 	<properties>
 		<java.version>1.8</java.version>
 		<packaging>jar</packaging>
-		<spring.boot.version>1.3.3.RELEASE</spring.boot.version>
 	</properties>
 
 	<build>
@@ -147,7 +147,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.17</version>
+						<version>2.19.1</version>
 						<configuration>
 							<properties>
 								<property>

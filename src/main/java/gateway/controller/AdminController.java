@@ -75,8 +75,6 @@ public class AdminController extends PiazzaRestController {
 	private GatewayUtil gatewayUtil;
 	@Value("${SPACE}")
 	private String SPACE;
-	@Value("${workflow.url}")
-	private String WORKFLOW_URL;
 	@Value("${ingest.url}")
 	private String INGEST_URL;
 	@Value("${access.url}")
@@ -85,10 +83,6 @@ public class AdminController extends PiazzaRestController {
 	private String JOBMANAGER_URL;
 	@Value("${servicecontroller.url}")
 	private String SERVICECONTROLLER_URL;
-	@Value("${uuid.url}")
-	private String UUIDGEN_URL;
-	@Value("${logger.url}")
-	private String LOGGER_URL;
 	@Value("${security.url}")
 	private String SECURITY_URL;
 	@Value("${release.url}")
@@ -101,7 +95,7 @@ public class AdminController extends PiazzaRestController {
 
 	private static final String GATEWAY = "Gateway";
 	private static final String AUTHORIZATION = "Authorization";
-	
+
 	/**
 	 * Healthcheck required for all Piazza Core Services
 	 * 
@@ -134,7 +128,7 @@ public class AdminController extends PiazzaRestController {
 				LOG.info("Could not find local version. Delegating to pz-release endpoint.", exception);
 			} finally {
 				try {
-					if( templateStream != null ) {
+					if (templateStream != null) {
 						templateStream.close();
 					}
 				} catch (Exception exception) {
@@ -162,13 +156,10 @@ public class AdminController extends PiazzaRestController {
 		Map<String, Object> stats = new HashMap<String, Object>();
 		// Write the URL configs
 		stats.put("Space", SPACE);
-		stats.put("Workflow", WORKFLOW_URL);
 		stats.put("Ingest", INGEST_URL);
 		stats.put("Access", ACCESS_URL);
 		stats.put("JobManager", JOBMANAGER_URL);
 		stats.put("ServiceController", SERVICECONTROLLER_URL);
-		stats.put("UUIDGen", UUIDGEN_URL);
-		stats.put("Logger", LOGGER_URL);
 		stats.put("Security", SECURITY_URL);
 		stats.put("Release", RELEASE_URL);
 		// Return
@@ -249,8 +240,8 @@ public class AdminController extends PiazzaRestController {
 			// Broker to IDAM
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(restTemplate
-						.getForEntity(String.format("%s/%s/%s.json", SECURITY_URL, "profile", username), UserProfileResponse.class).getBody(),
-						HttpStatus.OK);
+						.getForEntity(String.format("%s/%s/%s.json", SECURITY_URL, "profile", username), UserProfileResponse.class)
+						.getBody(), HttpStatus.OK);
 				logger.log(String.format("User %s successfully retrieved User Profile.", username), Severity.INFORMATIONAL,
 						new AuditElement(dn, "successUserProfile", username));
 				return response;
