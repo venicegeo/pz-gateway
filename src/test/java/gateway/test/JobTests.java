@@ -53,7 +53,6 @@ import model.job.type.ExecuteServiceJob;
 import model.job.type.RepeatJob;
 import model.request.PiazzaJobRequest;
 import model.response.ErrorResponse;
-import model.response.JobErrorResponse;
 import model.response.JobResponse;
 import model.response.JobStatusResponse;
 import model.response.PiazzaResponse;
@@ -93,8 +92,6 @@ public class JobTests {
 
 	private Principal user;
 	private Job mockJob;
-	private ErrorResponse mockError;
-	private ResponseEntity<PiazzaResponse> mockJobError;
 
 	/**
 	 * Initialize mock objects.
@@ -103,10 +100,6 @@ public class JobTests {
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
 		MockitoAnnotations.initMocks(gatewayUtil);
-
-		// Mock a common error we can use to test
-		mockError = new ErrorResponse("Job Not Found", "Gateway");
-		mockJobError = new ResponseEntity<PiazzaResponse>(new JobErrorResponse("1234", "Job Not Found", "Gateway"), HttpStatus.NOT_FOUND);
 
 		// Mock a Job
 		mockJob = new Job();

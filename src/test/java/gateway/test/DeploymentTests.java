@@ -77,7 +77,6 @@ public class DeploymentTests {
 	private DeploymentController deploymentController;
 
 	private Principal user;
-	private ErrorResponse mockError;
 	private Deployment mockDeployment;
 
 	/**
@@ -87,9 +86,6 @@ public class DeploymentTests {
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
 		MockitoAnnotations.initMocks(gatewayUtil);
-
-		// Mock a common error we can use to test
-		mockError = new ErrorResponse("Error!", "Test");
 
 		// Mock a user
 		user = new JMXPrincipal("Test User");

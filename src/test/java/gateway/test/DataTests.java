@@ -82,7 +82,6 @@ public class DataTests {
 
 	private Principal user;
 	private DataResource mockData;
-	private ErrorResponse mockError;
 
 	/**
 	 * Initialize mock objects.
@@ -91,9 +90,6 @@ public class DataTests {
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
 		MockitoAnnotations.initMocks(gatewayUtil);
-
-		// Mock a common error we can use to test
-		mockError = new ErrorResponse("Error!", "Test");
 
 		// Mock some Data that we can use in our test cases.
 		mockData = new DataResource();

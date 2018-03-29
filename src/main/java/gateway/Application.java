@@ -128,7 +128,7 @@ public class Application extends SpringBootServletInitializer {
 								return Long.parseLong(value) * 1000;
 							}
 						}
-						return 5 * 1000;
+						return (long) 5 * 1000;
 					}
 				}).setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
 		restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
