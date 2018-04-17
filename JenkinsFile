@@ -92,7 +92,7 @@ node {
         mkdir -p ${root}/.m2/repository
         ${mvn}/bin/mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install \
           -Dmaven.repo.local=${root}/.m2/repository \
-          -Pcoveragef-per-test org.jacoco:jacoco-maven-plugin:report \
+          -Pcoverage-per-test org.jacoco:jacoco-maven-plugin:report \
           -DdataFile=target/jacoco.exec
         """
 
