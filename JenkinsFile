@@ -32,11 +32,16 @@ node {
     }
   }
 
-  def appvers = sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)
-  appvers = appvers.trim()
+  def appvers = (sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)).trim();
+  def appversShort = (sh(script: "git describe --tags --always | sed 's/\\./-/'g", returnStdout: true)).trim();
   def appName = "pz-gateway-${appvers}"
 
   stage('Archive') {
+    //Write the source version to a json file.
+    def jsonVersionFile = "${root}/src/main/resources/pz-release.json"
+    sh """
+      printf "{\"version\":{\"short\":\"${appversShort}\",\"long\":\"${appvers}\"}}" > ${jsonVersionFile}
+    """
     // Build Tarball
     def targetFiles = "pz-gateway.jar manifest.jenkins.yml"
     def artifactDirectory = "maven-artifact"
