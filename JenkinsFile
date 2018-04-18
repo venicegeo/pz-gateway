@@ -33,7 +33,7 @@ node {
   }
 
   def appvers = (sh(script: "git describe --long --tags --always | sed 's/\\./-/'g", returnStdout: true)).trim();
-  def appversShort = (sh(script: "git describe --tags --always | sed 's/\\./-/'g", returnStdout: true)).trim();
+  def appversShort = (sh(script: "git describe --abbrev=0 | sed 's/\\./-/'g", returnStdout: true)).trim();
   def appName = "pz-gateway-${appvers}"
 
   stage('Archive') {
