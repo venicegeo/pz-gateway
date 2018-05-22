@@ -322,7 +322,7 @@ public class JobController extends PiazzaRestController {
 			request.jobType = job;
 			request.createdBy = gatewayUtil.getPrincipalName(user);
 
-			String jobId = gatewayUtil.sendJobRequest(request, null);
+			String jobId = gatewayUtil.sendJobRequest(request, job.getJobId());
 
 			logger.log(String.format("User %s Sent Execute Job for Service %s under Job ID %s.", userName, job.data.getServiceId(), jobId),
 					Severity.INFORMATIONAL, new AuditElement(dn, "completeExecuteServiceJob", jobId));
