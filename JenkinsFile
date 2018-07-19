@@ -151,8 +151,28 @@ node {
         sh "cf auth ${CFUSER} ${CFPASS}"
         sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_ONE_PCF_SPACE}"
         def legacyAppNames = sh(script: "cf routes | grep \"pz-gateway \" | awk '{print \$4}'", returnStdout: true)
+        
+        // Define Routes
         sh "cf map-route ${appName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname pz-gateway"
         sh "cf map-route ${appName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname piazza"
+        
+        // Define Policies
+        try {
+          def ingest = sh(script: "cf routes | grep \"pz-ingest \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${ingest} --protocol tcp --port 8080"
+          def access = sh(script: "cf routes | grep \"pz-access \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${access} --protocol tcp --port 8080"
+          def jobmanager = sh(script: "cf routes | grep \"pz-jobmanager \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${jobmanager} --protocol tcp --port 8080"
+          def serviceController = sh(script: "cf routes | grep \"pz-servicecontroller \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${serviceController} --protocol tcp --port 8080"
+          def idam = sh(script: "cf routes | grep \"pz-idam \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${idam} --protocol tcp --port 8080"
+        } catch (Exception ex) {
+          echo "Could not establish network policies. The network policy tool should be run post-build to ensure functionality."
+        }
+
+        
         // Remove Legacy applications
         for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
           def legacyAppName = legacyApp.toString().trim()
@@ -230,17 +250,36 @@ node {
         sh "cf auth ${CFUSER} ${CFPASS}"
         sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_TWO_PCF_SPACE}"
         def legacyAppNames = sh(script: "cf routes | grep \"pz-gateway \" | awk '{print \$4}'", returnStdout: true)
+        
+        // Define Routes
         sh "cf map-route ${appName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname pz-gateway"
         sh "cf map-route ${appName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname piazza"
-          // Remove Legacy applications
-          for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
-            def legacyAppName = legacyApp.toString().trim()
-            if (legacyAppName != appName) {
-              sh "cf unmap-route ${legacyAppName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname pz-gateway"
-              sh "cf unmap-route ${legacyAppName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname piazza"
-              sh "cf delete -f ${legacyAppName} -r"
-            }
+        
+        // Define Policies
+        try {
+          def ingest = sh(script: "cf routes | grep \"pz-ingest \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${ingest} --protocol tcp --port 8080"
+          def access = sh(script: "cf routes | grep \"pz-access \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${access} --protocol tcp --port 8080"
+          def jobmanager = sh(script: "cf routes | grep \"pz-jobmanager \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${jobmanager} --protocol tcp --port 8080"
+          def serviceController = sh(script: "cf routes | grep \"pz-servicecontroller \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${serviceController} --protocol tcp --port 8080"
+          def idam = sh(script: "cf routes | grep \"pz-idam \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${idam} --protocol tcp --port 8080"
+        } catch (Exception ex) {
+          echo "Could not establish network policies. The network policy tool should be run post-build to ensure functionality."
+        }
+        
+        // Remove Legacy applications
+        for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
+          def legacyAppName = legacyApp.toString().trim()
+          if (legacyAppName != appName) {
+            sh "cf unmap-route ${legacyAppName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname pz-gateway"
+            sh "cf unmap-route ${legacyAppName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname piazza"
+            sh "cf delete -f ${legacyAppName} -r"
           }
+        }
         }
       }
     }
