@@ -153,7 +153,6 @@ node {
         def legacyAppNames = sh(script: "cf routes | grep \"pz-gateway \" | awk '{print \$4}'", returnStdout: true)
         
         // Define Routes
-        sh "cf map-route ${appName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname pz-gateway"
         sh "cf map-route ${appName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname piazza"
         
         // Define Policies
@@ -177,7 +176,6 @@ node {
         for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
           def legacyAppName = legacyApp.toString().trim()
           if (legacyAppName != appName) {
-            sh "cf unmap-route ${legacyAppName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname pz-gateway"
             sh "cf unmap-route ${legacyAppName} ${env.PHASE_ONE_PCF_DOMAIN} --hostname piazza"
             sh "cf delete -f ${legacyAppName} -r"
           }
@@ -252,7 +250,6 @@ node {
         def legacyAppNames = sh(script: "cf routes | grep \"pz-gateway \" | awk '{print \$4}'", returnStdout: true)
         
         // Define Routes
-        sh "cf map-route ${appName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname pz-gateway"
         sh "cf map-route ${appName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname piazza"
         
         // Define Policies
@@ -275,7 +272,6 @@ node {
         for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
           def legacyAppName = legacyApp.toString().trim()
           if (legacyAppName != appName) {
-            sh "cf unmap-route ${legacyAppName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname pz-gateway"
             sh "cf unmap-route ${legacyAppName} ${env.PHASE_TWO_PCF_DOMAIN} --hostname piazza"
             sh "cf delete -f ${legacyAppName} -r"
           }
