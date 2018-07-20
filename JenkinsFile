@@ -157,15 +157,15 @@ node {
         
         // Define Policies
         try {
-          def ingest = sh(script: "cf routes | grep \"pz-ingest \" | awk '{print \$4}'", returnStdout: true).trim()
+          def ingest = sh(script: "cf routes | grep \"pz-ingest \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${ingest} --protocol tcp --port 8080"
-          def access = sh(script: "cf routes | grep \"pz-access \" | awk '{print \$4}'", returnStdout: true).trim()
+          def access = sh(script: "cf routes | grep \"pz-access \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${access} --protocol tcp --port 8080"
-          def jobmanager = sh(script: "cf routes | grep \"pz-jobmanager \" | awk '{print \$4}'", returnStdout: true).trim()
+          def jobmanager = sh(script: "cf routes | grep \"pz-jobmanager \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${jobmanager} --protocol tcp --port 8080"
-          def serviceController = sh(script: "cf routes | grep \"pz-servicecontroller \" | awk '{print \$4}'", returnStdout: true).trim()
+          def serviceController = sh(script: "cf routes | grep \"pz-servicecontroller \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${serviceController} --protocol tcp --port 8080"
-          def idam = sh(script: "cf routes | grep \"pz-idam \" | awk '{print \$4}'", returnStdout: true).trim()
+          def idam = sh(script: "cf routes | grep \"pz-idam \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${idam} --protocol tcp --port 8080"
         } catch (Exception ex) {
           echo "Could not establish network policies. The network policy tool should be run post-build to ensure functionality."
@@ -254,15 +254,15 @@ node {
         
         // Define Policies
         try {
-          def ingest = sh(script: "cf routes | grep \"pz-ingest \" | awk '{print \$4}'", returnStdout: true).trim()
+          def ingest = sh(script: "cf routes | grep \"pz-ingest \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${ingest} --protocol tcp --port 8080"
-          def access = sh(script: "cf routes | grep \"pz-access \" | awk '{print \$4}'", returnStdout: true).trim()
+          def access = sh(script: "cf routes | grep \"pz-access \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${access} --protocol tcp --port 8080"
-          def jobmanager = sh(script: "cf routes | grep \"pz-jobmanager \" | awk '{print \$4}'", returnStdout: true).trim()
+          def jobmanager = sh(script: "cf routes | grep \"pz-jobmanager \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${jobmanager} --protocol tcp --port 8080"
-          def serviceController = sh(script: "cf routes | grep \"pz-servicecontroller \" | awk '{print \$4}'", returnStdout: true).trim()
+          def serviceController = sh(script: "cf routes | grep \"pz-servicecontroller \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${serviceController} --protocol tcp --port 8080"
-          def idam = sh(script: "cf routes | grep \"pz-idam \" | awk '{print \$4}'", returnStdout: true).trim()
+          def idam = sh(script: "cf routes | grep \"pz-idam \" | awk '{print \$4}' | head -n1", returnStdout: true).trim()
           sh "cf add-network-policy ${appName} --destination-app ${idam} --protocol tcp --port 8080"
         } catch (Exception ex) {
           echo "Could not establish network policies. The network policy tool should be run post-build to ensure functionality."
