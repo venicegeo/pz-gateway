@@ -1,4 +1,4 @@
-#pz-gateway
+# pz-gateway
 The pz-gateway project handles all user-facing requests to Piazza via REST endpoints. The purpose of this component is to allow for external users to be able to interact with Piazza data, services, events, and other core Piazza functionality.
 
 ## Requirements
