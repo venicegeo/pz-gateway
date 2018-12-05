@@ -45,6 +45,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import gateway.controller.util.GatewayUtil;
 import gateway.controller.util.PiazzaRestController;
 import io.swagger.annotations.Api;
@@ -137,10 +139,14 @@ public class ServiceController extends PiazzaRestController {
 			PiazzaJobRequest jobRequest = new PiazzaJobRequest();
 			jobRequest.createdBy = gatewayUtil.getPrincipalName(user);
 			jobRequest.jobType = new RegisterServiceJob(service);
+			String jobRequestString = new ObjectMapper().writeValueAsString(jobRequest);
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> entity = new HttpEntity<String>(jobRequestString, headers);
 			// Proxy the request to the Service Controller
 			try {
 				ResponseEntity<PiazzaResponse> response = new ResponseEntity<PiazzaResponse>(
-						restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService"), jobRequest,
+						restTemplate.postForEntity(String.format("%s/%s", SERVICECONTROLLER_URL, "registerService.json"), entity,
 								ServiceIdResponse.class).getBody(),
 						HttpStatus.CREATED);
 				logger.log(String.format("User %s Registered Service.", userName), Severity.INFORMATIONAL, new AuditElement(dn,
